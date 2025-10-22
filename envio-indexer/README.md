@@ -4,7 +4,7 @@
 
 ## Live Deployment
 
-🚀 **Hosted GraphQL API**: https://indexer.dev.hyperindex.xyz/adebdd9/v1/graphql
+🚀 **Hosted GraphQL API**: https://indexer.dev.hyperindex.xyz/30b0185/v1/graphql
 
 ## Contract Info
 
@@ -32,12 +32,14 @@ The indexer maintains two types of entities:
 ### Transaction Tracking
 
 Payment events include full transaction metadata:
+
 - **Transaction Hash** - Direct links to blockchain transactions
 - **Block Number** - Block-level tracking
 - **Block Timestamp** - Precise transaction timing
 - **Payer Address** - Buyer identification
 
 This enables:
+
 - Direct Etherscan transaction links
 - Accurate chronological ordering
 - Real-time transaction verification

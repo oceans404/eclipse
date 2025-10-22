@@ -278,10 +278,10 @@ query RecentPaymentsWithTransactions {
 ```graphql
 query PaymentsForEtherscan {
   ProductPaymentService_PaymentReceived(where: { productId: { _eq: "1" } }) {
-    transactionHash  # Use for: https://sepolia.etherscan.io/tx/{transactionHash}
-    payer           # Use for: https://sepolia.etherscan.io/address/{payer}
+    transactionHash # Use for: https://sepolia.etherscan.io/tx/{transactionHash}
+    payer # Use for: https://sepolia.etherscan.io/address/{payer}
     amount
-    blockTimestamp  # Convert: new Date(Number(blockTimestamp) * 1000)
+    blockTimestamp # Convert: new Date(Number(blockTimestamp) * 1000)
   }
 }
 ```
@@ -291,10 +291,10 @@ query PaymentsForEtherscan {
 ```graphql
 query PaymentsByTimeRange {
   ProductPaymentService_PaymentReceived(
-    where: { 
-      blockTimestamp: { 
-        _gte: "1761157000"  # Unix timestamp
-        _lte: "1761170000" 
+    where: {
+      blockTimestamp: {
+        _gte: "1761157000" # Unix timestamp
+        _lte: "1761170000"
       }
     }
     order_by: { blockTimestamp: asc }
@@ -536,17 +536,19 @@ To enable transaction hash and timestamp tracking, the indexer uses Envio's `fie
 ```yaml
 field_selection:
   transaction_fields:
-    - "hash"
-    - "transactionIndex"
+    - 'hash'
+    - 'transactionIndex'
 ```
 
 This configuration enables:
+
 - `transactionHash` field in payment events
 - `blockTimestamp` and `blockNumber` from block data
 - Direct blockchain transaction references
 - Enhanced frontend integration capabilities
 
 **Required steps for transaction tracking:**
+
 1. Add `field_selection` to `config.yaml`
 2. Update schema with transaction fields
 3. Modify event handlers to capture transaction data
@@ -554,4 +556,4 @@ This configuration enables:
 
 ---
 
-**GraphQL endpoint:** https://indexer.dev.hyperindex.xyz/adebdd9/v1/graphql
+**GraphQL endpoint:** https://indexer.dev.hyperindex.xyz/30b0185/v1/graphql

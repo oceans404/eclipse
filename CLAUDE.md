@@ -32,6 +32,20 @@ pnpm install
 pnpm codegen && pnpm dev
 ```
 
+**Next.js Marketplace** (navigate to marketplace-nextjs directory):
+
+```bash
+cd marketplace-nextjs
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+Access at http://localhost:4269
+
 ## Architecture Overview
 
 The project uses a modular architecture:
@@ -65,12 +79,21 @@ The project uses a modular architecture:
 
 5. **Event Indexing** (`envio-indexer/`):
 
-   - **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/adebdd9/v1/graphql
+   - **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/30b0185/v1/graphql
    - **Dual Entity System**: Historical events + current Product state tracking
    - **Event Handlers**: Process PaymentReceived, ProductAdded, and ProductUpdated events
    - **Smart State Management**: Product entity auto-updates with price changes
 
-6. **Privacy Layer Integration**:
+6. **Frontend Application** (`marketplace-nextjs/`):
+
+   - **Eclipse marketplace frontend** built with Next.js 15 + TypeScript
+   - **Apollo Client v3**: GraphQL data management with real-time syncing
+   - **Product Discovery**: Search, filtering, and sorting functionality
+   - **Creator Profiles**: Individual creator dashboards with analytics
+   - **Transaction Tracking**: Complete price history and Etherscan links
+   - **Responsive Design**: Tailwind CSS with modern UI components
+
+7. **Privacy Layer Integration**:
    - Nillion Private Storage (nilDB) for encrypted data via contentId
    - Nillion Private LLMs (nilAI) for content verification
    - Nillion Private Compute (nilCC) for secure processing

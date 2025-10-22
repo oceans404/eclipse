@@ -48,10 +48,20 @@ Smart contract infrastructure for marketplace payments using PYUSD.
 
 Event indexing service for real-time marketplace data.
 
-- **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/adebdd9/v1/graphql
+- **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/30b0185/v1/graphql
 - **Dual Entity System**: Tracks both historical events and current product state
 - **HyperSync enabled**: Fast historical data synchronization
 - **Real-time indexing**: Live event tracking from ProductPaymentService contract
+
+### 🌐 [marketplace-nextjs/](./marketplace-nextjs/)
+
+Eclipse marketplace frontend built with Next.js 15.
+
+- **Live Demo**: http://localhost:4269 (when running locally)
+- **Product Discovery**: Browse products with search, filtering, and sorting
+- **Creator Profiles**: View creator statistics and product portfolios
+- **Transaction Tracking**: Complete price history and Etherscan links
+- **Real-time Data**: Apollo Client synced with Envio GraphQL API
 
 ---
 
