@@ -15,6 +15,9 @@ ProductPaymentService.PaymentReceived.handler(async ({ event, context }) => {
     payer: event.params.payer,
     productId: event.params.productId,
     amount: event.params.amount,
+    transactionHash: event.transaction.hash,
+    blockNumber: BigInt(event.block.number),
+    blockTimestamp: BigInt(event.block.timestamp),
   };
 
   context.ProductPaymentService_PaymentReceived.set(entity);

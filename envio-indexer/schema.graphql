@@ -3,6 +3,9 @@ type ProductPaymentService_PaymentReceived {
   payer: String!
   productId: BigInt!
   amount: BigInt!
+  transactionHash: String!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
 }
 
 type ProductPaymentService_ProductAdded {

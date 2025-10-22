@@ -12,5 +12,9 @@ networks:
           - event: PaymentReceived(address indexed payer, uint256 indexed productId, uint256 amount)
           - event: ProductAdded(uint256 indexed productId, uint256 price, address indexed creator, string contentId)
           - event: ProductUpdated(uint256 indexed productId, uint256 newPrice)
+field_selection:
+  transaction_fields:
+    - "hash"
+    - "transactionIndex"
 unordered_multichain_mode: true
 preload_handlers: true
