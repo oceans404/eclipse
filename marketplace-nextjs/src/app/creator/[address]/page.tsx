@@ -3,7 +3,13 @@
 import React, { use } from 'react';
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Package, DollarSign, TrendingUp, Calendar } from 'lucide-react';
+import {
+  ArrowLeft,
+  Package,
+  DollarSign,
+  TrendingUp,
+  Calendar,
+} from 'lucide-react';
 import { GET_CREATOR_PROFILE, GET_CREATOR_REVENUE } from '@/lib/queries';
 import { ProductCard } from '@/components/ProductCard';
 import { AddressDisplay } from '@/components/AddressDisplay';
@@ -20,7 +26,7 @@ export default function CreatorPage({ params }: CreatorPageProps) {
   const resolvedParams = use(params);
   const router = useRouter();
   const { loading, error, data } = useQuery(GET_CREATOR_PROFILE, {
-    variables: { creator: resolvedParams.address }
+    variables: { creator: resolvedParams.address },
   });
 
   const products = data?.Product || [];
@@ -28,7 +34,7 @@ export default function CreatorPage({ params }: CreatorPageProps) {
 
   const { data: revenueData } = useQuery(GET_CREATOR_REVENUE, {
     variables: { productIds },
-    skip: productIds.length === 0
+    skip: productIds.length === 0,
   });
 
   if (loading) {
@@ -58,8 +64,12 @@ export default function CreatorPage({ params }: CreatorPageProps) {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">👤</div>
-          <h3 className="text-2xl font-semibold text-gray-800 mb-2">Creator not found</h3>
-          <p className="text-gray-600 mb-6">This creator doesn't have any products yet.</p>
+          <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+            Creator not found
+          </h3>
+          <p className="text-gray-600 mb-6">
+            This creator doesn't have any products yet.
+          </p>
           <button
             onClick={() => router.push('/creators')}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
@@ -71,16 +81,23 @@ export default function CreatorPage({ params }: CreatorPageProps) {
     );
   }
 
-  const totalSales = revenueData?.ProductPaymentService_PaymentReceived?.length || 0;
-  const totalRevenue = revenueData?.ProductPaymentService_PaymentReceived?.reduce((sum: string, payment: any) => {
-    return (BigInt(sum) + BigInt(payment.amount || '0')).toString();
-  }, '0') || '0';
+  const totalSales =
+    revenueData?.ProductPaymentService_PaymentReceived?.length || 0;
+  const totalRevenue =
+    revenueData?.ProductPaymentService_PaymentReceived?.reduce(
+      (sum: string, payment: any) => {
+        return (BigInt(sum) + BigInt(payment.amount || '0')).toString();
+      },
+      '0'
+    ) || '0';
 
-  // Remove debug logging
-  console.log('Revenue data:', revenueData?.ProductPaymentService_PaymentReceived?.[0]);
-
-  const averagePrice = products.length > 0 ? 
-    products.reduce((sum: number, product: any) => sum + Number(product.currentPrice), 0) / products.length : 0;
+  const averagePrice =
+    products.length > 0
+      ? products.reduce(
+          (sum: number, product: any) => sum + Number(product.currentPrice),
+          0
+        ) / products.length
+      : 0;
 
   const formatDate = (timestamp: string) => {
     return new Date(Number(timestamp) * 1000).toLocaleString('en-US', {
@@ -89,11 +106,11 @@ export default function CreatorPage({ params }: CreatorPageProps) {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
     });
   };
 
-  const oldestProduct = products.reduce((oldest: any, product: any) => 
+  const oldestProduct = products.reduce((oldest: any, product: any) =>
     Number(product.createdAt) < Number(oldest.createdAt) ? product : oldest
   );
 
@@ -116,7 +133,7 @@ export default function CreatorPage({ params }: CreatorPageProps) {
               </div>
               <div>
                 <h1 className="text-3xl font-bold">Creator Profile</h1>
-                <AddressDisplay 
+                <AddressDisplay
                   address={resolvedParams.address}
                   className="text-blue-100"
                   showCopy={true}
@@ -130,7 +147,9 @@ export default function CreatorPage({ params }: CreatorPageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <div className="bg-blue-50 rounded-2xl p-6 text-center border border-blue-100">
                 <Package size={24} className="mx-auto mb-3 text-blue-600" />
-                <p className="text-2xl font-bold text-blue-900">{products.length}</p>
+                <p className="text-2xl font-bold text-blue-900">
+                  {products.length}
+                </p>
                 <p className="text-sm text-blue-600">Products Created</p>
               </div>
 
@@ -143,8 +162,13 @@ export default function CreatorPage({ params }: CreatorPageProps) {
               </div>
 
               <div className="bg-purple-50 rounded-2xl p-6 text-center border border-purple-100">
-                <TrendingUp size={24} className="mx-auto mb-3 text-purple-600" />
-                <p className="text-2xl font-bold text-purple-900">{totalSales}</p>
+                <TrendingUp
+                  size={24}
+                  className="mx-auto mb-3 text-purple-600"
+                />
+                <p className="text-2xl font-bold text-purple-900">
+                  {totalSales}
+                </p>
                 <p className="text-sm text-purple-600">Total Sales</p>
               </div>
 
@@ -159,7 +183,9 @@ export default function CreatorPage({ params }: CreatorPageProps) {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Products by this Creator</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  Products by this Creator
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {products.map((product: any) => (
                     <ProductCard
@@ -175,10 +201,14 @@ export default function CreatorPage({ params }: CreatorPageProps) {
 
               <div className="space-y-6">
                 <div className="bg-gray-50 rounded-2xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Creator Stats</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Creator Stats
+                  </h3>
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-gray-600">Average Product Price</p>
+                      <p className="text-sm text-gray-600">
+                        Average Product Price
+                      </p>
                       <p className="text-xl font-bold text-gray-900">
                         {pyusdToFormatted(averagePrice.toString())} PYUSD
                       </p>
@@ -186,44 +216,56 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                     <div>
                       <p className="text-sm text-gray-600">Revenue per Sale</p>
                       <p className="text-xl font-bold text-gray-900">
-                        {totalSales > 0 ? pyusdToFormatted((Number(totalRevenue) / totalSales).toString()) : '0.00'} PYUSD
+                        {totalSales > 0
+                          ? pyusdToFormatted(
+                              (Number(totalRevenue) / totalSales).toString()
+                            )
+                          : '0.00'}{' '}
+                        PYUSD
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {revenueData?.ProductPaymentService_PaymentReceived && revenueData.ProductPaymentService_PaymentReceived.length > 0 && (
-                  <div className="bg-gray-50 rounded-2xl p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Sales</h3>
-                    <div className="space-y-3">
-                      {revenueData.ProductPaymentService_PaymentReceived.slice(0, 5).map((payment: any, index: number) => (
-                        <a
-                          key={index}
-                          href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${payment.transactionHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex justify-between items-center bg-white rounded-xl p-3 hover:bg-gray-50 transition-colors cursor-pointer group"
-                        >
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              Product #{payment.productId}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {formatDate(payment.blockTimestamp)}
-                            </p>
-                            <p className="text-xs text-blue-600 group-hover:underline">
-                              View transaction →
-                            </p>
-                          </div>
-                          <PriceDisplay 
-                            priceInPyusd={payment.amount} 
-                            className="font-semibold text-gray-900"
-                          />
-                        </a>
-                      ))}
+                {revenueData?.ProductPaymentService_PaymentReceived &&
+                  revenueData.ProductPaymentService_PaymentReceived.length >
+                    0 && (
+                    <div className="bg-gray-50 rounded-2xl p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                        Recent Sales
+                      </h3>
+                      <div className="space-y-3">
+                        {revenueData.ProductPaymentService_PaymentReceived.slice(
+                          0,
+                          5
+                        ).map((payment: any, index: number) => (
+                          <a
+                            key={index}
+                            href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${payment.transactionHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex justify-between items-center bg-white rounded-xl p-3 hover:bg-gray-50 transition-colors cursor-pointer group"
+                          >
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                Product #{payment.productId}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {formatDate(payment.blockTimestamp)}
+                              </p>
+                              <p className="text-xs text-blue-600 group-hover:underline">
+                                View transaction →
+                              </p>
+                            </div>
+                            <PriceDisplay
+                              priceInPyusd={payment.amount}
+                              className="font-semibold text-gray-900"
+                            />
+                          </a>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             </div>
           </div>

@@ -157,3 +157,31 @@ export const GET_CREATOR_PROFILE = gql`
     }
   }
 `;
+
+export const GET_USER_OWNED_PRODUCTS = gql`
+  query UserOwnedProducts($userAddress: String!) {
+    ProductPaymentService_PaymentReceived(
+      where: { payer: { _eq: $userAddress } }
+      distinct_on: productId
+    ) {
+      productId
+      amount
+      blockTimestamp
+      transactionHash
+    }
+  }
+`;
+
+export const GET_OWNED_PRODUCTS_WITH_DETAILS = gql`
+  query OwnedProductsWithDetails($productIds: [numeric!]!) {
+    Product(where: { productId: { _in: $productIds } }) {
+      id
+      productId
+      currentPrice
+      creator
+      contentId
+      createdAt
+      lastUpdatedAt
+    }
+  }
+`;

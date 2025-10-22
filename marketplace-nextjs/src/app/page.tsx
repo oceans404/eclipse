@@ -2,14 +2,22 @@
 
 import React, { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { GET_ALL_PRODUCTS } from '@/lib/queries';
+import { usePrivy } from '@privy-io/react-auth';
+import { GET_ALL_PRODUCTS, GET_USER_OWNED_PRODUCTS } from '@/lib/queries';
 import { ProductCard } from '@/components/ProductCard';
 
 export default function ProductsPage() {
   const [sortBy, setSortBy] = useState<'price' | 'newest' | 'oldest'>('newest');
   const [searchTerm, setSearchTerm] = useState('');
+  const { authenticated, user } = usePrivy();
   
   const { loading, error, data } = useQuery(GET_ALL_PRODUCTS);
+  
+  // Get user's owned products to determine ownership
+  const { data: ownedData } = useQuery(GET_USER_OWNED_PRODUCTS, {
+    variables: { userAddress: user?.wallet?.address },
+    skip: !authenticated || !user?.wallet?.address,
+  });
 
   if (loading) {
     return (
@@ -35,12 +43,34 @@ export default function ProductsPage() {
 
   const products = data?.Product || [];
   
+  // Create sets for owned and created products for quick lookup
+  const ownedProductIds = new Set(
+    ownedData?.ProductPaymentService_PaymentReceived?.map((payment: any) => payment.productId) || []
+  );
+  const userAddress = user?.wallet?.address?.toLowerCase();
+  
   const filteredProducts = products
     .filter((product: any) => 
       product.contentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.creator.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a: any, b: any) => {
+      // First, determine ownership status for priority sorting
+      const aIsCreated = authenticated && userAddress === a.creator.toLowerCase();
+      const aIsOwned = ownedProductIds.has(a.productId);
+      const aIsAvailable = !aIsCreated && !aIsOwned;
+      
+      const bIsCreated = authenticated && userAddress === b.creator.toLowerCase();
+      const bIsOwned = ownedProductIds.has(b.productId);
+      const bIsAvailable = !bIsCreated && !bIsOwned;
+      
+      // Priority order: Available > Owned > Created
+      if (aIsAvailable && !bIsAvailable) return -1;
+      if (!aIsAvailable && bIsAvailable) return 1;
+      if (aIsOwned && bIsCreated) return -1;
+      if (aIsCreated && bIsOwned) return 1;
+      
+      // If same ownership status, sort by user preference
       switch (sortBy) {
         case 'price':
           const priceA = BigInt(a.currentPrice || '0');
@@ -91,6 +121,25 @@ export default function ProductsPage() {
               <option value="oldest">Oldest First</option>
               <option value="price">Price: Low to High</option>
             </select>
+          </div>
+        </div>
+
+        {/* Ownership Legend */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Product Status Legend:</h3>
+          <div className="flex flex-wrap gap-4 text-xs">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span className="text-gray-600">Created by you</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span className="text-gray-600">Owned by you</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+              <span className="text-gray-600">Available to purchase</span>
+            </div>
           </div>
         </div>
 
