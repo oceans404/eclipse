@@ -13,48 +13,42 @@ Navigate to the onchain-payments directory before running commands:
 ```bash
 cd onchain-payments
 
-# Install dependencies
-npm install
-
-# Run all tests
+# Run tests
 npx hardhat test
 
-# Run only Solidity tests
-npx hardhat test solidity
-
-# Run only Node.js tests  
-npx hardhat test nodejs
-
-# Deploy contracts
-npx hardhat ignition deploy ignition/modules/Counter.ts
-
 # Deploy to Sepolia
-npx hardhat ignition deploy ignition/modules/Counter.ts --network sepolia
-
-# Run scripts
-npx hardhat run scripts/sendOptimismTransaction.ts
+npx hardhat run scripts/deploy.ts --network sepolia
 ```
 
 ## Architecture Overview
 
 The project uses a modular architecture:
 
-1. **Smart Contracts** (`onchain-payments/contracts/`): Handle payments and access control
-   - Currently has placeholder Counter.sol
-   - Will integrate PYUSD payment system
+1. **Smart Contracts** (`onchain-payments/contracts/`):
+   - **ProductPaymentService.sol**: Core marketplace contract managing PYUSD payments
+   - **MockERC20.sol**: Test token for development and testing
+   - Direct creator payments with no platform fees
+   - Integration with Nillion storage via contentId references
    - Uses Solidity 0.8.28 with Hardhat 3 Beta
 
 2. **Testing Strategy**:
-   - Foundry-style Solidity tests (`.t.sol` files) for unit testing
-   - Node.js tests with Viem for integration testing
-   - Test files located in `onchain-payments/test/`
+   - **Solidity Tests** (`contracts/ProductPaymentService.t.sol`): Foundry-based unit tests
+   - **Integration Tests** (`test/ProductPaymentService.ts`): Node.js tests with Viem
+   - Comprehensive coverage including multi-user scenarios and event testing
 
-3. **Deployment** (`onchain-payments/ignition/modules/`):
-   - Uses Hardhat Ignition for deployment management
-   - Supports mainnet, Optimism, and Sepolia networks
+3. **Deployment & Scripts** (`onchain-payments/scripts/`):
+   - **deploy.ts**: Deploy ProductPaymentService to Sepolia with PYUSD integration
+   - **add-product.ts**: Create marketplace listings with Nillion content IDs
+   - **buy-product.ts**: Purchase products using PYUSD payments
+   - **update-product-price.ts**: Update product prices (creator-only)
 
-4. **Privacy Layer** (Planned):
-   - Nillion Private Storage (nilDB) for encrypted data
+4. **Constants & Configuration** (`onchain-payments/constants.ts`):
+   - Chain IDs, token addresses, block explorer URLs
+   - PYUSD Sepolia address: `0xcac524bca292aaade2df8a05cc58f0a65b1b3bb9`
+   - Sepolia chain ID: `11155111`
+
+5. **Privacy Layer Integration**:
+   - Nillion Private Storage (nilDB) for encrypted data via contentId
    - Nillion Private LLMs (nilAI) for content verification
    - Nillion Private Compute (nilCC) for secure processing
 
@@ -66,14 +60,25 @@ The project uses a modular architecture:
 - **Networks**: Configured for local forks of mainnet/Optimism and Sepolia testnet
 - **Environment Variables**: 
   - `SEPOLIA_RPC_URL`: RPC endpoint for Sepolia
-  - `PRIVATE_KEY`: Deployment wallet private key
+  - `SEPOLIA_PRIVATE_KEY`: Deployment wallet private key
+  - `BUYER_PRIVATE_KEY`: Second wallet for buyer interactions
+  - `PAYMENT_SERVICE_ADDRESS`: Deployed contract address for interaction scripts
+
+## Current Deployment
+
+- **ProductPaymentService Contract**: `0x9c91a92cf1cd0b94fb632292fe63ed966833518d` (Sepolia)
+- **Etherscan**: https://sepolia.etherscan.io/address/0x9c91a92cf1cd0b94fb632292fe63ed966833518d#code
+- **Blockscout**: https://eth-sepolia.blockscout.com/address/0x9c91a92cf1cd0b94fb632292fe63ed966833518d?tab=contract
+- **Payment Token**: PYUSD at `0xcac524bca292aaade2df8a05cc58f0a65b1b3bb9`
 
 ## Development Notes
 
-1. The project is in early hackathon stage - core marketplace logic is not yet implemented
+1. **Marketplace is fully implemented** with ProductPaymentService contract handling PYUSD payments
 2. When adding new contracts, create corresponding:
    - Solidity test file (`.t.sol`) for unit tests
    - TypeScript test file in `test/` for integration tests
-   - Deployment module in `ignition/modules/`
+   - Deployment script in `scripts/`
 3. Use Viem instead of ethers.js for all blockchain interactions
 4. Follow existing patterns for async/await and ES module imports
+5. **PYUSD Integration**: All prices use 6 decimal places (PYUSD standard)
+6. **Nillion Integration**: Use contentId format like `"nillion://example-content"` for storage references
