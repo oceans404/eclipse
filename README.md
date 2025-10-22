@@ -46,10 +46,10 @@ Smart contract infrastructure for marketplace payments using PYUSD.
 ### 🔍 [envio-indexer/](./envio-indexer/)
 Event indexing service for real-time marketplace data.
 
-- **GraphQL API**: Query payment events, product listings, and price updates
+- **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/3d73070/v1/graphql
+- **Dual Entity System**: Tracks both historical events and current product state
 - **HyperSync enabled**: Fast historical data synchronization
 - **Real-time indexing**: Live event tracking from ProductPaymentService contract
-- **Local development**: GraphQL console at http://localhost:8080/console
 
 ---
 

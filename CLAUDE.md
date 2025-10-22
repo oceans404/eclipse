@@ -60,10 +60,10 @@ The project uses a modular architecture:
    - Sepolia chain ID: `11155111`
 
 5. **Event Indexing** (`envio-indexer/`):
-   - **Envio HyperIndex**: Real-time indexing of ProductPaymentService events
-   - **GraphQL API**: Query payment events, product listings, and price updates
+   - **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/3d73070/v1/graphql
+   - **Dual Entity System**: Historical events + current Product state tracking
    - **Event Handlers**: Process PaymentReceived, ProductAdded, and ProductUpdated events
-   - **Local Development**: GraphQL console at http://localhost:8080/console
+   - **Smart State Management**: Product entity auto-updates with price changes
 
 6. **Privacy Layer Integration**:
    - Nillion Private Storage (nilDB) for encrypted data via contentId
