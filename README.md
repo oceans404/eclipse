@@ -26,6 +26,7 @@ Eclipse solves this with a private AI agent that has access to the encrypted con
 ### Tech Stack
 
 - [PYUSD](https://ethglobal.com/events/ethonline2025/prizes#paypal-usd) for stable, digital payments
+  - [PYUSD on ETH Sepolia](https://sepolia.etherscan.io/token/0xcac524bca292aaade2df8a05cc58f0a65b1b3bb9)
 - [Hardhat 3](https://ethglobal.com/events/ethonline2025/prizes#hardhat) for local smart contract development + testing
 - [Envio](https://ethglobal.com/events/ethonline2025/prizes#envio) HyperIndex or HyperSync for optimized indexing of emitted payment events
 - [Nillion Private Storage](https://docs.nillion.com/build/private-storage/overview) (nilDB) for private image storage

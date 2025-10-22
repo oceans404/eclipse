@@ -1,0 +1,28 @@
+=== Blockscout ===
+
+📤 Submitted source code for verification on Blockscout:
+
+  contracts/ProductPaymentService.sol:ProductPaymentService
+  Address: 0x9c91a92cf1cd0b94fb632292fe63ed966833518d
+
+⏳ Waiting for verification result...
+
+
+The initial verification attempt for contracts/ProductPaymentService.sol:ProductPaymentService failed using the minimal compiler input.
+
+Trying again with the full solc input used to compile and deploy the contract.
+Unrelated contracts may be displayed on Blockscout as a result.
+
+
+📤 Submitted source code for verification on Blockscout:
+
+  contracts/ProductPaymentService.sol:ProductPaymentService
+  Address: 0x9c91a92cf1cd0b94fb632292fe63ed966833518d
+
+⏳ Waiting for verification result...
+
+
+✅ Contract verified successfully on Blockscout!
+
+  contracts/ProductPaymentService.sol:ProductPaymentService
+  Explorer: https://eth-sepolia.blockscout.com/address/0x9c91a92cf1cd0b94fb632292fe63ed966833518d#code
