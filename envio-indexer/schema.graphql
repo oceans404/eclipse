@@ -19,3 +19,13 @@ type ProductPaymentService_ProductUpdated {
   newPrice: BigInt!
 }
 
+type Product {
+  id: String!
+  productId: BigInt!
+  currentPrice: BigInt!
+  creator: String!
+  contentId: String!
+  createdAt: BigInt!
+  lastUpdatedAt: BigInt!
+  updateCount: Int!
+}
