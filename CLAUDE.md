@@ -37,6 +37,7 @@ pnpm codegen && pnpm dev
 The project uses a modular architecture:
 
 1. **Smart Contracts** (`onchain-payments/contracts/`):
+
    - **ProductPaymentService.sol**: Core marketplace contract managing PYUSD payments
    - **MockERC20.sol**: Test token for development and testing
    - Direct creator payments with no platform fees
@@ -44,23 +45,27 @@ The project uses a modular architecture:
    - Uses Solidity 0.8.28 with Hardhat 3 Beta
 
 2. **Testing Strategy**:
+
    - **Solidity Tests** (`contracts/ProductPaymentService.t.sol`): Foundry-based unit tests
    - **Integration Tests** (`test/ProductPaymentService.ts`): Node.js tests with Viem
    - Comprehensive coverage including multi-user scenarios and event testing
 
 3. **Deployment & Scripts** (`onchain-payments/scripts/`):
+
    - **deploy.ts**: Deploy ProductPaymentService to Sepolia with PYUSD integration
    - **add-product.ts**: Create marketplace listings with Nillion content IDs
    - **buy-product.ts**: Purchase products using PYUSD payments
    - **update-product-price.ts**: Update product prices (creator-only)
 
 4. **Constants & Configuration** (`onchain-payments/constants.ts`):
+
    - Chain IDs, token addresses, block explorer URLs
    - PYUSD Sepolia address: `0xcac524bca292aaade2df8a05cc58f0a65b1b3bb9`
    - Sepolia chain ID: `11155111`
 
 5. **Event Indexing** (`envio-indexer/`):
-   - **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/3d73070/v1/graphql
+
+   - **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/adebdd9/v1/graphql
    - **Dual Entity System**: Historical events + current Product state tracking
    - **Event Handlers**: Process PaymentReceived, ProductAdded, and ProductUpdated events
    - **Smart State Management**: Product entity auto-updates with price changes
@@ -76,7 +81,7 @@ The project uses a modular architecture:
 - **TypeScript**: Strict mode with ES2022 target
 - **Ethereum Library**: Viem for all blockchain interactions
 - **Networks**: Configured for local forks of mainnet/Optimism and Sepolia testnet
-- **Environment Variables**: 
+- **Environment Variables**:
   - `SEPOLIA_RPC_URL`: RPC endpoint for Sepolia
   - `SEPOLIA_PRIVATE_KEY`: Deployment wallet private key
   - `BUYER_PRIVATE_KEY`: Second wallet for buyer interactions

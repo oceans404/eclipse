@@ -36,6 +36,7 @@ Eclipse solves this with a private AI agent that has access to the encrypted con
 ## Project Structure
 
 ### 📦 [onchain-payments/](./onchain-payments/)
+
 Smart contract infrastructure for marketplace payments using PYUSD.
 
 - **ProductPaymentService.sol**: Core marketplace contract with direct creator payments
@@ -44,9 +45,10 @@ Smart contract infrastructure for marketplace payments using PYUSD.
 - **Live on Sepolia**: [0x9c91a92cf1cd0b94fb632292fe63ed966833518d](https://sepolia.etherscan.io/address/0x9c91a92cf1cd0b94fb632292fe63ed966833518d#code)
 
 ### 🔍 [envio-indexer/](./envio-indexer/)
+
 Event indexing service for real-time marketplace data.
 
-- **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/3d73070/v1/graphql
+- **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/adebdd9/v1/graphql
 - **Dual Entity System**: Tracks both historical events and current product state
 - **HyperSync enabled**: Fast historical data synchronization
 - **Real-time indexing**: Live event tracking from ProductPaymentService contract

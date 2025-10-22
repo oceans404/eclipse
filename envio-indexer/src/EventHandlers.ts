@@ -31,6 +31,7 @@ ProductPaymentService.ProductAdded.handler(async ({ event, context }) => {
     price: event.params.price,
     creator: event.params.creator,
     contentId: event.params.contentId,
+    blockTimestamp: BigInt(event.block.timestamp),
   };
 
   context.ProductPaymentService_ProductAdded.set(entity);
@@ -56,6 +57,7 @@ ProductPaymentService.ProductUpdated.handler(async ({ event, context }) => {
     id: `${event.chainId}_${event.block.number}_${event.logIndex}`,
     productId: event.params.productId,
     newPrice: event.params.newPrice,
+    blockTimestamp: BigInt(event.block.timestamp),
   };
 
   context.ProductPaymentService_ProductUpdated.set(entity);

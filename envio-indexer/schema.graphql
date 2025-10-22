@@ -14,12 +14,14 @@ type ProductPaymentService_ProductAdded {
   price: BigInt!
   creator: String!
   contentId: String!
+  blockTimestamp: BigInt!
 }
 
 type ProductPaymentService_ProductUpdated {
   id: ID!
   productId: BigInt!
   newPrice: BigInt!
+  blockTimestamp: BigInt!
 }
 
 type Product {

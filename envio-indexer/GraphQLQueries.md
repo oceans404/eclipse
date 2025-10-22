@@ -168,6 +168,9 @@ query AllPayments {
     payer
     productId
     amount
+    transactionHash
+    blockNumber
+    blockTimestamp
   }
 }
 ```
@@ -179,6 +182,8 @@ query ProductPayments {
   ProductPaymentService_PaymentReceived(where: { productId: { _eq: "1" } }) {
     payer
     amount
+    transactionHash
+    blockTimestamp
   }
 }
 ```
@@ -192,6 +197,8 @@ query UserPayments {
   ) {
     productId
     amount
+    transactionHash
+    blockTimestamp
   }
 }
 ```
@@ -239,6 +246,64 @@ query TopPayers {
       count
     }
     keys
+  }
+}
+```
+
+---
+
+## Transaction Tracking Queries
+
+### Recent Payments with Full Transaction Data
+
+```graphql
+query RecentPaymentsWithTransactions {
+  ProductPaymentService_PaymentReceived(
+    limit: 10
+    order_by: { blockTimestamp: desc }
+  ) {
+    id
+    payer
+    productId
+    amount
+    transactionHash
+    blockNumber
+    blockTimestamp
+  }
+}
+```
+
+### Payments with Etherscan Links
+
+```graphql
+query PaymentsForEtherscan {
+  ProductPaymentService_PaymentReceived(where: { productId: { _eq: "1" } }) {
+    transactionHash  # Use for: https://sepolia.etherscan.io/tx/{transactionHash}
+    payer           # Use for: https://sepolia.etherscan.io/address/{payer}
+    amount
+    blockTimestamp  # Convert: new Date(Number(blockTimestamp) * 1000)
+  }
+}
+```
+
+### Time-Based Payment Analysis
+
+```graphql
+query PaymentsByTimeRange {
+  ProductPaymentService_PaymentReceived(
+    where: { 
+      blockTimestamp: { 
+        _gte: "1761157000"  # Unix timestamp
+        _lte: "1761170000" 
+      }
+    }
+    order_by: { blockTimestamp: asc }
+  ) {
+    transactionHash
+    payer
+    productId
+    amount
+    blockTimestamp
   }
 }
 ```
@@ -464,4 +529,29 @@ query GetProduct($productId: BigInt!) {
 
 ---
 
-**GraphQL endpoint:** Check the deployment for the URL!
+## Transaction Field Configuration
+
+To enable transaction hash and timestamp tracking, the indexer uses Envio's `field_selection` feature in `config.yaml`:
+
+```yaml
+field_selection:
+  transaction_fields:
+    - "hash"
+    - "transactionIndex"
+```
+
+This configuration enables:
+- `transactionHash` field in payment events
+- `blockTimestamp` and `blockNumber` from block data
+- Direct blockchain transaction references
+- Enhanced frontend integration capabilities
+
+**Required steps for transaction tracking:**
+1. Add `field_selection` to `config.yaml`
+2. Update schema with transaction fields
+3. Modify event handlers to capture transaction data
+4. Redeploy indexer to apply changes
+
+---
+
+**GraphQL endpoint:** https://indexer.dev.hyperindex.xyz/adebdd9/v1/graphql

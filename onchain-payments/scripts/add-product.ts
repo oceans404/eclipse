@@ -23,9 +23,9 @@ console.log('Contract:', PAYMENT_SERVICE_ADDRESS);
 console.log('Wallet:', wallet.account.address, '\n');
 
 // Add a product (PYUSD has 6 decimals!)
-const productId = 2n;
+const productId = 3n;
 const price = parseUnits('4', 6);
-const contentId = 'product-2!';
+const contentId = 'abc-123';
 
 console.log('📦 Adding product...');
 try {

@@ -4,7 +4,7 @@
 
 ## Live Deployment
 
-🚀 **Hosted GraphQL API**: https://indexer.dev.hyperindex.xyz/3d73070/v1/graphql
+🚀 **Hosted GraphQL API**: https://indexer.dev.hyperindex.xyz/adebdd9/v1/graphql
 
 ## Contract Info
 
@@ -19,14 +19,29 @@
 The indexer maintains two types of entities:
 
 1. **Event Entities** - Historical records of blockchain events:
+
    - `ProductPaymentService_ProductAdded` - Product creation events
-   - `ProductPaymentService_ProductUpdated` - Price change events  
-   - `ProductPaymentService_PaymentReceived` - Payment events
+   - `ProductPaymentService_ProductUpdated` - Price change events
+   - `ProductPaymentService_PaymentReceived` - Payment events with transaction tracking
 
 2. **Product Entity** - Current state tracking:
    - Always shows current price (auto-updated on price changes)
    - Tracks creator, content ID, timestamps, and update count
    - Perfect for frontend applications needing current product data
+
+### Transaction Tracking
+
+Payment events include full transaction metadata:
+- **Transaction Hash** - Direct links to blockchain transactions
+- **Block Number** - Block-level tracking
+- **Block Timestamp** - Precise transaction timing
+- **Payer Address** - Buyer identification
+
+This enables:
+- Direct Etherscan transaction links
+- Accurate chronological ordering
+- Real-time transaction verification
+- Enhanced user experience with blockchain transparency
 
 ### GraphQL API
 
