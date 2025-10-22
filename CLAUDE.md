@@ -8,7 +8,7 @@ Eclipse is a private data marketplace built for EthOnline 2025 that enables buye
 
 ## Build Commands
 
-Navigate to the onchain-payments directory before running commands:
+**Smart Contracts** (navigate to onchain-payments directory):
 
 ```bash
 cd onchain-payments
@@ -18,6 +18,18 @@ npx hardhat test
 
 # Deploy to Sepolia
 npx hardhat run scripts/deploy.ts --network sepolia
+```
+
+**Event Indexer** (navigate to envio-indexer directory):
+
+```bash
+cd envio-indexer
+
+# Install dependencies
+pnpm install
+
+# Generate types and start local indexer
+pnpm codegen && pnpm dev
 ```
 
 ## Architecture Overview
@@ -47,7 +59,13 @@ The project uses a modular architecture:
    - PYUSD Sepolia address: `0xcac524bca292aaade2df8a05cc58f0a65b1b3bb9`
    - Sepolia chain ID: `11155111`
 
-5. **Privacy Layer Integration**:
+5. **Event Indexing** (`envio-indexer/`):
+   - **Envio HyperIndex**: Real-time indexing of ProductPaymentService events
+   - **GraphQL API**: Query payment events, product listings, and price updates
+   - **Event Handlers**: Process PaymentReceived, ProductAdded, and ProductUpdated events
+   - **Local Development**: GraphQL console at http://localhost:8080/console
+
+6. **Privacy Layer Integration**:
    - Nillion Private Storage (nilDB) for encrypted data via contentId
    - Nillion Private LLMs (nilAI) for content verification
    - Nillion Private Compute (nilCC) for secure processing

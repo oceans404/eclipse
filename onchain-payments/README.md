@@ -8,6 +8,7 @@ The core contract (`contracts/ProductPaymentService.sol`) manages one-time payme
 
 - ProductPaymentService Sepolia Contract: https://sepolia.etherscan.io/address/0x9c91a92cf1cd0b94fb632292fe63ed966833518d#code
 - Blockscout Verified Contract: https://eth-sepolia.blockscout.com/address/0x9c91a92cf1cd0b94fb632292fe63ed966833518d?tab=contract
+- Etherscan Verified Contract: https://sepolia.etherscan.io/address/0x9c91a92cf1cd0b94fb632292fe63ed966833518d#code
 - PYUSDC Sepolia token: https://sepolia.etherscan.io/token/0xcac524bca292aaade2df8a05cc58f0a65b1b3bb9
 
 ### Key Features

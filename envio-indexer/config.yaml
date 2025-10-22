@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: eclipse-envio-indexer
+networks:
+  - id: 11155111
+    start_block: 0
+    contracts:
+      - name: ProductPaymentService
+        address:
+          - 0x9c91a92cF1cd0B94Fb632292Fe63eD966833518d
+        handler: src/EventHandlers.ts
+        events:
+          - event: PaymentReceived(address indexed payer, uint256 indexed productId, uint256 amount)
+          - event: ProductAdded(uint256 indexed productId, uint256 price, address indexed creator, string contentId)
+          - event: ProductUpdated(uint256 indexed productId, uint256 newPrice)
+unordered_multichain_mode: true
+preload_handlers: true

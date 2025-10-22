@@ -42,6 +42,11 @@ const config: HardhatUserConfig = {
       ].filter(Boolean) as string[], // Filter out undefined values
     },
   },
+  verify: {
+    etherscan: {
+      apiKey: process.env.ETHERSCAN_API_KEY || '',
+    },
+  },
 };
 
 export default config;

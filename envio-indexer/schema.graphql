@@ -1,0 +1,21 @@
+type ProductPaymentService_PaymentReceived {
+  id: ID!
+  payer: String!
+  productId: BigInt!
+  amount: BigInt!
+}
+
+type ProductPaymentService_ProductAdded {
+  id: ID!
+  productId: BigInt!
+  price: BigInt!
+  creator: String!
+  contentId: String!
+}
+
+type ProductPaymentService_ProductUpdated {
+  id: ID!
+  productId: BigInt!
+  newPrice: BigInt!
+}
+

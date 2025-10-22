@@ -33,6 +33,24 @@ Eclipse solves this with a private AI agent that has access to the encrypted con
 - [Nillion Private LLMs](https://docs.nillion.com/build/private-llms/overview) (nilAI) for private image analysis (multimodal image + text prompt)
 - [Nillion Private Compute](https://docs.nillion.com/build/compute/overview) (nilCC) for verifiably granting data access via [Nillion nuc](https://docs.nillion.com/build/private-storage/overview#nuc-tokens) (JWTs) for data permissioning upon payment
 
+## Project Structure
+
+### 📦 [onchain-payments/](./onchain-payments/)
+Smart contract infrastructure for marketplace payments using PYUSD.
+
+- **ProductPaymentService.sol**: Core marketplace contract with direct creator payments
+- **Comprehensive testing**: Solidity unit tests + TypeScript integration tests
+- **Deployment scripts**: Deploy and interact with contracts on Sepolia testnet
+- **Live on Sepolia**: [0x9c91a92cf1cd0b94fb632292fe63ed966833518d](https://sepolia.etherscan.io/address/0x9c91a92cf1cd0b94fb632292fe63ed966833518d#code)
+
+### 🔍 [envio-indexer/](./envio-indexer/)
+Event indexing service for real-time marketplace data.
+
+- **GraphQL API**: Query payment events, product listings, and price updates
+- **HyperSync enabled**: Fast historical data synchronization
+- **Real-time indexing**: Live event tracking from ProductPaymentService contract
+- **Local development**: GraphQL console at http://localhost:8080/console
+
 ---
 
 _Built for [EthOnline 2025](https://ethglobal.com/events/ethonline2025)_
