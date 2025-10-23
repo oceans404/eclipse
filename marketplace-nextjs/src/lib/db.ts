@@ -96,7 +96,7 @@ export async function deleteCreatorProfile(address: string): Promise<boolean> {
       WHERE address = ${address.toLowerCase()}
     `;
     
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   } catch (error) {
     console.error('Error deleting creator profile:', error);
     throw error;

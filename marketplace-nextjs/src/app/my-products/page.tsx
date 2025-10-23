@@ -230,7 +230,7 @@ export default function MyProductsPage() {
   };
 
   // Slider navigation functions
-  const scrollSlider = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
+  const scrollSlider = (ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') => {
     if (!ref.current) return;
     
     const scrollAmount = 320; // Width of one product card + gap
@@ -246,7 +246,7 @@ export default function MyProductsPage() {
   };
 
   // Check scroll positions for button visibility
-  const updateScrollPosition = (ref: React.RefObject<HTMLDivElement>, setPosition: (pos: number) => void) => {
+  const updateScrollPosition = (ref: React.RefObject<HTMLDivElement | null>, setPosition: (pos: number) => void) => {
     if (!ref.current) return;
     setPosition(ref.current.scrollLeft);
   };

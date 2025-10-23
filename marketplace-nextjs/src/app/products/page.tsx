@@ -27,11 +27,11 @@ export default function ProductsPage() {
     const fetchCreatorProfiles = async () => {
       if (!data?.Product) return;
 
-      const uniqueCreators = [...new Set(data.Product.map((p: any) => p.creator))];
+      const uniqueCreators = [...new Set(data.Product.map((p: any) => p.creator))] as string[];
       const profiles = new Map<string, CreatorProfile>();
 
       await Promise.all(
-        uniqueCreators.map(async (address: string) => {
+        uniqueCreators.map(async (address) => {
           try {
             const response = await fetch(`/api/creator/${address}`);
             if (response.ok) {
