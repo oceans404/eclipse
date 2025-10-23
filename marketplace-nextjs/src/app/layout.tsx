@@ -1,23 +1,27 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { CustomApolloProvider } from "@/components/ApolloProvider";
-import { PrivyProvider } from "@/components/PrivyProvider";
-import { Navbar } from "@/components/Navbar";
+import type { Metadata } from 'next';
+import { Inter, Crimson_Pro } from 'next/font/google';
+import './globals.css';
+import { CustomApolloProvider } from '@/components/ApolloProvider';
+import { PrivyProvider } from '@/components/PrivyProvider';
+import { ParallaxBackground } from '@/components/ParallaxBackground';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin'],
+  display: 'swap',
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const crimsonPro = Crimson_Pro({
+  variable: '--font-crimson-pro',
+  subsets: ['latin'],
+  weight: ['300', '400', '600'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: "🌒 Eclipse Marketplace",
-  description: "Private data marketplace powered by Nillion",
+  title: 'Eclipse - Private Data Marketplace',
+  description:
+    "Buy private data with confidence. A private AI agent answers your questions about encrypted content, so you know what you're buying before you commit.",
 };
 
 export default function RootLayout({
@@ -26,13 +30,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="en" className={`${inter.variable} ${crimsonPro.variable}`}>
+      <body className="antialiased">
         <PrivyProvider>
           <CustomApolloProvider>
-            <Navbar />
+            <ParallaxBackground />
             {children}
           </CustomApolloProvider>
         </PrivyProvider>

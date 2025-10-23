@@ -3,67 +3,99 @@
 import React from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useQuery } from '@apollo/client';
-import { GET_USER_OWNED_PRODUCTS, GET_OWNED_PRODUCTS_WITH_DETAILS, GET_PRODUCTS_BY_CREATOR } from '@/lib/queries';
+import {
+  GET_USER_OWNED_PRODUCTS,
+  GET_OWNED_PRODUCTS_WITH_DETAILS,
+  GET_PRODUCTS_BY_CREATOR,
+} from '@/lib/queries';
 import { ProductCard } from '@/components/ProductCard';
 import Link from 'next/link';
+import { Navbar } from '@/components/Navbar';
 
 export default function MyProductsPage() {
   const { authenticated, user, login } = usePrivy();
 
   // First query: Get all products the user has purchased
-  const { loading: loadingOwned, error: errorOwned, data: ownedData } = useQuery(
-    GET_USER_OWNED_PRODUCTS,
-    {
-      variables: { userAddress: user?.wallet?.address },
-      skip: !authenticated || !user?.wallet?.address,
-    }
-  );
+  const {
+    loading: loadingOwned,
+    error: errorOwned,
+    data: ownedData,
+  } = useQuery(GET_USER_OWNED_PRODUCTS, {
+    variables: { userAddress: user?.wallet?.address },
+    skip: !authenticated || !user?.wallet?.address,
+  });
 
   // Extract product IDs from owned products
-  const ownedProductIds = ownedData?.ProductPaymentService_PaymentReceived?.map(
-    (payment: any) => payment.productId
-  ) || [];
+  const ownedProductIds =
+    ownedData?.ProductPaymentService_PaymentReceived?.map(
+      (payment: any) => payment.productId
+    ) || [];
 
   // Second query: Get full product details for owned products
-  const { loading: loadingDetails, error: errorDetails, data: detailsData } = useQuery(
-    GET_OWNED_PRODUCTS_WITH_DETAILS,
-    {
-      variables: { productIds: ownedProductIds },
-      skip: ownedProductIds.length === 0,
-    }
-  );
+  const {
+    loading: loadingDetails,
+    error: errorDetails,
+    data: detailsData,
+  } = useQuery(GET_OWNED_PRODUCTS_WITH_DETAILS, {
+    variables: { productIds: ownedProductIds },
+    skip: ownedProductIds.length === 0,
+  });
 
   // Third query: Get products created by the user
-  const { loading: loadingCreated, error: errorCreated, data: createdData } = useQuery(
-    GET_PRODUCTS_BY_CREATOR,
-    {
-      variables: { creator: user?.wallet?.address },
-      skip: !authenticated || !user?.wallet?.address,
-    }
-  );
+  const {
+    loading: loadingCreated,
+    error: errorCreated,
+    data: createdData,
+  } = useQuery(GET_PRODUCTS_BY_CREATOR, {
+    variables: { creator: user?.wallet?.address },
+    skip: !authenticated || !user?.wallet?.address,
+  });
 
   // Not authenticated
   if (!authenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full mx-4">
-          <div className="text-center">
-            <div className="text-4xl mb-4">🔒</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Sign In Required</h2>
-            <p className="text-gray-600 mb-6">
-              Please connect your wallet to view your purchased products
-            </p>
-            <button
-              onClick={login}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors mr-3"
-            >
+      <div className="min-h-screen flex items-center justify-center">
+        <div
+          style={{
+            textAlign: 'center',
+            maxWidth: '32rem',
+            padding: '3rem',
+            border: '1px solid #e0e0e0',
+          }}
+        >
+          <div style={{ fontSize: '4rem', marginBottom: '2rem', opacity: 0.3 }}>
+            🔒
+          </div>
+          <h2
+            style={{
+              fontSize: '2.5rem',
+              fontWeight: 300,
+              marginBottom: '1rem',
+            }}
+          >
+            Sign in required
+          </h2>
+          <p
+            style={{
+              fontSize: '1.125rem',
+              color: '#666',
+              marginBottom: '2rem',
+            }}
+          >
+            Please connect your wallet to view your products
+          </p>
+          <div
+            style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}
+          >
+            <button onClick={login} className="btn-primary">
               Connect Wallet
             </button>
             <Link
-              href="/"
-              className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors inline-block"
+              href="/products"
+              className="btn-secondary"
+              style={{ display: 'inline-block' }}
             >
-              Go to Homepage
+              Browse Products
             </Link>
           </div>
         </div>
@@ -76,21 +108,57 @@ export default function MyProductsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your products...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div style={{ textAlign: 'center' }}>
+          <div
+            style={{
+              animation: 'spin 1s linear infinite',
+              borderRadius: '50%',
+              height: '3rem',
+              width: '3rem',
+              borderBottom: '2px solid #D97757',
+              margin: '0 auto 1rem',
+            }}
+          ></div>
+          <p style={{ color: '#666' }}>Loading your products...</p>
         </div>
+        <style jsx>{`
+          @keyframes spin {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center bg-red-50 border border-red-200 rounded-xl p-6">
-          <p className="text-red-600 font-medium">Error loading your products</p>
-          <p className="text-red-500 text-sm mt-2">{error.message}</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div
+          style={{
+            textAlign: 'center',
+            border: '1px solid #e0e0e0',
+            padding: '2rem',
+            maxWidth: '28rem',
+          }}
+        >
+          <p style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+            Error loading your products
+          </p>
+          <p
+            style={{
+              color: '#666',
+              fontSize: '0.875rem',
+              fontFamily: 'var(--font-inter)',
+            }}
+          >
+            {error.message}
+          </p>
         </div>
       </div>
     );
@@ -116,193 +184,376 @@ export default function MyProductsPage() {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
     });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      <div className="container mx-auto px-6 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            📦 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">My Products</span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Products you've purchased and created on Eclipse marketplace
-          </p>
-        </div>
-
-        {/* User Info */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">Your Wallet</h2>
-              <p className="text-gray-600 font-mono text-sm">
-                {user?.wallet?.address}
-              </p>
+    <>
+      <Navbar />
+      <div className="min-h-screen">
+        <div className="container-eclipse" style={{ maxWidth: '1400px' }}>
+          {/* Header */}
+          <div
+            style={{
+              textAlign: 'center',
+              paddingTop: '12rem',
+              paddingBottom: '6rem',
+              borderBottom: '1px solid #e0e0e0',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: 'var(--font-inter)',
+                fontSize: '0.75rem',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                color: '#D97757',
+                marginBottom: '2.5rem',
+                fontWeight: 500,
+              }}
+            >
+              Your Collection
             </div>
-            <div className="text-center">
-              <p className="text-sm text-gray-500">Products Owned</p>
-              <p className="text-3xl font-bold text-green-600">{ownedProducts.length}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm text-gray-500">Products Created</p>
-              <p className="text-3xl font-bold text-blue-600">{createdProducts.length}</p>
-            </div>
+            <h1
+              style={{
+                fontSize: '4.5rem',
+                fontWeight: 300,
+                lineHeight: 1.1,
+                marginBottom: '2rem',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              My products.
+            </h1>
+            <p
+              style={{
+                fontSize: '1.25rem',
+                color: '#666',
+                maxWidth: '42rem',
+                margin: '0 auto',
+                lineHeight: 1.7,
+              }}
+            >
+              Products you've purchased and created on Eclipse
+            </p>
           </div>
-        </div>
 
-        {/* Owned Products Section */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 flex items-center space-x-2">
-              <span>🛒</span>
-              <span>Products I Own</span>
-            </h2>
-            {ownedProducts.length > 0 && (
-              <span className="text-sm text-gray-500">
-                {ownedProducts.length} product{ownedProducts.length !== 1 ? 's' : ''} • Sorted by purchase date
-              </span>
-            )}
-          </div>
-
-          {ownedProducts.length === 0 ? (
-            <div className="bg-white rounded-xl p-12 text-center border-2 border-dashed border-gray-200">
-              <div className="text-4xl mb-4">🛒</div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">No products owned yet</h3>
-              <p className="text-gray-600 mb-6">
-                Start exploring the marketplace to purchase your first product!
-              </p>
-              <Link
-                href="/"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors inline-block"
+          {/* Owned Products Section */}
+          <div style={{ padding: '6rem 0', borderBottom: '1px solid #e0e0e0' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '4rem',
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 300,
+                  letterSpacing: '-0.01em',
+                }}
               >
-                Browse Products
-              </Link>
+                Products I own
+              </h2>
+              {ownedProducts.length > 0 && (
+                <span
+                  style={{
+                    fontFamily: 'var(--font-inter)',
+                    fontSize: '0.875rem',
+                    color: '#666',
+                  }}
+                >
+                  {ownedProducts.length} product
+                  {ownedProducts.length !== 1 ? 's' : ''}
+                </span>
+              )}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...ownedProducts]
-                .sort((a: any, b: any) => {
-                  const purchaseA = purchaseDetailsMap.get(a.productId);
-                  const purchaseB = purchaseDetailsMap.get(b.productId);
-                  return Number(purchaseB?.purchaseDate || 0) - Number(purchaseA?.purchaseDate || 0);
-                })
-                .map((product: any) => {
-                  const purchaseDetails = purchaseDetailsMap.get(product.productId);
-                  return (
-                    <div key={product.productId} className="relative">
-                      {/* Owned Badge */}
-                      <div className="absolute top-4 right-4 z-10 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium">
-                        OWNED
-                      </div>
-                      
-                      <ProductCard
-                        productId={product.productId}
-                        contentId={product.contentId}
-                        currentPrice={product.currentPrice}
-                        creator={product.creator}
-                      />
-                      
-                      {/* Purchase Info */}
-                      {purchaseDetails && (
-                        <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
-                          <h4 className="font-medium text-green-800 mb-2">Purchase Details</h4>
-                          <div className="space-y-1 text-sm text-green-700">
-                            <p>
-                              <span className="font-medium">Purchased:</span>{' '}
+
+            {ownedProducts.length === 0 ? (
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '6rem 3rem',
+                  border: '1px solid #e0e0e0',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '4rem',
+                    marginBottom: '2rem',
+                    opacity: 0.2,
+                  }}
+                >
+                  🛒
+                </div>
+                <h3
+                  style={{
+                    fontSize: '2rem',
+                    fontWeight: 300,
+                    marginBottom: '1rem',
+                  }}
+                >
+                  No products owned yet
+                </h3>
+                <p
+                  style={{
+                    fontSize: '1.125rem',
+                    color: '#666',
+                    marginBottom: '2rem',
+                  }}
+                >
+                  Start exploring the marketplace
+                </p>
+                <Link href="/products" className="btn-primary">
+                  Browse Products
+                </Link>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                  gap: '4rem 3rem',
+                }}
+              >
+                {[...ownedProducts]
+                  .sort((a: any, b: any) => {
+                    const purchaseA = purchaseDetailsMap.get(a.productId);
+                    const purchaseB = purchaseDetailsMap.get(b.productId);
+                    return (
+                      Number(purchaseB?.purchaseDate || 0) -
+                      Number(purchaseA?.purchaseDate || 0)
+                    );
+                  })
+                  .map((product: any) => {
+                    const purchaseDetails = purchaseDetailsMap.get(
+                      product.productId
+                    );
+                    return (
+                      <div key={product.productId}>
+                        <ProductCard
+                          productId={product.productId}
+                          contentId={product.contentId}
+                          currentPrice={product.currentPrice}
+                          creator={product.creator}
+                        />
+
+                        {/* Purchase Info */}
+                        {purchaseDetails && (
+                          <div
+                            style={{
+                              marginTop: '1rem',
+                              padding: '1rem',
+                              border: '1px solid #e0e0e0',
+                              backgroundColor: '#f5f5f3',
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontFamily: 'var(--font-inter)',
+                                fontSize: '0.75rem',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                                color: '#999',
+                                marginBottom: '0.5rem',
+                              }}
+                            >
+                              Purchased
+                            </p>
+                            <p
+                              style={{
+                                fontFamily: 'var(--font-inter)',
+                                fontSize: '0.875rem',
+                                color: '#1a1a1a',
+                                marginBottom: '0.5rem',
+                              }}
+                            >
                               {formatDate(purchaseDetails.purchaseDate)}
                             </p>
                             <a
                               href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${purchaseDetails.transactionHash}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline inline-block"
+                              style={{
+                                fontFamily: 'var(--font-inter)',
+                                fontSize: '0.75rem',
+                                color: '#D97757',
+                                textDecoration: 'none',
+                                borderBottom: '1px solid #D97757',
+                                paddingBottom: '0.125rem',
+                              }}
                             >
-                              View Transaction →
+                              View transaction →
                             </a>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-            </div>
-          )}
-        </div>
-
-        {/* Created Products Section */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 flex items-center space-x-2">
-              <span>✨</span>
-              <span>Products I Created</span>
-            </h2>
-            {createdProducts.length > 0 && (
-              <span className="text-sm text-gray-500">
-                {createdProducts.length} product{createdProducts.length !== 1 ? 's' : ''} • Sorted by creation date
-              </span>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
             )}
           </div>
 
-          {createdProducts.length === 0 ? (
-            <div className="bg-white rounded-xl p-12 text-center border-2 border-dashed border-gray-200">
-              <div className="text-4xl mb-4">✨</div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">No products created yet</h3>
-              <p className="text-gray-600 mb-6">
-                Ready to become a creator? Add your first product to the marketplace!
-              </p>
-              <Link
-                href="/create"
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors inline-block"
+          {/* Created Products Section */}
+          <div style={{ padding: '6rem 0 8rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '4rem',
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 300,
+                  letterSpacing: '-0.01em',
+                }}
               >
-                Create Product
-              </Link>
+                Products I created
+              </h2>
+              {createdProducts.length > 0 && (
+                <span
+                  style={{
+                    fontFamily: 'var(--font-inter)',
+                    fontSize: '0.875rem',
+                    color: '#666',
+                  }}
+                >
+                  {createdProducts.length} product
+                  {createdProducts.length !== 1 ? 's' : ''}
+                </span>
+              )}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...createdProducts]
-                .sort((a: any, b: any) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
-                .map((product: any) => (
-                  <div key={product.productId} className="relative">
-                    {/* Creator Badge */}
-                    <div className="absolute top-4 right-4 z-10 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium">
-                      CREATOR
-                    </div>
-                    
-                    <ProductCard
-                      productId={product.productId}
-                      contentId={product.contentId}
-                      currentPrice={product.currentPrice}
-                      creator={product.creator}
-                    />
-                    
-                    {/* Creator Info */}
-                    <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <h4 className="font-medium text-blue-800 mb-2">Creation Details</h4>
-                      <div className="space-y-1 text-sm text-blue-700">
-                        <p>
-                          <span className="font-medium">Created:</span>{' '}
+
+            {createdProducts.length === 0 ? (
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '6rem 3rem',
+                  border: '1px solid #e0e0e0',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '4rem',
+                    marginBottom: '2rem',
+                    opacity: 0.2,
+                  }}
+                >
+                  ✨
+                </div>
+                <h3
+                  style={{
+                    fontSize: '2rem',
+                    fontWeight: 300,
+                    marginBottom: '1rem',
+                  }}
+                >
+                  No products created yet
+                </h3>
+                <p
+                  style={{
+                    fontSize: '1.125rem',
+                    color: '#666',
+                    marginBottom: '2rem',
+                  }}
+                >
+                  Ready to become a creator?
+                </p>
+                <Link href="/create" className="btn-primary">
+                  Create Product
+                </Link>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                  gap: '4rem 3rem',
+                }}
+              >
+                {[...createdProducts]
+                  .sort(
+                    (a: any, b: any) =>
+                      Number(b.createdAt || 0) - Number(a.createdAt || 0)
+                  )
+                  .map((product: any) => (
+                    <div key={product.productId}>
+                      <ProductCard
+                        productId={product.productId}
+                        contentId={product.contentId}
+                        currentPrice={product.currentPrice}
+                        creator={product.creator}
+                      />
+
+                      {/* Creator Info */}
+                      <div
+                        style={{
+                          marginTop: '1rem',
+                          padding: '1rem',
+                          border: '1px solid #e0e0e0',
+                          backgroundColor: '#f5f5f3',
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.75rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            color: '#999',
+                            marginBottom: '0.5rem',
+                          }}
+                        >
+                          Created
+                        </p>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.875rem',
+                            color: '#1a1a1a',
+                            marginBottom: '0.5rem',
+                          }}
+                        >
                           {formatDate(product.createdAt)}
                         </p>
-                        <p>
-                          <span className="font-medium">Updates:</span>{' '}
-                          {product.updateCount || 0} time{product.updateCount !== 1 ? 's' : ''}
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.75rem',
+                            color: '#666',
+                            marginBottom: '0.5rem',
+                          }}
+                        >
+                          {product.updateCount || 0} update
+                          {product.updateCount !== 1 ? 's' : ''}
                         </p>
                         <Link
                           href={`/product/${product.productId}`}
-                          className="text-blue-600 hover:underline inline-block"
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.75rem',
+                            color: '#D97757',
+                            textDecoration: 'none',
+                            borderBottom: '1px solid #D97757',
+                            paddingBottom: '0.125rem',
+                          }}
                         >
-                          View Sales Data →
+                          View sales data →
                         </Link>
                       </div>
                     </div>
-                  </div>
-                ))}
-            </div>
-          )}
+                  ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

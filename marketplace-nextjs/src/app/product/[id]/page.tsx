@@ -3,11 +3,11 @@
 import React, { use } from 'react';
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Package, User, DollarSign } from 'lucide-react';
 import { GET_PRODUCT_DETAILS, GET_PRICE_HISTORY } from '@/lib/queries';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { AddressDisplay } from '@/components/AddressDisplay';
 import { PurchaseButton } from '@/components/PurchaseButton';
+import { Navbar } from '@/components/Navbar';
 
 interface ProductPageProps {
   params: Promise<{
@@ -32,18 +32,34 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   if (isNaN(productId)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">❓</div>
-          <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+      <div className="min-h-screen flex items-center justify-center">
+        <div
+          style={{ textAlign: 'center', maxWidth: '32rem', padding: '3rem' }}
+        >
+          <div style={{ fontSize: '4rem', marginBottom: '2rem', opacity: 0.3 }}>
+            🌒
+          </div>
+          <h3
+            style={{
+              fontSize: '2.5rem',
+              fontWeight: 300,
+              marginBottom: '1rem',
+            }}
+          >
             Invalid Product ID
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p
+            style={{
+              fontSize: '1.125rem',
+              color: '#666',
+              marginBottom: '2rem',
+            }}
+          >
             The product ID must be a valid number.
           </p>
           <button
-            onClick={() => router.push('/')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+            onClick={() => router.push('/products')}
+            className="btn-primary"
           >
             Back to Products
           </button>
@@ -54,10 +70,19 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading product details...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div style={{ textAlign: 'center' }}>
+          <div
+            style={{
+              animation: 'spin 1s linear infinite',
+              borderRadius: '50%',
+              height: '3rem',
+              width: '3rem',
+              borderBottom: '2px solid #D97757',
+              margin: '0 auto 1rem',
+            }}
+          ></div>
+          <p style={{ color: '#666' }}>Loading product details...</p>
         </div>
       </div>
     );
@@ -65,10 +90,27 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center bg-red-50 border border-red-200 rounded-xl p-6">
-          <p className="text-red-600 font-medium">Error loading product</p>
-          <p className="text-red-500 text-sm mt-2">{error.message}</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div
+          style={{
+            textAlign: 'center',
+            border: '1px solid #e0e0e0',
+            padding: '2rem',
+            maxWidth: '28rem',
+          }}
+        >
+          <p style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+            Error loading product
+          </p>
+          <p
+            style={{
+              color: '#666',
+              fontSize: '0.875rem',
+              fontFamily: 'var(--font-inter)',
+            }}
+          >
+            {error.message}
+          </p>
         </div>
       </div>
     );
@@ -77,18 +119,34 @@ export default function ProductPage({ params }: ProductPageProps) {
   const product = data?.Product?.[0];
   if (!product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">❓</div>
-          <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+      <div className="min-h-screen flex items-center justify-center">
+        <div
+          style={{ textAlign: 'center', maxWidth: '32rem', padding: '3rem' }}
+        >
+          <div style={{ fontSize: '4rem', marginBottom: '2rem', opacity: 0.3 }}>
+            🌒
+          </div>
+          <h3
+            style={{
+              fontSize: '2.5rem',
+              fontWeight: 300,
+              marginBottom: '1rem',
+            }}
+          >
             Product not found
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p
+            style={{
+              fontSize: '1.125rem',
+              color: '#666',
+              marginBottom: '2rem',
+            }}
+          >
             The product you're looking for doesn't exist.
           </p>
           <button
-            onClick={() => router.push('/')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+            onClick={() => router.push('/products')}
+            className="btn-primary"
           >
             Back to Products
           </button>
@@ -137,235 +195,603 @@ export default function ProductPage({ params }: ProductPageProps) {
     });
   };
 
+  const formatDateNoYear = (timestamp: string) => {
+    return new Date(Number(timestamp) * 1000).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        <button
-          onClick={() => router.push('/')}
-          className="mb-8 flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+    <>
+      <Navbar />
+      <div className="min-h-screen">
+        <div
+          className="container-eclipse"
+          style={{
+            maxWidth: '1200px',
+            paddingTop: '10rem',
+            paddingBottom: '8rem',
+          }}
         >
-          <ArrowLeft size={20} />
-          <span>Back to Products</span>
-        </button>
-
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white">
-            <div className="flex items-center space-x-2 mb-4">
-              <Package size={24} />
-              <span className="text-lg font-medium">
+          {/* Product Info + Stats Dashboard */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1.2fr',
+              gap: '2.5rem',
+              alignItems: 'start',
+              paddingBottom: '4rem',
+              borderBottom: '1px solid #e0e0e0',
+              marginBottom: '3rem',
+              minHeight: '280px',
+            }}
+            className="responsive-product-header"
+          >
+            {/* Left: Product Info */}
+            <div
+              style={{
+                padding: '2rem',
+                border: '1px solid #e0e0e0',
+                backgroundColor: '#fafaf8',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: 'var(--font-inter)',
+                  fontSize: '0.75rem',
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  color: '#D97757',
+                  marginBottom: '2rem',
+                  fontWeight: 500,
+                }}
+              >
                 Product #{product.productId}
-              </span>
-            </div>
-            <h1 className="text-4xl font-bold mb-2 break-all">
-              {product.contentId}
-            </h1>
-            <p className="text-blue-100">
-              Premium data content stored securely with Nillion
-            </p>
-          </div>
+              </div>
 
-          <div className="p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div className="bg-gray-50 rounded-2xl p-6">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <DollarSign size={20} className="text-green-600" />
-                    <h3 className="text-lg font-semibold">Current Price</h3>
+              {/* Product Content */}
+              <div
+                style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+              >
+                {/* Product Icon & Name */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1.5rem',
+                    marginBottom: '1.5rem',
+                  }}
+                >
+                  {/* Product Icon Placeholder */}
+                  <div
+                    style={{
+                      width: '4.5rem',
+                      height: '4.5rem',
+                      backgroundColor: '#f5f5f3',
+                      border: '2px dashed #e0e0e0',
+                      borderRadius: '0.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.75rem',
+                      color: '#999',
+                      flexShrink: 0,
+                    }}
+                  >
+                    🌒
                   </div>
-                  <PriceDisplay
-                    priceInPyusd={product.currentPrice}
-                    className="text-3xl font-bold text-gray-900"
-                  />
+
+                  {/* Product Name & Date */}
+                  <div style={{ flex: 1 }}>
+                    <h1
+                      style={{
+                        fontSize: '1.5rem',
+                        fontWeight: 300,
+                        lineHeight: 1.2,
+                        marginBottom: '0.5rem',
+                        letterSpacing: '-0.01em',
+                        wordBreak: 'break-all',
+                      }}
+                    >
+                      {product.contentId}
+                    </h1>
+                    <p
+                      style={{
+                        fontSize: '0.875rem',
+                        color: '#666',
+                        fontFamily: 'var(--font-inter)',
+                      }}
+                    >
+                      Created {formatDate(product.createdAt)}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-2xl p-6">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <User size={20} className="text-blue-600" />
-                    <h3 className="text-lg font-semibold">Creator</h3>
+                {/* Product Description */}
+                <p
+                  style={{
+                    fontSize: '0.95rem',
+                    color: '#666',
+                    marginBottom: '1.5rem',
+                    lineHeight: 1.6,
+                    flex: 1,
+                  }}
+                >
+                  Private data stored securely with Nillion's privacy
+                  infrastructure. Content is encrypted and verifiable through AI
+                  agents.
+                </p>
+
+                {/* Creator */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      color: '#999',
+                      marginBottom: '0.5rem',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Creator
                   </div>
                   <div
-                    className="cursor-pointer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      padding: '0.75rem',
+                      border: '1px solid #e0e0e0',
+                      backgroundColor: '#f5f5f3',
+                      cursor: 'pointer',
+                      transition: 'border-color 200ms',
+                    }}
                     onClick={() => router.push(`/creator/${product.creator}`)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#D97757';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#e0e0e0';
+                    }}
                   >
-                    <AddressDisplay
-                      address={product.creator}
-                      className="text-gray-900 hover:text-blue-600 transition-colors"
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono, monospace)',
+                        fontSize: '0.875rem',
+                        color: '#1a1a1a',
+                        flex: 1,
+                      }}
+                    >
+                      {product.creator.slice(0, 6)}...
+                      {product.creator.slice(-4)}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.75rem',
+                        color: '#D97757',
+                        fontWeight: 500,
+                      }}
+                    >
+                      View profile →
+                    </span>
+                  </div>
+                </div>
+
+                {/* Purchase Section - Bottom aligned */}
+                <div style={{ marginTop: 'auto' }}>
+                  <div
+                    style={{
+                      padding: '1.5rem',
+                      border: '1px solid #e0e0e0',
+                      backgroundColor: '#f5f5f3',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <h3
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                        color: '#666',
+                        marginBottom: '1rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      Purchase Product
+                    </h3>
+                    <PurchaseButton
+                      productId={product.productId}
+                      price={
+                        product.currentPrice
+                          ? (Number(product.currentPrice) / 1e6).toFixed(2)
+                          : '0.00'
+                      }
+                      onPurchaseSuccess={() => {
+                        window.location.reload();
+                      }}
                     />
                   </div>
                 </div>
+              </div>
+            </div>
 
-                <div className="bg-gray-50 rounded-2xl p-6">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Calendar size={20} className="text-purple-600" />
-                    <h3 className="text-lg font-semibold">Created</h3>
-                  </div>
-                  <p className="text-gray-900">
-                    {formatDate(product.createdAt)}
+            {/* Right: Stats + Purchase Dashboard */}
+            <div
+              style={{
+                padding: '2rem',
+                border: '1px solid #e0e0e0',
+                backgroundColor: '#fafaf8',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              {/* Price & Stats Section */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '1.5rem',
+                  marginBottom: '2rem',
+                }}
+              >
+                {/* Current Price */}
+                <div style={{ textAlign: 'center' }}>
+                  <p
+                    style={{
+                      fontSize: '2rem',
+                      fontWeight: 500,
+                      color: '#D97757',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    <PriceDisplay priceInPyusd={product.currentPrice} />
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: '#999',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Current Price
+                  </p>
+                </div>
+
+                {/* Update Count */}
+                <div style={{ textAlign: 'center' }}>
+                  <p
+                    style={{
+                      fontSize: '2rem',
+                      fontWeight: 300,
+                      color: '#1a1a1a',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    {product.updateCount || 0}
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: '#999',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Updates
+                  </p>
+                </div>
+
+                {/* Total Sales */}
+                <div style={{ textAlign: 'center' }}>
+                  <p
+                    style={{
+                      fontSize: '2rem',
+                      fontWeight: 300,
+                      color: '#1a1a1a',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    {totalSales}
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: '#999',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Sales
+                  </p>
+                </div>
+
+                {/* Total Revenue */}
+                <div style={{ textAlign: 'center' }}>
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '1.25rem',
+                      fontWeight: 500,
+                      color: '#1a1a1a',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    <PriceDisplay priceInPyusd={totalRevenue} />
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: '#999',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Revenue
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
-                  <h3 className="text-lg font-semibold text-green-800 mb-4">
-                    Sales Statistics
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-700">
-                        {totalSales}
-                      </p>
-                      <p className="text-sm text-green-600">Total Sales</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-700">
-                        <PriceDisplay priceInPyusd={totalRevenue} />
-                      </p>
-                      <p className="text-sm text-green-600">Revenue</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-                  <h3 className="text-lg font-semibold text-blue-800 mb-4">
-                    Product Details
-                  </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm text-blue-600 font-medium">
-                        Content ID
-                      </p>
-                      <p className="text-blue-900 break-all font-mono text-sm">
-                        {product.contentId}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-blue-600 font-medium">
-                        Product ID
-                      </p>
-                      <p className="text-blue-900 font-mono">
-                        {product.productId}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-blue-600 font-medium">
-                        Last Updated
-                      </p>
-                      <p className="text-blue-900">
-                        {formatDate(product.lastUpdatedAt)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
-                  <h3 className="text-lg font-semibold text-green-800 mb-4">
-                    Purchase Product
-                  </h3>
-                  <PurchaseButton
-                    productId={product.productId}
-                    price={
-                      product.currentPrice
-                        ? (Number(product.currentPrice) / 1e6).toFixed(2)
-                        : '0.00'
-                    }
-                    onPurchaseSuccess={() => {
-                      // Optionally refresh the page or show success message
-                      window.location.reload();
+              {/* Price History - Compact */}
+              {priceHistory.length > 0 && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '0.75rem',
+                      paddingBottom: '0.5rem',
+                      borderBottom: '1px solid #e0e0e0',
                     }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {priceHistory.length > 0 && (
-              <div className="mt-8 bg-gray-50 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold mb-4">Price History</h3>
-                <div className="space-y-3">
-                  {priceHistory.map((entry: any, index: number) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center bg-white rounded-xl p-4"
+                  >
+                    <h3
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.75rem',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: '#666',
+                        fontWeight: 500,
+                      }}
                     >
-                      <div className="flex items-center space-x-3">
+                      Price History
+                    </h3>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.7rem',
+                        color: '#999',
+                      }}
+                    >
+                      {priceHistory.length} changes
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.5rem',
+                      maxHeight: '120px',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    {priceHistory.slice(-3).reverse().map((entry: any, index: number) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          padding: '0.5rem',
+                          border: '1px solid #e0e0e0',
+                          backgroundColor: '#f5f5f3',
+                          fontSize: '0.75rem',
+                        }}
+                      >
                         <div
-                          className={`w-3 h-3 rounded-full ${
-                            entry.type === 'created'
-                              ? 'bg-blue-500'
-                              : 'bg-orange-500'
-                          }`}
-                        ></div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {entry.type === 'created'
-                              ? 'Product Created'
-                              : 'Price Updated'}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {formatDate(entry.timestamp)}
-                          </p>
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '0.25rem',
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: 'var(--font-inter)',
+                              fontWeight: 500,
+                              color: entry.type === 'created' ? '#D97757' : '#1a1a1a',
+                            }}
+                          >
+                            {entry.type === 'created' ? 'Created' : 'Updated'}
+                          </span>
+                          <span
+                            style={{
+                              fontFamily: 'var(--font-inter)',
+                              fontWeight: 500,
+                              color: '#D97757',
+                            }}
+                          >
+                            <PriceDisplay priceInPyusd={entry.price} />
+                          </span>
                         </div>
+                        <span
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.7rem',
+                            color: '#999',
+                          }}
+                        >
+                          {formatDateNoYear(entry.timestamp)}
+                        </span>
                       </div>
-                      <div className="text-right">
-                        <PriceDisplay
-                          priceInPyusd={entry.price}
-                          className="font-semibold text-gray-900"
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {data?.ProductPaymentService_PaymentReceived &&
-              data.ProductPaymentService_PaymentReceived.length > 0 && (
-                <div className="mt-8 bg-gray-50 rounded-2xl p-6">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Recent Purchases
-                  </h3>
-                  <div className="space-y-3">
-                    {data.ProductPaymentService_PaymentReceived.slice(0, 5).map(
-                      (payment: any, index: number) => (
+              {/* Recent Purchases - Compact */}
+              {data?.ProductPaymentService_PaymentReceived &&
+                data.ProductPaymentService_PaymentReceived.length > 0 && (
+                  <div style={{ marginBottom: '2rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '0.75rem',
+                        paddingBottom: '0.5rem',
+                        borderBottom: '1px solid #e0e0e0',
+                      }}
+                    >
+                      <h3
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.75rem',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          color: '#666',
+                          fontWeight: 500,
+                        }}
+                      >
+                        Latest Purchases
+                      </h3>
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.7rem',
+                          color: '#999',
+                        }}
+                      >
+                        {data.ProductPaymentService_PaymentReceived.length}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      {data.ProductPaymentService_PaymentReceived.slice(
+                        0,
+                        2
+                      ).map((payment: any, index: number) => (
                         <a
                           key={index}
                           href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${payment.transactionHash}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex justify-between items-center bg-white rounded-xl p-4 hover:bg-gray-50 transition-colors cursor-pointer group"
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            padding: '0.5rem',
+                            border: '1px solid #e0e0e0',
+                            backgroundColor: '#f5f5f3',
+                            textDecoration: 'none',
+                            color: 'inherit',
+                            transition: 'border-color 200ms',
+                            fontSize: '0.75rem',
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.borderColor = '#D97757')
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.borderColor = '#e0e0e0')
+                          }
                         >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <div>
-                              <AddressDisplay
-                                address={payment.payer}
-                                className="text-gray-700"
-                                showCopy={false}
-                                showExplorer={false}
-                              />
-                              <p className="text-xs text-gray-500">
-                                {formatDate(payment.blockTimestamp)}
-                              </p>
-                              <p className="text-xs text-blue-600 group-hover:underline">
-                                View transaction →
-                              </p>
-                            </div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              marginBottom: '0.25rem',
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontFamily: 'var(--font-inter)',
+                                fontWeight: 500,
+                              }}
+                            >
+                              {payment.payer.slice(0, 6)}...
+                              {payment.payer.slice(-4)}
+                            </span>
+                            <span
+                              style={{
+                                fontFamily: 'var(--font-inter)',
+                                fontWeight: 500,
+                                color: '#D97757',
+                              }}
+                            >
+                              <PriceDisplay priceInPyusd={payment.amount} />
+                            </span>
                           </div>
-                          <div className="text-right">
-                            <PriceDisplay
-                              priceInPyusd={payment.amount}
-                              className="font-semibold text-gray-900"
-                            />
-                          </div>
+                          <span
+                            style={{
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '0.7rem',
+                              color: '#999',
+                            }}
+                          >
+                            {formatDateNoYear(payment.blockTimestamp)}
+                          </span>
                         </a>
-                      )
-                    )}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+
+            </div>
           </div>
+
         </div>
       </div>
-    </div>
+
+      {/* Loading spinner animation */}
+      <style jsx>{`
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .responsive-product-header {
+            grid-template-columns: 1fr !important;
+            gap: 2rem !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .responsive-product-header div:last-child > div:first-child {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+    </>
   );
 }

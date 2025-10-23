@@ -1,178 +1,247 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { usePrivy } from '@privy-io/react-auth';
-import { GET_ALL_PRODUCTS, GET_USER_OWNED_PRODUCTS } from '@/lib/queries';
-import { ProductCard } from '@/components/ProductCard';
+import React, { useEffect } from 'react';
+import Link from 'next/link';
 
-export default function ProductsPage() {
-  const [sortBy, setSortBy] = useState<'price' | 'newest' | 'oldest'>('newest');
-  const [searchTerm, setSearchTerm] = useState('');
-  const { authenticated, user } = usePrivy();
-  
-  const { loading, error, data } = useQuery(GET_ALL_PRODUCTS);
-  
-  // Get user's owned products to determine ownership
-  const { data: ownedData } = useQuery(GET_USER_OWNED_PRODUCTS, {
-    variables: { userAddress: user?.wallet?.address },
-    skip: !authenticated || !user?.wallet?.address,
-  });
+export default function LandingPage() {
+  useEffect(() => {
+    // Mouse parallax effect
+    const handleMouseMove = (e: MouseEvent) => {
+      const layers = document.querySelectorAll('.parallax-layer');
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading products...</p>
-        </div>
-      </div>
-    );
-  }
+      layers.forEach((layer) => {
+        const element = layer as HTMLElement;
+        const speed = parseFloat(element.getAttribute('data-speed') || '0');
+        const x = (e.clientX - centerX) * speed;
+        const y = (e.clientY - centerY) * speed;
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center bg-red-50 border border-red-200 rounded-xl p-6">
-          <p className="text-red-600 font-medium">Error loading products</p>
-          <p className="text-red-500 text-sm mt-2">{error.message}</p>
-        </div>
-      </div>
-    );
-  }
+        element.style.transform = `translate(${x}px, ${y}px)`;
+      });
+    };
 
-  const products = data?.Product || [];
-  
-  // Create sets for owned and created products for quick lookup
-  const ownedProductIds = new Set(
-    ownedData?.ProductPaymentService_PaymentReceived?.map((payment: any) => payment.productId) || []
-  );
-  const userAddress = user?.wallet?.address?.toLowerCase();
-  
-  const filteredProducts = products
-    .filter((product: any) => 
-      product.contentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.creator.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a: any, b: any) => {
-      // First, determine ownership status for priority sorting
-      const aIsCreated = authenticated && userAddress === a.creator.toLowerCase();
-      const aIsOwned = ownedProductIds.has(a.productId);
-      const aIsAvailable = !aIsCreated && !aIsOwned;
-      
-      const bIsCreated = authenticated && userAddress === b.creator.toLowerCase();
-      const bIsOwned = ownedProductIds.has(b.productId);
-      const bIsAvailable = !bIsCreated && !bIsOwned;
-      
-      // Priority order: Available > Owned > Created
-      if (aIsAvailable && !bIsAvailable) return -1;
-      if (!aIsAvailable && bIsAvailable) return 1;
-      if (aIsOwned && bIsCreated) return -1;
-      if (aIsCreated && bIsOwned) return 1;
-      
-      // If same ownership status, sort by user preference
-      switch (sortBy) {
-        case 'price':
-          const priceA = BigInt(a.currentPrice || '0');
-          const priceB = BigInt(b.currentPrice || '0');
-          return priceA < priceB ? -1 : priceA > priceB ? 1 : 0;
-        case 'newest':
-          const timeA = BigInt(a.createdAt || '0');
-          const timeB = BigInt(b.createdAt || '0');
-          return timeB < timeA ? -1 : timeB > timeA ? 1 : 0;
-        case 'oldest':
-          const timeOldA = BigInt(a.createdAt || '0');
-          const timeOldB = BigInt(b.createdAt || '0');
-          return timeOldA < timeOldB ? -1 : timeOldA > timeOldB ? 1 : 0;
-        default:
-          return 0;
-      }
-    });
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      <div className="container mx-auto px-6 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            🌒 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Eclipse</span> Marketplace
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover and purchase private data with AI verification powered by Nillion
-          </p>
-        </div>
+    <>
+      {/* Parallax Background */}
+      <div className="parallax-bg">
+        <div
+          className="parallax-layer parallax-layer-1"
+          data-speed="0.15"
+        ></div>
+        <div className="parallax-layer parallax-layer-2" data-speed="0.3"></div>
+        <div className="parallax-layer parallax-layer-3" data-speed="0.5"></div>
+        <div className="parallax-layer parallax-layer-4" data-speed="0.2"></div>
+      </div>
 
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search products or creators..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div className="flex gap-2">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="price">Price: Low to High</option>
-            </select>
+      {/* Navigation */}
+      <nav>
+        <div className="container-eclipse">
+          <div className="logo">Eclipse</div>
+          <div className="nav-links">
+            <Link href="https://github.com/oceans404/eclipse" target="_blank">
+              Github Repo
+            </Link>
+            <Link href="/products" className="btn-nav">
+              Launch App
+            </Link>
           </div>
         </div>
+      </nav>
 
-        {/* Ownership Legend */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Product Status Legend:</h3>
-          <div className="flex flex-wrap gap-4 text-xs">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span className="text-gray-600">Created by you</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-gray-600">Owned by you</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-              <span className="text-gray-600">Available to purchase</span>
+      {/* Hero Section */}
+      <section className="hero">
+        <div className="container-eclipse">
+          <div className="hero-content">
+            <div className="hero-label">Private Data Marketplace</div>
+            <h1>
+              Buy private data
+              <br />
+              with confidence.
+            </h1>
+            <p className="hero-subtitle">
+              A private AI agent answers your questions about encrypted content,
+              so you know what you&apos;re buying before you commit.
+            </p>
+            <div className="hero-buttons">
+              <Link href="/products" className="btn-primary">
+                Explore Marketplace
+              </Link>
+              <Link
+                href="https://github.com/oceans404/eclipse"
+                target="_blank"
+                className="btn-secondary"
+              >
+                Learn More
+              </Link>
             </div>
           </div>
         </div>
+      </section>
 
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-2">No products found</h3>
-            <p className="text-gray-600">
-              {searchTerm ? 'Try adjusting your search terms' : 'Be the first to add a product!'}
+      {/* Problem Statement */}
+      <section className="tech">
+        <div className="container-eclipse">
+          <div className="problem-content">
+            <div className="section-label">The Problem</div>
+            <h2>Buying private data requires blind trust.</h2>
+            <p>
+              As a buyer, you can&apos;t verify what you&apos;re getting without
+              seeing it. As a seller, you can&apos;t prove your data&apos;s
+              value without giving it away for free.
+            </p>
+            <p>
+              Eclipse bridges this gap with privacy-preserving verification.
             </p>
           </div>
-        ) : (
-          <>
-            <div className="flex justify-between items-center mb-6">
-              <p className="text-gray-600">
-                Showing {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="how-it-works" id="how-it-works">
+        <div className="container-eclipse">
+          <div className="how-it-works-header">
+            <div className="section-label">How It Works</div>
+            <h2>
+              Ask questions,
+              <br />
+              buy with certainty.
+            </h2>
+            <p>
+              Our private AI agent has access to encrypted content. You can
+              verify what you&apos;re buying without the seller revealing
+              anything.
+            </p>
+          </div>
+          <div className="steps-grid">
+            <div className="step">
+              <div className="step-number">01</div>
+              <h3>Creator uploads</h3>
+              <p>
+                Creators upload private content with a title, description, and
+                price. A private AI agent gains encrypted access.
               </p>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProducts.map((product: any) => (
-                <ProductCard
-                  key={product.productId}
-                  productId={product.productId}
-                  contentId={product.contentId}
-                  currentPrice={product.currentPrice}
-                  creator={product.creator}
-                />
-              ))}
+            <div className="step">
+              <div className="step-number">02</div>
+              <h3>Buyer verifies</h3>
+              <p>
+                Ask the AI agent questions about the content. Verify it matches
+                the description before making a purchase decision.
+              </p>
             </div>
-          </>
-        )}
-      </div>
-    </div>
+            <div className="step">
+              <div className="step-number">03</div>
+              <h3>Secure payment</h3>
+              <p>
+                Pay with PYUSD through our smart contract. Content access is
+                automatically granted after verified payment.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits */}
+      <section className="benefits">
+        <div className="container-eclipse">
+          <div className="benefits-header">
+            <div className="section-label">Benefits</div>
+            <h2>Built for buyers and sellers.</h2>
+          </div>
+          <div className="benefits-grid">
+            <div className="benefit">
+              <div className="benefit-for">For Buyers</div>
+              <h3 className="benefit-title">Verify before you buy</h3>
+              <p className="benefit-description">
+                Ask questions about encrypted content through our private AI
+                agent. Confirm authenticity and value without the seller
+                revealing anything prematurely.
+              </p>
+            </div>
+            <div className="benefit">
+              <div className="benefit-for">For Sellers</div>
+              <h3 className="benefit-title">Prove value without risk</h3>
+              <p className="benefit-description">
+                Demonstrate your data&apos;s worth to potential buyers while
+                maintaining complete control. No free samples, no data leakage.
+              </p>
+            </div>
+            <div className="benefit">
+              <div className="benefit-for">For Buyers</div>
+              <h3 className="benefit-title">Transparent pricing</h3>
+              <p className="benefit-description">
+                All transactions are on-chain with PYUSD. View complete price
+                history and transaction records on Etherscan.
+              </p>
+            </div>
+            <div className="benefit">
+              <div className="benefit-for">For Sellers</div>
+              <h3 className="benefit-title">Direct payments</h3>
+              <p className="benefit-description">
+                Receive payments instantly to your wallet. No intermediaries, no
+                delays. Smart contracts handle everything automatically.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Tech Stack */}
+      <section className="tech">
+        <div className="container-eclipse">
+          <div className="tech-content">
+            <div className="section-label">Technology</div>
+            <h2>Built on cutting-edge infrastructure.</h2>
+            <p>
+              Eclipse combines privacy-preserving computation, stable digital
+              payments, and decentralized verification to create a trustless
+              marketplace.
+            </p>
+            <div className="tech-stack">
+              <div className="tech-item">Nillion Private Storage & LLMs</div>
+              <div className="tech-item">PYUSD Stablecoin Payments</div>
+              <div className="tech-item">Envio Event Indexing</div>
+              <div className="tech-item">Ethereum Smart Contracts</div>
+              <div className="tech-item">Verifiable Compute</div>
+              <div className="tech-item">On-chain Permissioning</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="cta">
+        <div className="container-eclipse">
+          <div className="cta-content">
+            <h2>Start buying and selling private data today.</h2>
+            <div className="cta-buttons">
+              <Link href="/products" className="btn-primary">
+                Launch Marketplace
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer>
+        <div className="container-eclipse">
+          <div className="footer-grid">
+            <div>
+              <div className="footer-brand">Eclipse</div>
+
+              <Link href="https://github.com/oceans404/eclipse" target="_blank">
+                <p>Github repo</p>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </>
   );
 }

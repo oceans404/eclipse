@@ -3,18 +3,12 @@
 import React, { use } from 'react';
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowLeft,
-  Package,
-  DollarSign,
-  TrendingUp,
-  Calendar,
-} from 'lucide-react';
 import { GET_CREATOR_PROFILE, GET_CREATOR_REVENUE } from '@/lib/queries';
 import { ProductCard } from '@/components/ProductCard';
 import { AddressDisplay } from '@/components/AddressDisplay';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { pyusdToFormatted } from '@/utils/formatting';
+import { Navbar } from '@/components/Navbar';
 
 interface CreatorPageProps {
   params: Promise<{
@@ -39,21 +33,57 @@ export default function CreatorPage({ params }: CreatorPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading creator profile...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div style={{ textAlign: 'center' }}>
+          <div
+            style={{
+              animation: 'spin 1s linear infinite',
+              borderRadius: '50%',
+              height: '3rem',
+              width: '3rem',
+              borderBottom: '2px solid #D97757',
+              margin: '0 auto 1rem',
+            }}
+          ></div>
+          <p style={{ color: '#666' }}>Loading creator profile...</p>
         </div>
+        <style jsx>{`
+          @keyframes spin {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center bg-red-50 border border-red-200 rounded-xl p-6">
-          <p className="text-red-600 font-medium">Error loading creator</p>
-          <p className="text-red-500 text-sm mt-2">{error.message}</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div
+          style={{
+            textAlign: 'center',
+            border: '1px solid #e0e0e0',
+            padding: '2rem',
+            maxWidth: '28rem',
+          }}
+        >
+          <p style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+            Error loading creator
+          </p>
+          <p
+            style={{
+              color: '#666',
+              fontSize: '0.875rem',
+              fontFamily: 'var(--font-inter)',
+            }}
+          >
+            {error.message}
+          </p>
         </div>
       </div>
     );
@@ -61,18 +91,34 @@ export default function CreatorPage({ params }: CreatorPageProps) {
 
   if (products.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">👤</div>
-          <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+      <div className="min-h-screen flex items-center justify-center">
+        <div
+          style={{ textAlign: 'center', maxWidth: '32rem', padding: '3rem' }}
+        >
+          <div style={{ fontSize: '4rem', marginBottom: '2rem', opacity: 0.3 }}>
+            👤
+          </div>
+          <h3
+            style={{
+              fontSize: '2.5rem',
+              fontWeight: 300,
+              marginBottom: '1rem',
+            }}
+          >
             Creator not found
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p
+            style={{
+              fontSize: '1.125rem',
+              color: '#666',
+              marginBottom: '2rem',
+            }}
+          >
             This creator doesn't have any products yet.
           </p>
           <button
             onClick={() => router.push('/creators')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+            className="btn-primary"
           >
             Back to Creators
           </button>
@@ -110,157 +156,468 @@ export default function CreatorPage({ params }: CreatorPageProps) {
     });
   };
 
+  const formatDateNoYear = (timestamp: string) => {
+    return new Date(Number(timestamp) * 1000).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   const oldestProduct = products.reduce((oldest: any, product: any) =>
     Number(product.createdAt) < Number(oldest.createdAt) ? product : oldest
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <button
-          onClick={() => router.push('/creators')}
-          className="mb-8 flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+    <>
+      <Navbar />
+      <div className="min-h-screen">
+        <div
+          className="container-eclipse"
+          style={{
+            maxWidth: '1200px',
+            paddingTop: '10rem',
+            paddingBottom: '8rem',
+          }}
         >
-          <ArrowLeft size={20} />
-          <span>Back to Creators</span>
-        </button>
+          {/* Profile + Stats Dashboard */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1.2fr',
+              gap: '2.5rem',
+              alignItems: 'start',
+              paddingBottom: '4rem',
+              borderBottom: '1px solid #e0e0e0',
+              marginBottom: '3rem',
+              minHeight: '280px',
+            }}
+            className="responsive-creator-header"
+          >
+            {/* Left: Creator Profile */}
+            <div
+              style={{
+                padding: '2rem',
+                border: '1px solid #e0e0e0',
+                backgroundColor: '#fafaf8',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              {/* Profile Content */}
+              <div
+                style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+              >
+                {/* Creator Image & Name Row */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1.5rem',
+                    marginBottom: '1.5rem',
+                  }}
+                >
+                  {/* Creator Image Placeholder */}
+                  <div
+                    style={{
+                      width: '4.5rem',
+                      height: '4.5rem',
+                      backgroundColor: '#f5f5f3',
+                      border: '2px dashed #e0e0e0',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.75rem',
+                      color: '#999',
+                      flexShrink: 0,
+                    }}
+                  >
+                    👤
+                  </div>
 
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl">
-                👤
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold">Creator Profile</h1>
-                <AddressDisplay
-                  address={resolvedParams.address}
-                  className="text-blue-100"
-                  showCopy={true}
-                  showExplorer={true}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-blue-50 rounded-2xl p-6 text-center border border-blue-100">
-                <Package size={24} className="mx-auto mb-3 text-blue-600" />
-                <p className="text-2xl font-bold text-blue-900">
-                  {products.length}
-                </p>
-                <p className="text-sm text-blue-600">Products Created</p>
-              </div>
-
-              <div className="bg-green-50 rounded-2xl p-6 text-center border border-green-100">
-                <DollarSign size={24} className="mx-auto mb-3 text-green-600" />
-                <p className="text-2xl font-bold text-green-900">
-                  {pyusdToFormatted(totalRevenue)}
-                </p>
-                <p className="text-sm text-green-600">Total Revenue (PYUSD)</p>
-              </div>
-
-              <div className="bg-purple-50 rounded-2xl p-6 text-center border border-purple-100">
-                <TrendingUp
-                  size={24}
-                  className="mx-auto mb-3 text-purple-600"
-                />
-                <p className="text-2xl font-bold text-purple-900">
-                  {totalSales}
-                </p>
-                <p className="text-sm text-purple-600">Total Sales</p>
-              </div>
-
-              <div className="bg-orange-50 rounded-2xl p-6 text-center border border-orange-100">
-                <Calendar size={24} className="mx-auto mb-3 text-orange-600" />
-                <p className="text-lg font-bold text-orange-900">
-                  {formatDate(oldestProduct.createdAt)}
-                </p>
-                <p className="text-sm text-orange-600">Member Since</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Products by this Creator
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {products.map((product: any) => (
-                    <ProductCard
-                      key={product.id}
-                      productId={product.productId}
-                      contentId={product.contentId}
-                      currentPrice={product.currentPrice}
-                      creator={product.creator}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-gray-50 rounded-2xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Creator Stats
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        Average Product Price
-                      </p>
-                      <p className="text-xl font-bold text-gray-900">
-                        {pyusdToFormatted(averagePrice.toString())} PYUSD
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Revenue per Sale</p>
-                      <p className="text-xl font-bold text-gray-900">
-                        {totalSales > 0
-                          ? pyusdToFormatted(
-                              (Number(totalRevenue) / totalSales).toString()
-                            )
-                          : '0.00'}{' '}
-                        PYUSD
-                      </p>
-                    </div>
+                  {/* Creator Name */}
+                  <div style={{ flex: 1 }}>
+                    <h1
+                      style={{
+                        fontSize: '2rem',
+                        fontWeight: 300,
+                        lineHeight: 1.1,
+                        marginBottom: '0.5rem',
+                        letterSpacing: '-0.02em',
+                        color: '#D97757',
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      [Creator Name]
+                    </h1>
+                    <p
+                      style={{
+                        fontSize: '0.875rem',
+                        color: '#666',
+                        fontFamily: 'var(--font-inter)',
+                      }}
+                    >
+                      Member since {formatDate(oldestProduct.createdAt)}
+                    </p>
                   </div>
                 </div>
 
+                {/* Creator Description */}
+                <p
+                  style={{
+                    fontSize: '0.95rem',
+                    color: '#999',
+                    fontStyle: 'italic',
+                    marginBottom: '1.5rem',
+                    lineHeight: 1.6,
+                    flex: 1,
+                  }}
+                >
+                  [Creator description and bio will appear here. This could be a
+                  longer description about the creator's background and
+                  expertise.]
+                </p>
+
+                {/* Address - Bottom aligned */}
+                <div
+                  style={{
+                    marginTop: 'auto',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      color: '#999',
+                      marginBottom: '0.5rem',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Wallet Address
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      padding: '0.75rem',
+                      border: '1px solid #e0e0e0',
+                      backgroundColor: '#f5f5f3',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono, monospace)',
+                        fontSize: '0.875rem',
+                        color: '#1a1a1a',
+                        flex: 1,
+                      }}
+                    >
+                      {resolvedParams.address.slice(0, 6)}...
+                      {resolvedParams.address.slice(-4)}
+                    </span>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                      }}
+                    >
+                      <button
+                        onClick={() =>
+                          navigator.clipboard.writeText(resolvedParams.address)
+                        }
+                        style={{
+                          padding: '0.5rem 0.75rem',
+                          border: '1px solid #e0e0e0',
+                          backgroundColor: 'transparent',
+                          cursor: 'pointer',
+                          transition: 'all 200ms',
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.75rem',
+                          fontWeight: 500,
+                          color: '#666',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = '#D97757';
+                          e.currentTarget.style.color = '#D97757';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = '#e0e0e0';
+                          e.currentTarget.style.color = '#666';
+                        }}
+                        title="Copy address"
+                      >
+                        Copy
+                      </button>
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/address/${resolvedParams.address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          padding: '0.5rem 0.75rem',
+                          border: '1px solid #e0e0e0',
+                          backgroundColor: 'transparent',
+                          textDecoration: 'none',
+                          color: '#666',
+                          transition: 'all 200ms',
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.75rem',
+                          fontWeight: 500,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = '#D97757';
+                          e.currentTarget.style.color = '#D97757';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = '#e0e0e0';
+                          e.currentTarget.style.color = '#666';
+                        }}
+                        title="View on Etherscan"
+                      >
+                        View onchain →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Stats Dashboard */}
+            <div
+              style={{
+                padding: '2rem',
+                border: '1px solid #e0e0e0',
+                backgroundColor: '#fafaf8',
+                height: '100%',
+              }}
+            >
+              {/* Main Dashboard Content */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '2fr 1fr',
+                  gap: '1.5rem',
+                }}
+              >
+                {/* Left: Key Metrics Grid */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1.5rem',
+                  }}
+                >
+                  <div style={{ textAlign: 'center' }}>
+                    <p
+                      style={{
+                        fontSize: '2rem',
+                        fontWeight: 300,
+                        color: '#1a1a1a',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
+                      {products.length}
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.75rem',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: '#999',
+                        fontWeight: 500,
+                      }}
+                    >
+                      Products
+                    </p>
+                  </div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <p
+                      style={{
+                        fontSize: '2rem',
+                        fontWeight: 300,
+                        color: '#1a1a1a',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
+                      {totalSales}
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.75rem',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: '#999',
+                        fontWeight: 500,
+                      }}
+                    >
+                      Total Sales
+                    </p>
+                  </div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '1.25rem',
+                        fontWeight: 500,
+                        color: '#D97757',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
+                      {pyusdToFormatted(totalRevenue)} PYUSD
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.75rem',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: '#999',
+                        fontWeight: 500,
+                      }}
+                    >
+                      Total Revenue
+                    </p>
+                  </div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '1.1rem',
+                        fontWeight: 500,
+                        color: '#1a1a1a',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
+                      {pyusdToFormatted(averagePrice.toString())} PYUSD
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.75rem',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: '#999',
+                        fontWeight: 500,
+                      }}
+                    >
+                      Avg Price
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: Recent Sales Section */}
                 {revenueData?.ProductPaymentService_PaymentReceived &&
                   revenueData.ProductPaymentService_PaymentReceived.length >
                     0 && (
-                    <div className="bg-gray-50 rounded-2xl p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                        Recent Sales
-                      </h3>
-                      <div className="space-y-3">
+                    <div
+                      style={{
+                        height: 'fit-content',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '0.75rem',
+                          paddingBottom: '0.5rem',
+                          borderBottom: '1px solid #e0e0e0',
+                        }}
+                      >
+                        <h3
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.75rem',
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            color: '#666',
+                            fontWeight: 500,
+                          }}
+                        >
+                          Latest Sales
+                        </h3>
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.5rem',
+                        }}
+                      >
                         {revenueData.ProductPaymentService_PaymentReceived.slice(
                           0,
-                          5
+                          3
                         ).map((payment: any, index: number) => (
                           <a
                             key={index}
                             href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${payment.transactionHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex justify-between items-center bg-white rounded-xl p-3 hover:bg-gray-50 transition-colors cursor-pointer group"
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              padding: '0.5rem',
+                              border: '1px solid #e0e0e0',
+                              backgroundColor: '#f5f5f3',
+                              textDecoration: 'none',
+                              color: 'inherit',
+                              transition: 'border-color 200ms',
+                              fontSize: '0.75rem',
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.borderColor = '#D97757')
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.borderColor = '#e0e0e0')
+                            }
                           >
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                Product #{payment.productId}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {formatDate(payment.blockTimestamp)}
-                              </p>
-                              <p className="text-xs text-blue-600 group-hover:underline">
-                                View transaction →
-                              </p>
+                            <div
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: '0.25rem',
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontFamily: 'var(--font-inter)',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                #{payment.productId}
+                              </span>
+                              <span
+                                style={{
+                                  fontFamily: 'var(--font-inter)',
+                                  fontWeight: 500,
+                                  color: '#D97757',
+                                }}
+                              >
+                                <PriceDisplay priceInPyusd={payment.amount} />
+                              </span>
                             </div>
-                            <PriceDisplay
-                              priceInPyusd={payment.amount}
-                              className="font-semibold text-gray-900"
-                            />
+                            <span
+                              style={{
+                                fontFamily: 'var(--font-inter)',
+                                fontSize: '0.7rem',
+                                color: '#999',
+                              }}
+                            >
+                              {formatDateNoYear(payment.blockTimestamp)}
+                            </span>
                           </a>
                         ))}
                       </div>
@@ -269,8 +626,88 @@ export default function CreatorPage({ params }: CreatorPageProps) {
               </div>
             </div>
           </div>
+
+          {/* Products Section */}
+          <div style={{ marginBottom: '3rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '2rem',
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: '2rem',
+                  fontWeight: 300,
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                Products ({products.length})
+              </h2>
+              {products.length > 6 && (
+                <button
+                  onClick={() => router.push('/products')}
+                  style={{
+                    fontFamily: 'var(--font-inter)',
+                    fontSize: '0.875rem',
+                    color: '#D97757',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  View all in marketplace →
+                </button>
+              )}
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '2rem',
+              }}
+            >
+              {products.slice(0, 6).map((product: any) => (
+                <ProductCard
+                  key={product.id}
+                  productId={product.productId}
+                  contentId={product.contentId}
+                  currentPrice={product.currentPrice}
+                  creator={product.creator}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Responsive styles */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .responsive-creator-header {
+            grid-template-columns: 1fr !important;
+            gap: 2rem !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .responsive-creator-header div:last-child {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
+    </>
   );
 }

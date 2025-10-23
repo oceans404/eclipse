@@ -14,7 +14,7 @@ interface CreatorCardProps {
 export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
   const router = useRouter();
   const { data: statsData } = useQuery(GET_CREATOR_STATS, {
-    variables: { creator }
+    variables: { creator },
   });
 
   const products = statsData?.products || [];
@@ -22,50 +22,186 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
 
   const { data: revenueData } = useQuery(GET_CREATOR_REVENUE, {
     variables: { productIds },
-    skip: productIds.length === 0
+    skip: productIds.length === 0,
   });
 
   const handleClick = () => {
     router.push(`/creator/${creator}`);
   };
 
-  const totalRevenue = revenueData?.ProductPaymentService_PaymentReceived?.reduce((sum: string, payment: any) => {
-    return (BigInt(sum) + BigInt(payment.amount || '0')).toString();
-  }, '0') || '0';
+  const totalRevenue =
+    revenueData?.ProductPaymentService_PaymentReceived?.reduce(
+      (sum: string, payment: any) => {
+        return (BigInt(sum) + BigInt(payment.amount || '0')).toString();
+      },
+      '0'
+    ) || '0';
 
   return (
-    <div 
-      className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
+    <div
       onClick={handleClick}
+      style={{
+        cursor: 'pointer',
+        transition: 'transform 200ms ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-4px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
     >
-      <div className="flex justify-between items-start mb-4">
-        <div className="text-3xl">👤</div>
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="text-xs text-gray-400">View profile →</span>
+      {/* Card Visual */}
+      <div
+        style={{
+          aspectRatio: '4/5',
+          background: 'linear-gradient(135deg, #f5f5f3 0%, #e8e8e6 100%)',
+          border: '1px solid #e0e0e0',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'border-color 200ms ease',
+          padding: '2rem',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = '#D97757';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = '#e0e0e0';
+        }}
+      >
+        {/* Creator Icon */}
+        <div
+          style={{
+            fontSize: '5rem',
+            color: '#d0d0ce',
+            marginBottom: '2rem',
+          }}
+        >
+          👤
+        </div>
+
+        {/* Stats Grid */}
+        <div
+          style={{
+            width: '100%',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '1rem',
+          }}
+        >
+          {/* Products Count */}
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '1rem',
+              border: '1px solid #e0e0e0',
+              backgroundColor: 'rgba(250, 250, 248, 0.8)',
+            }}
+          >
+            <p
+              style={{
+                fontFamily: 'var(--font-inter)',
+                fontSize: '0.75rem',
+                color: '#999',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '0.5rem',
+              }}
+            >
+              Products
+            </p>
+            <p
+              style={{
+                fontSize: '1.5rem',
+                fontWeight: 300,
+                color: '#1a1a1a',
+              }}
+            >
+              {products.length}
+            </p>
+          </div>
+
+          {/* Revenue */}
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '1rem',
+              border: '1px solid #e0e0e0',
+              backgroundColor: 'rgba(250, 250, 248, 0.8)',
+            }}
+          >
+            <p
+              style={{
+                fontFamily: 'var(--font-inter)',
+                fontSize: '0.75rem',
+                color: '#999',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '0.5rem',
+              }}
+            >
+              Revenue
+            </p>
+            <p
+              style={{
+                fontFamily: 'var(--font-inter)',
+                fontSize: '1rem',
+                fontWeight: 500,
+                color: '#D97757',
+              }}
+            >
+              {pyusdToFormatted(totalRevenue)}
+            </p>
+            <p
+              style={{
+                fontFamily: 'var(--font-inter)',
+                fontSize: '0.625rem',
+                color: '#999',
+                marginTop: '0.25rem',
+              }}
+            >
+              PYUSD
+            </p>
+          </div>
         </div>
       </div>
-      
-      <div className="mb-4">
-        <p className="text-sm text-gray-600 mb-2">Creator Address</p>
-        <AddressDisplay 
-          address={creator} 
-          showCopy={false} 
-          showExplorer={false}
-          className="text-gray-900 font-medium"
-        />
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-blue-50 rounded-xl p-3 text-center">
-          <p className="text-sm text-gray-600">Products</p>
-          <p className="text-xl font-bold text-gray-900">{products.length}</p>
-        </div>
-        <div className="bg-green-50 rounded-xl p-3 text-center">
-          <p className="text-sm text-gray-600">Revenue</p>
-          <p className="text-lg font-bold text-gray-900">
-            {pyusdToFormatted(totalRevenue)}
-          </p>
-          <p className="text-xs text-gray-500">PYUSD</p>
+
+      {/* Creator Info */}
+      <div style={{ textAlign: 'center' }}>
+        {/* Creator Label */}
+        <p
+          style={{
+            fontFamily: 'var(--font-inter)',
+            fontSize: '0.75rem',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: '#999',
+            marginBottom: '0.5rem',
+            fontWeight: 500,
+          }}
+        >
+          Creator
+        </p>
+
+        {/* Address */}
+        <div
+          style={{
+            fontFamily: 'var(--font-inter)',
+            fontSize: '0.8125rem',
+            color: '#1a1a1a',
+          }}
+        >
+          <AddressDisplay
+            address={creator}
+            showCopy={false}
+            showExplorer={false}
+            className="text-inherit"
+          />
         </div>
       </div>
     </div>

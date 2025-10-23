@@ -4,69 +4,193 @@ import React from 'react';
 import { useQuery } from '@apollo/client';
 import { GET_ALL_CREATORS } from '@/lib/queries';
 import { CreatorCard } from '@/components/CreatorCard';
+import { Navbar } from '@/components/Navbar';
 
 export default function CreatorsPage() {
   const { loading, error, data } = useQuery(GET_ALL_CREATORS);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading creators...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div style={{ textAlign: 'center' }}>
+          <div
+            style={{
+              animation: 'spin 1s linear infinite',
+              borderRadius: '50%',
+              height: '3rem',
+              width: '3rem',
+              borderBottom: '2px solid #D97757',
+              margin: '0 auto 1rem',
+            }}
+          ></div>
+          <p style={{ color: '#666' }}>Loading creators...</p>
         </div>
+        <style jsx>{`
+          @keyframes spin {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center">
-        <div className="text-center bg-red-50 border border-red-200 rounded-xl p-6">
-          <p className="text-red-600 font-medium">Error loading creators</p>
-          <p className="text-red-500 text-sm mt-2">{error.message}</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div
+          style={{
+            textAlign: 'center',
+            border: '1px solid #e0e0e0',
+            padding: '2rem',
+            maxWidth: '28rem',
+          }}
+        >
+          <p style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+            Error loading creators
+          </p>
+          <p
+            style={{
+              color: '#666',
+              fontSize: '0.875rem',
+              fontFamily: 'var(--font-inter)',
+            }}
+          >
+            {error.message}
+          </p>
         </div>
       </div>
     );
   }
 
-  const creators = (data?.Product ? 
-    [...new Set(data.Product.map((product: any) => product.creator as string))] : []) as string[];
+  const creators = (
+    data?.Product
+      ? [
+          ...new Set(
+            data.Product.map((product: any) => product.creator as string)
+          ),
+        ]
+      : []
+  ) as string[];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      <div className="container mx-auto px-6 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            👥 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Creators</span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Meet the talented creators powering Eclipse marketplace
-          </p>
-        </div>
-
-        {creators.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">👤</div>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-2">No creators found</h3>
-            <p className="text-gray-600">Be the first to create and sell content!</p>
+    <>
+      <Navbar />
+      <div className="min-h-screen">
+        <div className="container-eclipse" style={{ maxWidth: '1400px' }}>
+          {/* Header */}
+          <div
+            style={{
+              textAlign: 'center',
+              paddingTop: '12rem',
+              paddingBottom: '6rem',
+              borderBottom: '1px solid #e0e0e0',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: 'var(--font-inter)',
+                fontSize: '0.75rem',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                color: '#D97757',
+                marginBottom: '2.5rem',
+                fontWeight: 500,
+              }}
+            >
+              Creator Directory
+            </div>
+            <h1
+              style={{
+                fontSize: '4.5rem',
+                fontWeight: 300,
+                lineHeight: 1.1,
+                marginBottom: '2rem',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Meet the creators.
+            </h1>
+            <p
+              style={{
+                fontSize: '1.25rem',
+                color: '#666',
+                maxWidth: '42rem',
+                margin: '0 auto',
+                lineHeight: 1.7,
+              }}
+            >
+              The talented individuals powering Eclipse marketplace with private
+              data.
+            </p>
           </div>
-        ) : (
-          <>
-            <div className="flex justify-between items-center mb-6">
-              <p className="text-gray-600">
-                {creators.length} creator{creators.length !== 1 ? 's' : ''} found
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {creators.map((creator: string) => (
-                <CreatorCard key={creator} creator={creator} />
-              ))}
-            </div>
-          </>
-        )}
+
+          {/* Creators Count */}
+          <div
+            style={{
+              padding: '3rem 0',
+              borderBottom: '1px solid #e0e0e0',
+            }}
+          >
+            <p
+              style={{
+                fontSize: '0.875rem',
+                color: '#666',
+                fontFamily: 'var(--font-inter)',
+                textAlign: 'center',
+              }}
+            >
+              {creators.length} creator{creators.length !== 1 ? 's' : ''} on
+              Eclipse
+            </p>
+          </div>
+
+          {/* Creators Grid or Empty State */}
+          <div style={{ padding: '6rem 0 8rem' }}>
+            {creators.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '8rem 0' }}>
+                <div
+                  style={{
+                    fontSize: '4.5rem',
+                    marginBottom: '2rem',
+                    opacity: 0.2,
+                  }}
+                >
+                  👤
+                </div>
+                <h3
+                  style={{
+                    fontSize: '3rem',
+                    fontWeight: 300,
+                    marginBottom: '1rem',
+                  }}
+                >
+                  No creators yet
+                </h3>
+                <p style={{ fontSize: '1.125rem', color: '#666' }}>
+                  Be the first to create and sell content
+                </p>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                  gap: '4rem 3rem',
+                }}
+              >
+                {creators.map((creator: string) => (
+                  <CreatorCard key={creator} creator={creator} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

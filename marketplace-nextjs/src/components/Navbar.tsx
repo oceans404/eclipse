@@ -24,108 +24,250 @@ export function Navbar() {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl">🌒</span>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Eclipse
-            </span>
-          </Link>
+    <nav
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        backgroundColor: 'rgba(250, 250, 248, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid #e0e0e0',
+        padding: '2rem 0',
+      }}
+    >
+      <div
+        className="container-eclipse"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        {/* Logo */}
+        <Link
+          href="/"
+          style={{
+            fontSize: '1.5rem',
+            fontWeight: 300,
+            letterSpacing: '0.02em',
+            textDecoration: 'none',
+            color: '#1a1a1a',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}
+        >
+          <span>🌒</span>
+          <span>Eclipse</span>
+        </Link>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/" 
-              className="text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              Products
-            </Link>
-            <Link 
-              href="/creators" 
-              className="text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              Creators
-            </Link>
-            {authenticated && (
-              <>
-                <Link 
-                  href="/my-products" 
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                  My Products
-                </Link>
-                <Link 
-                  href="/create" 
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                  Create Product
-                </Link>
-              </>
-            )}
-          </div>
+        {/* Navigation Links */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '3rem',
+            fontFamily: 'var(--font-inter)',
+            fontSize: '0.875rem',
+          }}
+        >
+          <Link
+            href="/products"
+            style={{
+              textDecoration: 'none',
+              color: '#1a1a1a',
+              transition: 'color 200ms',
+              fontWeight: 400,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#D97757')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#1a1a1a')}
+          >
+            Products
+          </Link>
+          <Link
+            href="/creators"
+            style={{
+              textDecoration: 'none',
+              color: '#1a1a1a',
+              transition: 'color 200ms',
+              fontWeight: 400,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#D97757')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#1a1a1a')}
+          >
+            Creators
+          </Link>
+          {authenticated && (
+            <>
+              <Link
+                href="/my-products"
+                style={{
+                  textDecoration: 'none',
+                  color: '#1a1a1a',
+                  transition: 'color 200ms',
+                  fontWeight: 400,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#D97757')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#1a1a1a')}
+              >
+                My Products
+              </Link>
+              <Link
+                href="/create"
+                style={{
+                  textDecoration: 'none',
+                  color: '#1a1a1a',
+                  transition: 'color 200ms',
+                  fontWeight: 400,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#D97757')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#1a1a1a')}
+              >
+                Create
+              </Link>
+            </>
+          )}
 
           {/* Wallet Section */}
-          <div className="flex items-center space-x-4">
-            {authenticated && user?.wallet?.address && (
-              <div className="flex items-center space-x-3">
+          {authenticated && user?.wallet?.address ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'stretch',
+                border: '1px solid #e0e0e0',
+                backgroundColor: '#fafaf8',
+                borderRadius: '0.25rem',
+                overflow: 'hidden',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                transition: 'all 200ms ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#D97757';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(217, 151, 87, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#e0e0e0';
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+              }}
+            >
+              {/* Wallet Info */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  flexDirection: 'column',
+                  padding: '0.5rem 0.75rem',
+                  gap: '0.125rem',
+                  minWidth: '120px',
+                }}
+              >
+                {/* User Address */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.375rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '0.375rem',
+                      height: '0.375rem',
+                      backgroundColor: '#D97757',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 0 1px rgba(217, 151, 87, 0.3)',
+                    }}
+                  ></div>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.75rem',
+                      color: '#1a1a1a',
+                      fontWeight: 500,
+                      letterSpacing: '0.01em',
+                    }}
+                  >
+                    {user.wallet.address.slice(0, 6)}...
+                    {user.wallet.address.slice(-4)}
+                  </span>
+                </div>
+
                 {/* PYUSD Balance */}
-                <div className="hidden sm:flex items-center space-x-2 bg-gray-50 px-3 py-2 rounded-lg">
-                  <span className="text-sm font-medium text-gray-600">PYUSD:</span>
-                  <span className="text-sm font-bold text-green-600">
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: '0.25rem',
+                    paddingLeft: '0.75rem',
+                  }}
+                >
+                  <span 
+                    style={{ 
+                      color: '#999', 
+                      fontSize: '0.625rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      fontWeight: 500,
+                      fontFamily: 'var(--font-inter)',
+                    }}
+                  >
+                    PYUSD
+                  </span>
+                  <span 
+                    style={{ 
+                      color: '#D97757', 
+                      fontWeight: 500,
+                      fontSize: '0.75rem',
+                      fontFamily: 'var(--font-inter)',
+                    }}
+                  >
                     {formatPyusdBalance(pyusdBalance?.value)}
                   </span>
                 </div>
-
-                {/* User Address */}
-                <div className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-mono text-gray-700">
-                    {user.wallet.address.slice(0, 6)}...{user.wallet.address.slice(-4)}
-                  </span>
-                </div>
               </div>
-            )}
 
-            {/* Login/Logout Button */}
-            {authenticated ? (
+              {/* Disconnect Button */}
               <button
                 onClick={logout}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 200ms ease',
+                  backgroundColor: 'transparent',
+                  color: '#999',
+                  padding: '0 0.625rem',
+                  border: 'none',
+                  borderLeft: '1px solid #e0e0e0',
+                  fontSize: '0.875rem',
+                  fontFamily: 'var(--font-inter)',
+                  cursor: 'pointer',
+                  fontWeight: 400,
+                  minWidth: '2rem',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#D97757';
+                  e.currentTarget.style.color = '#fafaf8';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#999';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                title="Disconnect wallet"
               >
-                Disconnect
+                ×
               </button>
-            ) : (
-              <button
-                onClick={login}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Connect Wallet
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {authenticated && (
-          <div className="md:hidden mt-4 pt-4 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Link href="/" className="text-gray-600 text-sm">Products</Link>
-                <Link href="/creators" className="text-gray-600 text-sm">Creators</Link>
-                <Link href="/my-products" className="text-gray-600 text-sm">My Products</Link>
-                <Link href="/create" className="text-gray-600 text-sm">Create</Link>
-              </div>
-              {user?.wallet?.address && (
-                <div className="flex items-center space-x-2 text-xs">
-                  <span className="text-gray-500">PYUSD: {formatPyusdBalance(pyusdBalance?.value)}</span>
-                </div>
-              )}
             </div>
-          </div>
-        )}
+          ) : (
+            <button onClick={login} className="btn-nav">
+              Connect Wallet
+            </button>
+          )}
+        </div>
       </div>
     </nav>
   );

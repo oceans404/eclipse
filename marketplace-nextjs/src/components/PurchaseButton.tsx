@@ -2,7 +2,11 @@
 
 import { useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { useContractWrite, usePyusdAllowance, useHasPaid } from '@/hooks/useContract';
+import {
+  useContractWrite,
+  usePyusdAllowance,
+  useHasPaid,
+} from '@/hooks/useContract';
 import { formatUnits, parseUnits } from 'viem';
 import { PYUSD_DECIMALS } from '@/lib/config';
 
@@ -12,25 +16,31 @@ interface PurchaseButtonProps {
   onPurchaseSuccess?: () => void;
 }
 
-export function PurchaseButton({ productId, price, onPurchaseSuccess }: PurchaseButtonProps) {
+export function PurchaseButton({
+  productId,
+  price,
+  onPurchaseSuccess,
+}: PurchaseButtonProps) {
   const { authenticated, user, login } = usePrivy();
   const [step, setStep] = useState<'idle' | 'approving' | 'purchasing'>('idle');
-  
-  const { 
-    approvePyusd, 
-    payForProduct, 
-    isPending, 
-    isConfirming, 
-    isConfirmed, 
-    hash, 
-    error 
+
+  const {
+    approvePyusd,
+    payForProduct,
+    isPending,
+    isConfirming,
+    isConfirmed,
+    hash,
+    error,
   } = useContractWrite();
 
   // Check if user already owns this product
   const { data: hasPaid } = useHasPaid(user?.wallet?.address, productId);
 
   // Check current PYUSD allowance
-  const { data: allowance, refetch: refetchAllowance } = usePyusdAllowance(user?.wallet?.address);
+  const { data: allowance, refetch: refetchAllowance } = usePyusdAllowance(
+    user?.wallet?.address
+  );
 
   const priceInPyusd = parseUnits(price, PYUSD_DECIMALS);
   const hasEnoughAllowance = allowance && allowance >= priceInPyusd;
@@ -46,19 +56,18 @@ export function PurchaseButton({ productId, price, onPurchaseSuccess }: Purchase
         // Auto-batched flow: Approve then immediately purchase
         setStep('approving');
         console.log('Starting auto-batched purchase flow...');
-        
+
         // Step 1: Approve PYUSD spending
         await approvePyusd(price);
         console.log('Approval completed, starting purchase...');
-        
+
         // Small delay to ensure approval is processed
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         // Step 2: Automatically trigger purchase
         setStep('purchasing');
         await payForProduct(productId);
         console.log('Purchase completed!');
-        
       } else {
         // Direct purchase if already approved
         setStep('purchasing');
@@ -79,10 +88,30 @@ export function PurchaseButton({ productId, price, onPurchaseSuccess }: Purchase
   // If user already owns this product
   if (hasPaid) {
     return (
-      <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-center">
-        <div className="flex items-center justify-center space-x-2">
-          <span>✅</span>
-          <span className="font-medium">YOU ALREADY OWN THIS</span>
+      <div
+        style={{
+          border: '1px solid #e0e0e0',
+          padding: '1.5rem',
+          textAlign: 'center',
+          backgroundColor: '#f5f5f3',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            fontFamily: 'var(--font-inter)',
+            fontSize: '0.875rem',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: '#1a1a1a',
+            fontWeight: 500,
+          }}
+        >
+          <span>✓</span>
+          <span>You already own this</span>
         </div>
       </div>
     );
@@ -93,7 +122,8 @@ export function PurchaseButton({ productId, price, onPurchaseSuccess }: Purchase
     return (
       <button
         onClick={handlePurchase}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg transition-colors font-medium"
+        className="btn-primary"
+        style={{ width: '100%' }}
       >
         Connect Wallet to Purchase
       </button>
@@ -121,57 +151,84 @@ export function PurchaseButton({ productId, price, onPurchaseSuccess }: Purchase
   // Helper function to get user-friendly error messages
   const getErrorMessage = (error: any) => {
     const message = error?.message || '';
-    
+
     if (message.includes('User rejected') || message.includes('User denied')) {
       return 'Transaction was cancelled by user';
     }
-    
+
     if (message.includes('insufficient funds')) {
       return 'Insufficient funds for transaction';
     }
-    
+
     if (message.includes('allowance')) {
       return 'PYUSD allowance issue - please try again';
     }
-    
+
     if (message.includes('ProductAlreadyExists')) {
       return 'Product ID already exists';
     }
-    
+
     if (message.includes('AlreadyPaid')) {
       return 'You have already purchased this product';
     }
-    
+
     // For other errors, show a generic message
     return 'Transaction failed - please try again';
   };
 
   return (
-    <div className="space-y-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Transaction Status */}
       {(error || hash) && (
-        <div className="p-3 rounded-lg border text-sm">
+        <div
+          style={{
+            padding: '1rem',
+            border: '1px solid #e0e0e0',
+            fontFamily: 'var(--font-inter)',
+            fontSize: '0.875rem',
+          }}
+        >
           {error && (
-            <div className="text-red-600">
-              <div className="font-medium">Transaction failed:</div>
-              <div className="mt-1">{getErrorMessage(error)}</div>
+            <div style={{ color: '#1a1a1a' }}>
+              <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>
+                Transaction failed:
+              </div>
+              <div style={{ color: '#666' }}>{getErrorMessage(error)}</div>
             </div>
           )}
           {hash && (
-            <div className="text-green-600">
-              <div className="font-medium">
-                {step === 'approving' ? 'Approval' : 'Purchase'} transaction submitted
+            <div>
+              <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>
+                {step === 'approving' ? 'Approval' : 'Purchase'} transaction
+                submitted
                 {step === 'approving' && !hasEnoughAllowance && (
-                  <span className="text-blue-600 text-sm block mt-1">
+                  <span
+                    style={{
+                      color: '#D97757',
+                      fontSize: '0.8125rem',
+                      display: 'block',
+                      marginTop: '0.25rem',
+                      fontWeight: 400,
+                    }}
+                  >
                     → Purchase will start automatically after approval
                   </span>
                 )}
               </div>
-              <a 
+              <a
                 href={`https://sepolia.etherscan.io/tx/${hash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline mt-1 inline-block"
+                style={{
+                  color: '#D97757',
+                  textDecoration: 'none',
+                  display: 'inline-block',
+                  borderBottom: '1px solid #D97757',
+                  paddingBottom: '0.125rem',
+                  transition: 'opacity 200ms',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.7')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
               >
                 View on Etherscan →
               </a>
@@ -184,11 +241,31 @@ export function PurchaseButton({ productId, price, onPurchaseSuccess }: Purchase
       <button
         onClick={handlePurchase}
         disabled={isLoading}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-3 px-6 rounded-lg transition-colors font-medium"
+        className="btn-primary"
+        style={{
+          width: '100%',
+          opacity: isLoading ? 0.6 : 1,
+          cursor: isLoading ? 'not-allowed' : 'pointer',
+        }}
       >
         {isLoading ? (
-          <div className="flex items-center justify-center space-x-2">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <div
+              style={{
+                animation: 'spin 1s linear infinite',
+                borderRadius: '50%',
+                height: '1.25rem',
+                width: '1.25rem',
+                borderBottom: '2px solid #fafaf8',
+              }}
+            ></div>
             <span>{getButtonText()}</span>
           </div>
         ) : (
@@ -198,10 +275,30 @@ export function PurchaseButton({ productId, price, onPurchaseSuccess }: Purchase
 
       {/* Purchase Info */}
       {!hasEnoughAllowance && (
-        <div className="text-xs text-gray-500 text-center">
-          ⚡ Auto-batched: Approval + Purchase in one click!
+        <div
+          style={{
+            fontFamily: 'var(--font-inter)',
+            fontSize: '0.75rem',
+            color: '#999',
+            textAlign: 'center',
+            letterSpacing: '0.05em',
+          }}
+        >
+          ⚡ Auto-batched: Approval + Purchase in one click
         </div>
       )}
+
+      {/* Add keyframes for loading spinner */}
+      <style jsx>{`
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </div>
   );
 }
