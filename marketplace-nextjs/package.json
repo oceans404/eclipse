@@ -13,6 +13,8 @@
     "@privy-io/react-auth": "^3.4.0",
     "@privy-io/wagmi": "^2.0.1",
     "@tanstack/react-query": "^5.90.5",
+    "@vercel/blob": "^2.0.0",
+    "@vercel/postgres": "^0.10.0",
     "date-fns": "^4.1.0",
     "graphql": "^16.11.0",
     "lucide-react": "^0.546.0",

@@ -2,8 +2,10 @@
 
 import { usePrivy } from '@privy-io/react-auth';
 import { useBalance } from 'wagmi';
+import { useQuery } from '@apollo/client';
 import { formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES, PYUSD_DECIMALS } from '@/lib/config';
+import { GET_PRODUCTS_BY_CREATOR } from '@/lib/queries';
 import Link from 'next/link';
 
 export function Navbar() {
@@ -17,6 +19,14 @@ export function Navbar() {
       enabled: !!user?.wallet?.address,
     },
   });
+
+  // Check if user has created any products
+  const { data: createdProductsData } = useQuery(GET_PRODUCTS_BY_CREATOR, {
+    variables: { creator: user?.wallet?.address },
+    skip: !authenticated || !user?.wallet?.address,
+  });
+
+  const hasCreatedProducts = createdProductsData?.Product?.length > 0;
 
   const formatPyusdBalance = (balance: bigint | undefined) => {
     if (!balance) return '0.00';
@@ -101,6 +111,21 @@ export function Navbar() {
           </Link>
           {authenticated && (
             <>
+              {hasCreatedProducts && (
+                <Link
+                  href={`/creator/${user?.wallet?.address}`}
+                  style={{
+                    textDecoration: 'none',
+                    color: '#1a1a1a',
+                    transition: 'color 200ms',
+                    fontWeight: 400,
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#D97757')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#1a1a1a')}
+                >
+                  My Profile
+                </Link>
+              )}
               <Link
                 href="/my-products"
                 style={{

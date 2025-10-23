@@ -1,13 +1,84 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { GET_ALL_CREATORS } from '@/lib/queries';
 import { CreatorCard } from '@/components/CreatorCard';
 import { Navbar } from '@/components/Navbar';
+import { CreatorProfile } from '@/lib/db';
 
 export default function CreatorsPage() {
   const { loading, error, data } = useQuery(GET_ALL_CREATORS);
+  const [creatorProfiles, setCreatorProfiles] = useState<{
+    [address: string]: CreatorProfile;
+  }>({});
+  const [profilesLoading, setProfilesLoading] = useState(true);
+
+  const creators = (
+    data?.Product
+      ? [
+          ...new Set(
+            data.Product.map((product: any) => product.creator as string)
+          ),
+        ]
+      : []
+  ) as string[];
+
+  // Fetch all creator profiles
+  useEffect(() => {
+    const fetchCreatorProfiles = async () => {
+      if (creators.length === 0) {
+        setProfilesLoading(false);
+        return;
+      }
+
+      try {
+        const profilePromises = creators.map(async (creator) => {
+          try {
+            const response = await fetch(`/api/creator/${creator}`);
+            if (response.ok) {
+              const profile = await response.json();
+              return { address: creator, profile };
+            }
+          } catch (error) {
+            console.error(`Error fetching profile for ${creator}:`, error);
+          }
+          return { address: creator, profile: null };
+        });
+
+        const results = await Promise.all(profilePromises);
+        const profilesMap: { [address: string]: CreatorProfile } = {};
+
+        results.forEach(({ address, profile }) => {
+          if (profile) {
+            profilesMap[address] = profile;
+          }
+        });
+
+        setCreatorProfiles(profilesMap);
+      } catch (error) {
+        console.error('Error fetching creator profiles:', error);
+      } finally {
+        setProfilesLoading(false);
+      }
+    };
+
+    fetchCreatorProfiles();
+  }, [creators.length]);
+
+  // Sort creators: those with profiles first, then by creation date
+  const sortedCreators = [...creators].sort((a, b) => {
+    const aHasProfile = creatorProfiles[a] ? 1 : 0;
+    const bHasProfile = creatorProfiles[b] ? 1 : 0;
+
+    // First sort by profile existence (profiles first)
+    if (aHasProfile !== bHasProfile) {
+      return bHasProfile - aHasProfile;
+    }
+
+    // Then sort alphabetically by address as fallback
+    return a.localeCompare(b);
+  });
 
   if (loading) {
     return (
@@ -67,16 +138,6 @@ export default function CreatorsPage() {
     );
   }
 
-  const creators = (
-    data?.Product
-      ? [
-          ...new Set(
-            data.Product.map((product: any) => product.creator as string)
-          ),
-        ]
-      : []
-  ) as string[];
-
   return (
     <>
       <Navbar />
@@ -129,26 +190,6 @@ export default function CreatorsPage() {
             </p>
           </div>
 
-          {/* Creators Count */}
-          <div
-            style={{
-              padding: '3rem 0',
-              borderBottom: '1px solid #e0e0e0',
-            }}
-          >
-            <p
-              style={{
-                fontSize: '0.875rem',
-                color: '#666',
-                fontFamily: 'var(--font-inter)',
-                textAlign: 'center',
-              }}
-            >
-              {creators.length} creator{creators.length !== 1 ? 's' : ''} on
-              Eclipse
-            </p>
-          </div>
-
           {/* Creators Grid or Empty State */}
           <div style={{ padding: '6rem 0 8rem' }}>
             {creators.length === 0 ? (
@@ -183,7 +224,7 @@ export default function CreatorsPage() {
                   gap: '4rem 3rem',
                 }}
               >
-                {creators.map((creator: string) => (
+                {sortedCreators.map((creator: string) => (
                   <CreatorCard key={creator} creator={creator} />
                 ))}
               </div>

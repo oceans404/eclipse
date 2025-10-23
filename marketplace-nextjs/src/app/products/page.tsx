@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { usePrivy } from '@privy-io/react-auth';
 import { GET_ALL_PRODUCTS, GET_USER_OWNED_PRODUCTS } from '@/lib/queries';
 import { ProductCard } from '@/components/ProductCard';
 import { Navbar } from '@/components/Navbar';
+import { CreatorProfile } from '@/lib/db';
 
 export default function ProductsPage() {
   const [sortBy, setSortBy] = useState<'price' | 'newest' | 'oldest'>('newest');
   const [searchTerm, setSearchTerm] = useState('');
+  const [creatorProfiles, setCreatorProfiles] = useState<Map<string, CreatorProfile>>(new Map());
   const { authenticated, user } = usePrivy();
 
   const { loading, error, data } = useQuery(GET_ALL_PRODUCTS);
@@ -19,6 +21,34 @@ export default function ProductsPage() {
     variables: { userAddress: user?.wallet?.address },
     skip: !authenticated || !user?.wallet?.address,
   });
+
+  // Fetch creator profiles when products are loaded
+  useEffect(() => {
+    const fetchCreatorProfiles = async () => {
+      if (!data?.Product) return;
+
+      const uniqueCreators = [...new Set(data.Product.map((p: any) => p.creator))];
+      const profiles = new Map<string, CreatorProfile>();
+
+      await Promise.all(
+        uniqueCreators.map(async (address: string) => {
+          try {
+            const response = await fetch(`/api/creator/${address}`);
+            if (response.ok) {
+              const profile = await response.json();
+              profiles.set(address, profile);
+            }
+          } catch (error) {
+            console.error(`Failed to fetch profile for ${address}:`, error);
+          }
+        })
+      );
+
+      setCreatorProfiles(profiles);
+    };
+
+    fetchCreatorProfiles();
+  }, [data]);
 
   if (loading) {
     return (
@@ -419,6 +449,7 @@ export default function ProductsPage() {
                     contentId={product.contentId}
                     currentPrice={product.currentPrice}
                     creator={product.creator}
+                    creatorProfile={creatorProfiles.get(product.creator) || null}
                   />
                 ))}
               </div>

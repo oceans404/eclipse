@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/navigation';
 import { GET_PRODUCT_DETAILS, GET_PRICE_HISTORY } from '@/lib/queries';
@@ -8,6 +8,7 @@ import { PriceDisplay } from '@/components/PriceDisplay';
 import { AddressDisplay } from '@/components/AddressDisplay';
 import { PurchaseButton } from '@/components/PurchaseButton';
 import { Navbar } from '@/components/Navbar';
+import { CreatorProfile } from '@/lib/db';
 
 interface ProductPageProps {
   params: Promise<{
@@ -19,6 +20,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const resolvedParams = use(params);
   const router = useRouter();
   const productId = Number(resolvedParams.id);
+  const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null);
 
   const { loading, error, data } = useQuery(GET_PRODUCT_DETAILS, {
     variables: { productId },
@@ -29,6 +31,25 @@ export default function ProductPage({ params }: ProductPageProps) {
     variables: { productId },
     skip: isNaN(productId),
   });
+
+  // Fetch creator profile when product data is loaded
+  useEffect(() => {
+    const fetchCreatorProfile = async () => {
+      if (!data?.Product?.[0]?.creator) return;
+      
+      try {
+        const response = await fetch(`/api/creator/${data.Product[0].creator}`);
+        if (response.ok) {
+          const profile = await response.json();
+          setCreatorProfile(profile);
+        }
+      } catch (error) {
+        console.error('Failed to fetch creator profile:', error);
+      }
+    };
+
+    fetchCreatorProfile();
+  }, [data]);
 
   if (isNaN(productId)) {
     return (
@@ -363,23 +384,85 @@ export default function ProductPage({ params }: ProductPageProps) {
                       e.currentTarget.style.borderColor = '#e0e0e0';
                     }}
                   >
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-mono, monospace)',
-                        fontSize: '0.875rem',
-                        color: '#1a1a1a',
-                        flex: 1,
-                      }}
-                    >
-                      {product.creator.slice(0, 6)}...
-                      {product.creator.slice(-4)}
-                    </span>
+                    {/* Creator Profile Image */}
+                    {creatorProfile?.image_url ? (
+                      <img
+                        src={creatorProfile.image_url}
+                        alt={creatorProfile.name || 'Creator'}
+                        style={{
+                          width: '2.5rem',
+                          height: '2.5rem',
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                          border: '1px solid #e0e0e0',
+                          flexShrink: 0,
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: '2.5rem',
+                          height: '2.5rem',
+                          borderRadius: '50%',
+                          backgroundColor: '#f5f5f3',
+                          border: '1px solid #e0e0e0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.25rem',
+                          flexShrink: 0,
+                        }}
+                      >
+                        👤
+                      </div>
+                    )}
+                    
+                    {/* Creator Info */}
+                    <div style={{ flex: 1 }}>
+                      {creatorProfile?.name ? (
+                        <div>
+                          <div
+                            style={{
+                              fontSize: '0.9rem',
+                              color: '#1a1a1a',
+                              fontWeight: 400,
+                              marginBottom: '0.125rem',
+                            }}
+                          >
+                            {creatorProfile.name}
+                          </div>
+                          <div
+                            style={{
+                              fontFamily: 'var(--font-mono, monospace)',
+                              fontSize: '0.75rem',
+                              color: '#666',
+                            }}
+                          >
+                            {product.creator.slice(0, 6)}...
+                            {product.creator.slice(-4)}
+                          </div>
+                        </div>
+                      ) : (
+                        <span
+                          style={{
+                            fontFamily: 'var(--font-mono, monospace)',
+                            fontSize: '0.875rem',
+                            color: '#1a1a1a',
+                          }}
+                        >
+                          {product.creator.slice(0, 6)}...
+                          {product.creator.slice(-4)}
+                        </span>
+                      )}
+                    </div>
+                    
                     <span
                       style={{
                         fontFamily: 'var(--font-inter)',
                         fontSize: '0.75rem',
                         color: '#D97757',
                         fontWeight: 500,
+                        flexShrink: 0,
                       }}
                     >
                       View profile →

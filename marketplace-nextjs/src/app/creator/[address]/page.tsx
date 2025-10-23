@@ -1,14 +1,17 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/navigation';
+import { usePrivy } from '@privy-io/react-auth';
 import { GET_CREATOR_PROFILE, GET_CREATOR_REVENUE } from '@/lib/queries';
 import { ProductCard } from '@/components/ProductCard';
 import { AddressDisplay } from '@/components/AddressDisplay';
 import { PriceDisplay } from '@/components/PriceDisplay';
+import { EditProfileModal } from '@/components/EditProfileModal';
 import { pyusdToFormatted } from '@/utils/formatting';
 import { Navbar } from '@/components/Navbar';
+import { CreatorProfile } from '@/lib/db';
 
 interface CreatorPageProps {
   params: Promise<{
@@ -19,9 +22,37 @@ interface CreatorPageProps {
 export default function CreatorPage({ params }: CreatorPageProps) {
   const resolvedParams = use(params);
   const router = useRouter();
+  const { authenticated, user } = usePrivy();
+  const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+  
   const { loading, error, data } = useQuery(GET_CREATOR_PROFILE, {
     variables: { creator: resolvedParams.address },
   });
+
+  // Check if the current user is the creator
+  const isOwnProfile = authenticated && 
+    user?.wallet?.address?.toLowerCase() === resolvedParams.address.toLowerCase();
+
+  // Fetch creator profile from database
+  useEffect(() => {
+    const fetchCreatorProfile = async () => {
+      try {
+        const response = await fetch(`/api/creator/${resolvedParams.address}`);
+        if (response.ok) {
+          const profile = await response.json();
+          setCreatorProfile(profile);
+        }
+      } catch (error) {
+        console.error('Error fetching creator profile:', error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchCreatorProfile();
+  }, [resolvedParams.address]);
 
   const products = data?.Product || [];
   const productIds = products.map((p: any) => p.productId);
@@ -220,13 +251,13 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                     marginBottom: '1.5rem',
                   }}
                 >
-                  {/* Creator Image Placeholder */}
+                  {/* Creator Image */}
                   <div
                     style={{
                       width: '4.5rem',
                       height: '4.5rem',
                       backgroundColor: '#f5f5f3',
-                      border: '2px dashed #e0e0e0',
+                      border: creatorProfile?.image_url ? '2px solid #e0e0e0' : '2px dashed #e0e0e0',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
@@ -234,26 +265,70 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                       fontSize: '1.75rem',
                       color: '#999',
                       flexShrink: 0,
+                      overflow: 'hidden',
                     }}
                   >
-                    👤
+                    {creatorProfile?.image_url ? (
+                      <img
+                        src={creatorProfile.image_url}
+                        alt={creatorProfile.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.parentElement!.innerHTML = '👤';
+                        }}
+                      />
+                    ) : (
+                      '👤'
+                    )}
                   </div>
 
                   {/* Creator Name */}
                   <div style={{ flex: 1 }}>
-                    <h1
-                      style={{
-                        fontSize: '2rem',
-                        fontWeight: 300,
-                        lineHeight: 1.1,
-                        marginBottom: '0.5rem',
-                        letterSpacing: '-0.02em',
-                        color: '#D97757',
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      [Creator Name]
-                    </h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                      <h1
+                        style={{
+                          fontSize: '2rem',
+                          fontWeight: 300,
+                          lineHeight: 1.1,
+                          letterSpacing: '-0.02em',
+                          color: creatorProfile ? '#1a1a1a' : '#D97757',
+                          fontStyle: creatorProfile ? 'normal' : 'italic',
+                        }}
+                      >
+                        {creatorProfile ? creatorProfile.name : '[Creator Name]'}
+                      </h1>
+                      {isOwnProfile && (
+                        <button
+                          onClick={() => setIsEditModalOpen(true)}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            border: '1px solid #e0e0e0',
+                            backgroundColor: 'transparent',
+                            cursor: 'pointer',
+                            transition: 'all 200ms',
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.75rem',
+                            fontWeight: 500,
+                            color: '#666',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#D97757';
+                            e.currentTarget.style.color = '#D97757';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = '#e0e0e0';
+                            e.currentTarget.style.color = '#666';
+                          }}
+                        >
+                          Edit Profile
+                        </button>
+                      )}
+                    </div>
                     <p
                       style={{
                         fontSize: '0.875rem',
@@ -270,16 +345,17 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                 <p
                   style={{
                     fontSize: '0.95rem',
-                    color: '#999',
-                    fontStyle: 'italic',
+                    color: creatorProfile ? '#666' : '#999',
+                    fontStyle: creatorProfile ? 'normal' : 'italic',
                     marginBottom: '1.5rem',
                     lineHeight: 1.6,
                     flex: 1,
                   }}
                 >
-                  [Creator description and bio will appear here. This could be a
-                  longer description about the creator's background and
-                  expertise.]
+                  {creatorProfile 
+                    ? creatorProfile.description 
+                    : '[Creator description and bio will appear here. This could be a longer description about the creator\'s background and expertise.]'
+                  }
                 </p>
 
                 {/* Address - Bottom aligned */}
@@ -677,12 +753,25 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                   contentId={product.contentId}
                   currentPrice={product.currentPrice}
                   creator={product.creator}
+                  creatorProfile={creatorProfile}
                 />
               ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        address={resolvedParams.address}
+        currentProfile={creatorProfile}
+        onProfileUpdated={(updatedProfile) => {
+          setCreatorProfile(updatedProfile);
+          setIsEditModalOpen(false);
+        }}
+      />
 
       {/* Responsive styles */}
       <style jsx>{`

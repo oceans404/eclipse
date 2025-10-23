@@ -1,17 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import React from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { usePrivyWallet } from '@/hooks/usePrivyWallet';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
+import { CreatorProfile } from '@/lib/db';
 
 export default function CreateProductPage() {
   const { authenticated, user } = usePrivy();
   const { addProduct, isLoading, hash, error } = usePrivyWallet();
   const router = useRouter();
 
+  // Profile setup state
+  const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(
+    null
+  );
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [profileFormData, setProfileFormData] = useState({
+    name: '',
+    description: '',
+    image_url: '',
+  });
+  const [profileSubmitting, setProfileSubmitting] = useState(false);
+  const [profileError, setProfileError] = useState('');
+
+  // Product creation state
   const [formData, setFormData] = useState({
     productId: '',
     price: '',
@@ -21,6 +37,72 @@ export default function CreateProductPage() {
   const [submitted, setSubmitted] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(0);
+
+  // Check if user has a creator profile
+  useEffect(() => {
+    const fetchCreatorProfile = async () => {
+      if (!authenticated || !user?.wallet?.address) {
+        setProfileLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/creator/${user.wallet.address}`);
+        if (response.ok) {
+          const profile = await response.json();
+          setCreatorProfile(profile);
+        } else if (response.status === 404) {
+          // Profile doesn't exist, show profile form
+          setShowProfileForm(true);
+        }
+      } catch (error) {
+        console.error('Error fetching creator profile:', error);
+        setShowProfileForm(true); // Default to showing form on error
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchCreatorProfile();
+  }, [authenticated, user?.wallet?.address]);
+
+  // Handle profile form submission
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileSubmitting(true);
+    setProfileError('');
+
+    if (!user?.wallet?.address) {
+      setProfileError('Wallet address not found');
+      setProfileSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/creator/${user.wallet.address}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileFormData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create profile');
+      }
+
+      const profile = await response.json();
+      setCreatorProfile(profile);
+      setShowProfileForm(false);
+    } catch (err) {
+      setProfileError(
+        err instanceof Error ? err.message : 'Failed to create profile'
+      );
+    } finally {
+      setProfileSubmitting(false);
+    }
+  };
 
   // Helper function to get user-friendly error messages
   const getErrorMessage = (error: any) => {
@@ -134,6 +216,15 @@ export default function CreateProductPage() {
     }));
   };
 
+  const handleProfileChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setProfileFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
   if (!authenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -177,6 +268,36 @@ export default function CreateProductPage() {
     );
   }
 
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div style={{ textAlign: 'center' }}>
+          <div
+            style={{
+              animation: 'spin 1s linear infinite',
+              borderRadius: '50%',
+              height: '3rem',
+              width: '3rem',
+              borderBottom: '2px solid #D97757',
+              margin: '0 auto 1rem',
+            }}
+          ></div>
+          <p style={{ color: '#666' }}>Loading creator information...</p>
+        </div>
+        <style jsx>{`
+          @keyframes spin {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <>
       <Navbar />
@@ -184,53 +305,55 @@ export default function CreateProductPage() {
         <div
           className="container-eclipse"
           style={{
-            maxWidth: '900px',
-            paddingTop: '10rem',
-            paddingBottom: '8rem',
+            maxWidth: '800px',
+            paddingTop: '8rem',
+            paddingBottom: '4rem',
           }}
         >
-          {/* Header */}
+          {/* Compact Header */}
           <div
             style={{
               textAlign: 'center',
-              paddingBottom: '4rem',
+              paddingBottom: '2rem',
               borderBottom: '1px solid #e0e0e0',
-              marginBottom: '4rem',
+              marginBottom: '2rem',
             }}
           >
             <div
               style={{
                 fontFamily: 'var(--font-inter)',
-                fontSize: '0.75rem',
+                fontSize: '0.7rem',
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
                 color: '#D97757',
-                marginBottom: '2rem',
+                marginBottom: '1rem',
                 fontWeight: 500,
               }}
             >
-              Add to Marketplace
+              {showProfileForm ? 'Creator Setup' : 'Add to Marketplace'}
             </div>
             <h1
               style={{
-                fontSize: '4rem',
+                fontSize: '2.5rem',
                 fontWeight: 300,
                 lineHeight: 1.1,
-                marginBottom: '1.5rem',
+                marginBottom: '0.75rem',
                 letterSpacing: '-0.02em',
               }}
             >
-              Create new product.
+              {showProfileForm ? 'Create your profile.' : 'Create new product.'}
             </h1>
             <p
               style={{
-                fontSize: '1.125rem',
+                fontSize: '0.95rem',
                 color: '#666',
-                maxWidth: '36rem',
+                maxWidth: '32rem',
                 margin: '0 auto',
               }}
             >
-              Add your encrypted content to Eclipse
+              {showProfileForm
+                ? 'Set up your creator profile before adding products'
+                : 'Add your encrypted content to Eclipse'}
             </p>
           </div>
 
@@ -238,354 +361,631 @@ export default function CreateProductPage() {
           <div
             style={{
               border: '1px solid #e0e0e0',
-              padding: '3rem',
+              padding: '2rem',
             }}
           >
-            {/* Transaction Status */}
-            {(submitted || error) && (
-              <div
-                style={{
-                  marginBottom: '2rem',
-                  padding: '1.5rem',
-                  border: '1px solid #e0e0e0',
-                  fontFamily: 'var(--font-inter)',
-                  fontSize: '0.875rem',
-                }}
-              >
-                {isLoading && (
-                  <div
+            {showProfileForm ? (
+              // Profile Setup Form
+              <>
+                <div
+                  style={{
+                    marginBottom: '1.5rem',
+                    padding: '1rem',
+                    border: '1px solid #e0e0e0',
+                    backgroundColor: '#f5f5f3',
+                  }}
+                >
+                  <h3
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.8rem',
+                      fontWeight: 500,
+                      color: '#1a1a1a',
+                      marginBottom: '0.5rem',
                     }}
                   >
-                    <div
-                      style={{
-                        animation: 'spin 1s linear infinite',
-                        borderRadius: '50%',
-                        height: '1.25rem',
-                        width: '1.25rem',
-                        borderBottom: '2px solid #D97757',
-                      }}
-                    ></div>
-                    <span>Submitting transaction...</span>
-                  </div>
-                )}
-                {submitted && !isLoading && !isConfirmed && (
-                  <div
+                    Step 1: Create Your Profile
+                  </h3>
+                  <p
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.75rem',
+                      color: '#666',
+                      margin: 0,
                     }}
                   >
-                    <div
-                      style={{
-                        animation: 'spin 1s linear infinite',
-                        borderRadius: '50%',
-                        height: '1.25rem',
-                        width: '1.25rem',
-                        borderBottom: '2px solid #D97757',
-                      }}
-                    ></div>
-                    <span>Confirming transaction...</span>
+                    Set up your creator profile before adding products to the marketplace.
+                  </p>
+                </div>
+
+                {profileError && (
+                  <div
+                    style={{
+                      padding: '0.75rem',
+                      backgroundColor: '#fef2f2',
+                      border: '1px solid #fecaca',
+                      color: '#dc2626',
+                      fontSize: '0.875rem',
+                      marginBottom: '1.5rem',
+                    }}
+                  >
+                    {profileError}
                   </div>
                 )}
-                {isConfirmed && (
-                  <div>
-                    <div
+
+                <form onSubmit={handleProfileSubmit}>
+                  {/* Profile Name */}
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <label
+                      htmlFor="name"
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
+                        display: 'block',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.8rem',
+                        fontWeight: 500,
+                        color: '#1a1a1a',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
+                      Display Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={profileFormData.name}
+                      onChange={handleProfileChange}
+                      placeholder="Enter your display name"
+                      style={{
+                        width: '100%',
+                        padding: '0.625rem',
+                        border: '1px solid #e0e0e0',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        outline: 'none',
+                        transition: 'border-color 200ms',
+                      }}
+                      required
+                      disabled={profileSubmitting}
+                      onFocus={(e) => (e.target.style.borderColor = '#D97757')}
+                      onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
+                    />
+                  </div>
+
+                  {/* Profile Description */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <label
+                      htmlFor="description"
+                      style={{
+                        display: 'block',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#1a1a1a',
                         marginBottom: '0.75rem',
                       }}
                     >
-                      <span>✓</span>
-                      <span>
-                        Product created successfully!
-                        {redirectCountdown > 0 &&
-                          ` Redirecting in ${redirectCountdown}...`}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => (window.location.href = '/products')}
+                      Description *
+                    </label>
+                    <textarea
+                      id="description"
+                      name="description"
+                      value={profileFormData.description}
+                      onChange={handleProfileChange}
+                      placeholder="Tell others about yourself and your expertise"
+                      rows={4}
+                      style={{
+                        width: '100%',
+                        padding: '0.875rem',
+                        border: '1px solid #e0e0e0',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'border-color 200ms',
+                        resize: 'vertical',
+                      }}
+                      required
+                      disabled={profileSubmitting}
+                      onFocus={(e) => (e.target.style.borderColor = '#D97757')}
+                      onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
+                    />
+                  </div>
+
+                  {/* Profile Image URL */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <label
+                      htmlFor="image_url"
+                      style={{
+                        display: 'block',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#1a1a1a',
+                        marginBottom: '0.75rem',
+                      }}
+                    >
+                      Profile Image URL
+                    </label>
+                    <input
+                      type="url"
+                      id="image_url"
+                      name="image_url"
+                      value={profileFormData.image_url}
+                      onChange={handleProfileChange}
+                      placeholder="https://example.com/your-profile-image.jpg"
+                      style={{
+                        width: '100%',
+                        padding: '0.625rem',
+                        border: '1px solid #e0e0e0',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        outline: 'none',
+                        transition: 'border-color 200ms',
+                      }}
+                      disabled={profileSubmitting}
+                      onFocus={(e) => (e.target.style.borderColor = '#D97757')}
+                      onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
+                    />
+                    <p
                       style={{
                         fontFamily: 'var(--font-inter)',
                         fontSize: '0.8125rem',
-                        color: '#D97757',
-                        background: 'none',
-                        border: 'none',
-                        padding: 0,
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
+                        color: '#999',
+                        marginTop: '0.5rem',
                       }}
                     >
-                      Go to products page now →
-                    </button>
+                      Optional: URL to your profile picture
+                    </p>
                   </div>
-                )}
-                {error && (
-                  <div>
-                    <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>
-                      Transaction failed:
-                    </div>
-                    <div style={{ color: '#666' }}>
-                      {getErrorMessage(error)}
-                    </div>
-                  </div>
-                )}
-                {hash && (
-                  <div style={{ marginTop: '0.75rem' }}>
-                    <a
-                      href={`https://sepolia.etherscan.io/tx/${hash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        color: '#D97757',
-                        textDecoration: 'none',
-                        borderBottom: '1px solid #D97757',
-                        paddingBottom: '0.125rem',
-                      }}
-                    >
-                      View on Etherscan →
-                    </a>
-                  </div>
-                )}
-              </div>
-            )}
 
-            <form onSubmit={handleSubmit}>
-              {/* Product ID */}
-              <div style={{ marginBottom: '2rem' }}>
-                <label
-                  htmlFor="productId"
-                  style={{
-                    display: 'block',
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: '#1a1a1a',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  Product ID *
-                </label>
-                <input
-                  type="number"
-                  id="productId"
-                  name="productId"
-                  value={formData.productId}
-                  onChange={handleChange}
-                  placeholder="Enter a unique product ID"
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem',
-                    border: '1px solid #e0e0e0',
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.9375rem',
-                    outline: 'none',
-                    transition: 'border-color 200ms',
-                  }}
-                  required
-                  disabled={isLoading || isConfirmed}
-                  onFocus={(e) => (e.target.style.borderColor = '#D97757')}
-                  onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-                />
-                <p
-                  style={{
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.8125rem',
-                    color: '#999',
-                    marginTop: '0.5rem',
-                  }}
-                >
-                  Choose a unique number to identify your product
-                </p>
-              </div>
-
-              {/* Price */}
-              <div style={{ marginBottom: '2rem' }}>
-                <label
-                  htmlFor="price"
-                  style={{
-                    display: 'block',
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: '#1a1a1a',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  Price (PYUSD) *
-                </label>
-                <input
-                  type="number"
-                  id="price"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem',
-                    border: '1px solid #e0e0e0',
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.9375rem',
-                    outline: 'none',
-                    transition: 'border-color 200ms',
-                  }}
-                  required
-                  disabled={isLoading || isConfirmed}
-                  onFocus={(e) => (e.target.style.borderColor = '#D97757')}
-                  onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-                />
-                <p
-                  style={{
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.8125rem',
-                    color: '#999',
-                    marginTop: '0.5rem',
-                  }}
-                >
-                  Set your product price in PYUSD
-                </p>
-              </div>
-
-              {/* Content ID */}
-              <div style={{ marginBottom: '2rem' }}>
-                <label
-                  htmlFor="contentId"
-                  style={{
-                    display: 'block',
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: '#1a1a1a',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  Content ID / Description *
-                </label>
-                <textarea
-                  id="contentId"
-                  name="contentId"
-                  value={formData.contentId}
-                  onChange={handleChange}
-                  placeholder="Enter content ID or description"
-                  rows={4}
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem',
-                    border: '1px solid #e0e0e0',
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.9375rem',
-                    outline: 'none',
-                    transition: 'border-color 200ms',
-                    resize: 'vertical',
-                  }}
-                  required
-                  disabled={isLoading || isConfirmed}
-                  onFocus={(e) => (e.target.style.borderColor = '#D97757')}
-                  onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-                />
-                <p
-                  style={{
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.8125rem',
-                    color: '#999',
-                    marginTop: '0.5rem',
-                  }}
-                >
-                  Describe your content or provide a content identifier
-                </p>
-              </div>
-
-              {/* Creator Info */}
-              <div
-                style={{
-                  padding: '1.5rem',
-                  border: '1px solid #e0e0e0',
-                  backgroundColor: '#f5f5f3',
-                  marginBottom: '2rem',
-                }}
-              >
-                <h3
-                  style={{
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: '#1a1a1a',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  Creator Information
-                </h3>
-                <p
-                  style={{
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.8125rem',
-                    color: '#666',
-                    marginBottom: '0.5rem',
-                  }}
-                >
-                  <span style={{ fontWeight: 500 }}>Your Address:</span>{' '}
-                  <span style={{ wordBreak: 'break-all' }}>
-                    {user?.wallet?.address}
-                  </span>
-                </p>
-                <p
-                  style={{
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.75rem',
-                    color: '#999',
-                  }}
-                >
-                  You will receive payments directly to this address
-                </p>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading || isConfirmed}
-                className="btn-primary"
-                style={{
-                  width: '100%',
-                  opacity: isLoading || isConfirmed ? 0.6 : 1,
-                  cursor: isLoading || isConfirmed ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {isLoading ? (
+                  {/* Creator Address Info */}
                   <div
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.5rem',
+                      padding: '1.5rem',
+                      border: '1px solid #e0e0e0',
+                      backgroundColor: '#f5f5f3',
+                      marginBottom: '2rem',
                     }}
                   >
-                    <div
+                    <h3
                       style={{
-                        animation: 'spin 1s linear infinite',
-                        borderRadius: '50%',
-                        height: '1.25rem',
-                        width: '1.25rem',
-                        borderBottom: '2px solid #fafaf8',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#1a1a1a',
+                        marginBottom: '0.75rem',
                       }}
-                    ></div>
-                    <span>Submitting...</span>
+                    >
+                      Creator Address
+                    </h3>
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.8125rem',
+                        color: '#666',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
+                      <span style={{ fontWeight: 500 }}>Your Address:</span>{' '}
+                      <span style={{ wordBreak: 'break-all' }}>
+                        {user?.wallet?.address}
+                      </span>
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.75rem',
+                        color: '#999',
+                      }}
+                    >
+                      This address will be associated with your creator profile
+                    </p>
                   </div>
-                ) : isConfirmed ? (
-                  'Product Created ✓'
-                ) : (
-                  'Create Product'
+
+                  {/* Submit Profile Button */}
+                  <button
+                    type="submit"
+                    disabled={
+                      profileSubmitting ||
+                      !profileFormData.name.trim() ||
+                      !profileFormData.description.trim()
+                    }
+                    className="btn-primary"
+                    style={{
+                      width: '100%',
+                      opacity:
+                        profileSubmitting ||
+                        !profileFormData.name.trim() ||
+                        !profileFormData.description.trim()
+                          ? 0.6
+                          : 1,
+                      cursor:
+                        profileSubmitting ||
+                        !profileFormData.name.trim() ||
+                        !profileFormData.description.trim()
+                          ? 'not-allowed'
+                          : 'pointer',
+                    }}
+                  >
+                    {profileSubmitting ? (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem',
+                        }}
+                      >
+                        <div
+                          style={{
+                            animation: 'spin 1s linear infinite',
+                            borderRadius: '50%',
+                            height: '1.25rem',
+                            width: '1.25rem',
+                            borderBottom: '2px solid #fafaf8',
+                          }}
+                        ></div>
+                        <span>Creating Profile...</span>
+                      </div>
+                    ) : (
+                      'Create Profile & Continue'
+                    )}
+                  </button>
+                </form>
+              </>
+            ) : (
+              // Product Creation Form (existing form)
+              <>
+                {/* Transaction Status */}
+                {(submitted || error) && (
+                  <div
+                    style={{
+                      marginBottom: '2rem',
+                      padding: '1.5rem',
+                      border: '1px solid #e0e0e0',
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    {isLoading && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                        }}
+                      >
+                        <div
+                          style={{
+                            animation: 'spin 1s linear infinite',
+                            borderRadius: '50%',
+                            height: '1.25rem',
+                            width: '1.25rem',
+                            borderBottom: '2px solid #D97757',
+                          }}
+                        ></div>
+                        <span>Submitting transaction...</span>
+                      </div>
+                    )}
+                    {submitted && !isLoading && !isConfirmed && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                        }}
+                      >
+                        <div
+                          style={{
+                            animation: 'spin 1s linear infinite',
+                            borderRadius: '50%',
+                            height: '1.25rem',
+                            width: '1.25rem',
+                            borderBottom: '2px solid #D97757',
+                          }}
+                        ></div>
+                        <span>Confirming transaction...</span>
+                      </div>
+                    )}
+                    {isConfirmed && (
+                      <div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            marginBottom: '0.75rem',
+                          }}
+                        >
+                          <span>✓</span>
+                          <span>
+                            Product created successfully!
+                            {redirectCountdown > 0 &&
+                              ` Redirecting in ${redirectCountdown}...`}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => (window.location.href = '/products')}
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.8125rem',
+                            color: '#D97757',
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                          }}
+                        >
+                          Go to products page now →
+                        </button>
+                      </div>
+                    )}
+                    {error && (
+                      <div>
+                        <div
+                          style={{ fontWeight: 500, marginBottom: '0.5rem' }}
+                        >
+                          Transaction failed:
+                        </div>
+                        <div style={{ color: '#666' }}>
+                          {getErrorMessage(error)}
+                        </div>
+                      </div>
+                    )}
+                    {hash && (
+                      <div style={{ marginTop: '0.75rem' }}>
+                        <a
+                          href={`https://sepolia.etherscan.io/tx/${hash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: '#D97757',
+                            textDecoration: 'none',
+                            borderBottom: '1px solid #D97757',
+                            paddingBottom: '0.125rem',
+                          }}
+                        >
+                          View on Etherscan →
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 )}
-              </button>
-            </form>
+
+                <form onSubmit={handleSubmit}>
+                  {/* Product ID */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <label
+                      htmlFor="productId"
+                      style={{
+                        display: 'block',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#1a1a1a',
+                        marginBottom: '0.75rem',
+                      }}
+                    >
+                      Product ID *
+                    </label>
+                    <input
+                      type="number"
+                      id="productId"
+                      name="productId"
+                      value={formData.productId}
+                      onChange={handleChange}
+                      placeholder="Enter a unique product ID"
+                      style={{
+                        width: '100%',
+                        padding: '0.625rem',
+                        border: '1px solid #e0e0e0',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        outline: 'none',
+                        transition: 'border-color 200ms',
+                      }}
+                      required
+                      disabled={isLoading || isConfirmed}
+                      onFocus={(e) => (e.target.style.borderColor = '#D97757')}
+                      onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
+                    />
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.8125rem',
+                        color: '#999',
+                        marginTop: '0.5rem',
+                      }}
+                    >
+                      Choose a unique number to identify your product
+                    </p>
+                  </div>
+
+                  {/* Price */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <label
+                      htmlFor="price"
+                      style={{
+                        display: 'block',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#1a1a1a',
+                        marginBottom: '0.75rem',
+                      }}
+                    >
+                      Price (PYUSD) *
+                    </label>
+                    <input
+                      type="number"
+                      id="price"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleChange}
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                      style={{
+                        width: '100%',
+                        padding: '0.625rem',
+                        border: '1px solid #e0e0e0',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        outline: 'none',
+                        transition: 'border-color 200ms',
+                      }}
+                      required
+                      disabled={isLoading || isConfirmed}
+                      onFocus={(e) => (e.target.style.borderColor = '#D97757')}
+                      onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
+                    />
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.8125rem',
+                        color: '#999',
+                        marginTop: '0.5rem',
+                      }}
+                    >
+                      Set your product price in PYUSD
+                    </p>
+                  </div>
+
+                  {/* Content ID */}
+                  <div style={{ marginBottom: '2rem' }}>
+                    <label
+                      htmlFor="contentId"
+                      style={{
+                        display: 'block',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#1a1a1a',
+                        marginBottom: '0.75rem',
+                      }}
+                    >
+                      Content ID / Description *
+                    </label>
+                    <textarea
+                      id="contentId"
+                      name="contentId"
+                      value={formData.contentId}
+                      onChange={handleChange}
+                      placeholder="Enter content ID or description"
+                      rows={4}
+                      style={{
+                        width: '100%',
+                        padding: '0.875rem',
+                        border: '1px solid #e0e0e0',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'border-color 200ms',
+                        resize: 'vertical',
+                      }}
+                      required
+                      disabled={isLoading || isConfirmed}
+                      onFocus={(e) => (e.target.style.borderColor = '#D97757')}
+                      onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
+                    />
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.8125rem',
+                        color: '#999',
+                        marginTop: '0.5rem',
+                      }}
+                    >
+                      Describe your content or provide a content identifier
+                    </p>
+                  </div>
+
+                  {/* Creator Info */}
+                  <div
+                    style={{
+                      padding: '1.5rem',
+                      border: '1px solid #e0e0e0',
+                      backgroundColor: '#f5f5f3',
+                      marginBottom: '2rem',
+                    }}
+                  >
+                    <h3
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#1a1a1a',
+                        marginBottom: '0.75rem',
+                      }}
+                    >
+                      Creator Information
+                    </h3>
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.8125rem',
+                        color: '#666',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
+                      <span style={{ fontWeight: 500 }}>Your Address:</span>{' '}
+                      <span style={{ wordBreak: 'break-all' }}>
+                        {user?.wallet?.address}
+                      </span>
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.75rem',
+                        color: '#999',
+                      }}
+                    >
+                      You will receive payments directly to this address
+                    </p>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={isLoading || isConfirmed}
+                    className="btn-primary"
+                    style={{
+                      width: '100%',
+                      opacity: isLoading || isConfirmed ? 0.6 : 1,
+                      cursor:
+                        isLoading || isConfirmed ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {isLoading ? (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem',
+                        }}
+                      >
+                        <div
+                          style={{
+                            animation: 'spin 1s linear infinite',
+                            borderRadius: '50%',
+                            height: '1.25rem',
+                            width: '1.25rem',
+                            borderBottom: '2px solid #fafaf8',
+                          }}
+                        ></div>
+                        <span>Submitting...</span>
+                      </div>
+                    ) : isConfirmed ? (
+                      'Product Created ✓'
+                    ) : (
+                      'Create Product'
+                    )}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       </div>

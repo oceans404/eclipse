@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useQuery } from '@apollo/client';
 import {
@@ -11,9 +11,17 @@ import {
 import { ProductCard } from '@/components/ProductCard';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
+import { CreatorProfile } from '@/lib/db';
 
 export default function MyProductsPage() {
   const { authenticated, user, login } = usePrivy();
+  const [creatorProfiles, setCreatorProfiles] = useState<Map<string, CreatorProfile>>(new Map());
+  
+  // Slider refs and states
+  const ownedSliderRef = useRef<HTMLDivElement>(null);
+  const createdSliderRef = useRef<HTMLDivElement>(null);
+  const [ownedScrollPosition, setOwnedScrollPosition] = useState(0);
+  const [createdScrollPosition, setCreatedScrollPosition] = useState(0);
 
   // First query: Get all products the user has purchased
   const {
@@ -50,6 +58,39 @@ export default function MyProductsPage() {
     variables: { creator: user?.wallet?.address },
     skip: !authenticated || !user?.wallet?.address,
   });
+
+  // Fetch creator profiles when products are loaded
+  useEffect(() => {
+    const fetchCreatorProfiles = async () => {
+      const allProducts = [
+        ...(detailsData?.Product || []),
+        ...(createdData?.Product || [])
+      ];
+
+      if (allProducts.length === 0) return;
+
+      const uniqueCreators = [...new Set(allProducts.map((p: any) => p.creator))];
+      const profiles = new Map<string, CreatorProfile>();
+
+      await Promise.all(
+        uniqueCreators.map(async (address: string) => {
+          try {
+            const response = await fetch(`/api/creator/${address}`);
+            if (response.ok) {
+              const profile = await response.json();
+              profiles.set(address, profile);
+            }
+          } catch (error) {
+            console.error(`Failed to fetch profile for ${address}:`, error);
+          }
+        })
+      );
+
+      setCreatorProfiles(profiles);
+    };
+
+    fetchCreatorProfiles();
+  }, [detailsData, createdData]);
 
   // Not authenticated
   if (!authenticated) {
@@ -188,6 +229,28 @@ export default function MyProductsPage() {
     });
   };
 
+  // Slider navigation functions
+  const scrollSlider = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
+    if (!ref.current) return;
+    
+    const scrollAmount = 320; // Width of one product card + gap
+    const currentScroll = ref.current.scrollLeft;
+    const newScroll = direction === 'left' 
+      ? Math.max(0, currentScroll - scrollAmount)
+      : currentScroll + scrollAmount;
+    
+    ref.current.scrollTo({
+      left: newScroll,
+      behavior: 'smooth'
+    });
+  };
+
+  // Check scroll positions for button visibility
+  const updateScrollPosition = (ref: React.RefObject<HTMLDivElement>, setPosition: (pos: number) => void) => {
+    if (!ref.current) return;
+    setPosition(ref.current.scrollLeft);
+  };
+
   return (
     <>
       <Navbar />
@@ -258,18 +321,77 @@ export default function MyProductsPage() {
               >
                 Products I own
               </h2>
-              {ownedProducts.length > 0 && (
-                <span
-                  style={{
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.875rem',
-                    color: '#666',
-                  }}
-                >
-                  {ownedProducts.length} product
-                  {ownedProducts.length !== 1 ? 's' : ''}
-                </span>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                {ownedProducts.length > 0 && (
+                  <>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        color: '#666',
+                      }}
+                    >
+                      {ownedProducts.length} product
+                      {ownedProducts.length !== 1 ? 's' : ''}
+                    </span>
+                    {/* Navigation Arrows */}
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => scrollSlider(ownedSliderRef, 'left')}
+                        style={{
+                          width: '2.5rem',
+                          height: '2.5rem',
+                          border: '1px solid #e0e0e0',
+                          backgroundColor: ownedScrollPosition > 0 ? '#fafaf8' : '#f5f5f3',
+                          cursor: ownedScrollPosition > 0 ? 'pointer' : 'not-allowed',
+                          opacity: ownedScrollPosition > 0 ? 1 : 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 200ms',
+                        }}
+                        disabled={ownedScrollPosition === 0}
+                        onMouseEnter={(e) => {
+                          if (ownedScrollPosition > 0) {
+                            e.currentTarget.style.backgroundColor = '#D97757';
+                            e.currentTarget.style.color = '#fafaf8';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = ownedScrollPosition > 0 ? '#fafaf8' : '#f5f5f3';
+                          e.currentTarget.style.color = '#1a1a1a';
+                        }}
+                      >
+                        ←
+                      </button>
+                      <button
+                        onClick={() => scrollSlider(ownedSliderRef, 'right')}
+                        style={{
+                          width: '2.5rem',
+                          height: '2.5rem',
+                          border: '1px solid #e0e0e0',
+                          backgroundColor: '#fafaf8',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 200ms',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#D97757';
+                          e.currentTarget.style.color = '#fafaf8';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#fafaf8';
+                          e.currentTarget.style.color = '#1a1a1a';
+                        }}
+                      >
+                        →
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {ownedProducts.length === 0 ? (
@@ -314,11 +436,27 @@ export default function MyProductsPage() {
             ) : (
               <div
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                  gap: '4rem 3rem',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
+                <div
+                  ref={ownedSliderRef}
+                  onScroll={() => updateScrollPosition(ownedSliderRef, setOwnedScrollPosition)}
+                  style={{
+                    display: 'flex',
+                    gap: '2rem',
+                    overflowX: 'auto',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    paddingBottom: '1rem',
+                  }}
+                >
+                  <style jsx>{`
+                    div::-webkit-scrollbar {
+                      display: none;
+                    }
+                  `}</style>
                 {[...ownedProducts]
                   .sort((a: any, b: any) => {
                     const purchaseA = purchaseDetailsMap.get(a.productId);
@@ -333,12 +471,19 @@ export default function MyProductsPage() {
                       product.productId
                     );
                     return (
-                      <div key={product.productId}>
+                      <div 
+                        key={product.productId}
+                        style={{
+                          flexShrink: 0,
+                          width: '300px',
+                        }}
+                      >
                         <ProductCard
                           productId={product.productId}
                           contentId={product.contentId}
                           currentPrice={product.currentPrice}
                           creator={product.creator}
+                          creatorProfile={creatorProfiles.get(product.creator) || null}
                         />
 
                         {/* Purchase Info */}
@@ -393,6 +538,7 @@ export default function MyProductsPage() {
                       </div>
                     );
                   })}
+                </div>
               </div>
             )}
           </div>
@@ -416,18 +562,77 @@ export default function MyProductsPage() {
               >
                 Products I created
               </h2>
-              {createdProducts.length > 0 && (
-                <span
-                  style={{
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.875rem',
-                    color: '#666',
-                  }}
-                >
-                  {createdProducts.length} product
-                  {createdProducts.length !== 1 ? 's' : ''}
-                </span>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                {createdProducts.length > 0 && (
+                  <>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        color: '#666',
+                      }}
+                    >
+                      {createdProducts.length} product
+                      {createdProducts.length !== 1 ? 's' : ''}
+                    </span>
+                    {/* Navigation Arrows */}
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => scrollSlider(createdSliderRef, 'left')}
+                        style={{
+                          width: '2.5rem',
+                          height: '2.5rem',
+                          border: '1px solid #e0e0e0',
+                          backgroundColor: createdScrollPosition > 0 ? '#fafaf8' : '#f5f5f3',
+                          cursor: createdScrollPosition > 0 ? 'pointer' : 'not-allowed',
+                          opacity: createdScrollPosition > 0 ? 1 : 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 200ms',
+                        }}
+                        disabled={createdScrollPosition === 0}
+                        onMouseEnter={(e) => {
+                          if (createdScrollPosition > 0) {
+                            e.currentTarget.style.backgroundColor = '#D97757';
+                            e.currentTarget.style.color = '#fafaf8';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = createdScrollPosition > 0 ? '#fafaf8' : '#f5f5f3';
+                          e.currentTarget.style.color = '#1a1a1a';
+                        }}
+                      >
+                        ←
+                      </button>
+                      <button
+                        onClick={() => scrollSlider(createdSliderRef, 'right')}
+                        style={{
+                          width: '2.5rem',
+                          height: '2.5rem',
+                          border: '1px solid #e0e0e0',
+                          backgroundColor: '#fafaf8',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 200ms',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#D97757';
+                          e.currentTarget.style.color = '#fafaf8';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#fafaf8';
+                          e.currentTarget.style.color = '#1a1a1a';
+                        }}
+                      >
+                        →
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {createdProducts.length === 0 ? (
@@ -472,23 +677,46 @@ export default function MyProductsPage() {
             ) : (
               <div
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                  gap: '4rem 3rem',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
+                <div
+                  ref={createdSliderRef}
+                  onScroll={() => updateScrollPosition(createdSliderRef, setCreatedScrollPosition)}
+                  style={{
+                    display: 'flex',
+                    gap: '2rem',
+                    overflowX: 'auto',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    paddingBottom: '1rem',
+                  }}
+                >
+                  <style jsx>{`
+                    div::-webkit-scrollbar {
+                      display: none;
+                    }
+                  `}</style>
                 {[...createdProducts]
                   .sort(
                     (a: any, b: any) =>
                       Number(b.createdAt || 0) - Number(a.createdAt || 0)
                   )
                   .map((product: any) => (
-                    <div key={product.productId}>
+                    <div 
+                      key={product.productId}
+                      style={{
+                        flexShrink: 0,
+                        width: '300px',
+                      }}
+                    >
                       <ProductCard
                         productId={product.productId}
                         contentId={product.contentId}
                         currentPrice={product.currentPrice}
                         creator={product.creator}
+                        creatorProfile={creatorProfiles.get(product.creator) || null}
                       />
 
                       {/* Creator Info */}
@@ -549,6 +777,7 @@ export default function MyProductsPage() {
                       </div>
                     </div>
                   ))}
+                </div>
               </div>
             )}
           </div>
