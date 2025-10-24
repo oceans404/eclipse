@@ -79,7 +79,7 @@ The project uses a modular architecture:
 
 5. **Event Indexing** (`envio-indexer/`):
 
-   - **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/30b0185/v1/graphql
+   - **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/84d01d4/v1/graphql
    - **Dual Entity System**: Historical events + current Product state tracking
    - **Event Handlers**: Process PaymentReceived, ProductAdded, and ProductUpdated events
    - **Smart State Management**: Product entity auto-updates with price changes
@@ -136,7 +136,8 @@ The project uses a modular architecture:
 ### Design Principles
 
 **Visual Identity**:
-- **Brand Colors**: 
+
+- **Brand Colors**:
   - Primary: `#1a1a1a` (Deep charcoal)
   - Accent: `#D97757` (Warm terracotta/coral)
   - Background: `#fafaf8` (Warm off-white)
@@ -145,12 +146,14 @@ The project uses a modular architecture:
   - Tech sections: `#f5f5f3` (Subtle warm gray background)
 
 **Typography**:
+
 - **Primary Font**: `'Crimson Pro'` (serif) - Used for headings and body text
 - **Secondary Font**: `'Inter'` (sans-serif) - Used for UI elements, labels, and interactive text
 - **Font Weights**: Primarily 300 (light) and 400 (normal), with 500-600 for emphasis
 - **Letter Spacing**: Negative spacing (`-0.02em`) for large headings, positive spacing (`0.15em`) for uppercase labels
 
 **Layout & Spacing**:
+
 - **Container**: `.container-eclipse` with max-width 1200px and 3rem horizontal padding
 - **Sections**: Large vertical padding (10rem+) with 1px border separators
 - **Grid Systems**: CSS Grid with auto-fit/auto-fill patterns for responsive layouts
@@ -159,6 +162,7 @@ The project uses a modular architecture:
 ### UI Patterns
 
 **Page Structure** (follows this exact pattern):
+
 ```
 1. Header section (12rem top padding for nav clearance)
    - Small uppercase label (.hero-label style)
@@ -179,12 +183,14 @@ The project uses a modular architecture:
 ```
 
 **Interactive Elements**:
+
 - **Buttons**: `.btn-primary`, `.btn-secondary`, `.btn-nav` classes defined in globals.css
 - **Form Elements**: Consistent padding (0.875rem), border styling, focus states with accent color
 - **Links**: Subtle hover effects, underline treatments for secondary actions
 - **Loading States**: Spinning animations with accent color, consistent across all pages
 
 **Responsive Design**:
+
 - Mobile-first approach with specific breakpoints at 768px and 1024px
 - Grid columns collapse to single column on smaller screens
 - Typography scales down appropriately
@@ -202,12 +208,14 @@ The project uses a modular architecture:
 6. **Use the proper fonts**: Crimson Pro for content, Inter for UI labels and interactive elements
 
 **Color Usage**:
+
 - Use `#D97757` sparingly for accents, calls-to-action, and hover states
 - Maintain high contrast with `#1a1a1a` for primary text
 - Use `#666` for secondary text and descriptions
 - Keep backgrounds light with `#fafaf8` and `#f5f5f3` for subtle sections
 
 **Loading & Error States**:
+
 - Consistent spinner animation (see existing keyframes in components)
 - Error states with bordered containers and Inter font
 - Empty states with large emojis (4rem+ size, 0.2-0.3 opacity)

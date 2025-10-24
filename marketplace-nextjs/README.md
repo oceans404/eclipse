@@ -17,17 +17,20 @@ Visit [http://localhost:4269](http://localhost:4269) to explore the marketplace.
 ## ✨ What You Can Do
 
 ### 🔗 **Wallet Integration**
+
 - **Connect with Privy**: Email-based authentication + Sepolia wallet support
 - **PYUSD Balance**: Real-time balance tracking in navbar
 - **Smart Ownership**: Visual indicators for owned vs. created products
 
 ### 💰 **On-Chain Actions**
+
 - **Create Products**: Add your content with PYUSD pricing (requires wallet)
 - **Purchase Products**: Auto-batched approval + payment flow
 - **Ownership Tracking**: "YOU ALREADY OWN THIS" prevention system
 - **Transaction History**: Complete Etherscan integration
 
-### 📊 **Marketplace Features** 
+### 📊 **Marketplace Features**
+
 - **Browse Products**: Search, filter, and smart priority sorting
 - **Explore Creators**: Creator profiles with revenue stats
 - **Track Prices**: Complete price history and sales data
@@ -36,12 +39,14 @@ Visit [http://localhost:4269](http://localhost:4269) to explore the marketplace.
 ## 🏗️ Tech Stack
 
 ### **Frontend**
+
 - **Next.js 15** with App Router and TypeScript
-- **Privy** for wallet authentication and Web3 integration  
+- **Privy** for wallet authentication and Web3 integration
 - **Apollo Client v3** for GraphQL data management
 - **Tailwind CSS** for responsive styling
 
 ### **Blockchain Integration**
+
 - **PYUSD** (6 decimals) for payments on Sepolia testnet
 - **ProductPaymentService** smart contract for marketplace logic
 - **Envio GraphQL API** for real-time blockchain indexing
@@ -51,7 +56,7 @@ Visit [http://localhost:4269](http://localhost:4269) to explore the marketplace.
 
 - **`/`** - Product listing with smart ownership sorting
 - **`/product/[id]`** - Product details with purchase functionality
-- **`/creators`** - All creators with revenue statistics  
+- **`/creators`** - All creators with revenue statistics
 - **`/creator/[address]`** - Individual creator profiles and sales
 - **`/my-products`** - Personal dashboard (owned + created products)
 - **`/create`** - Product creation form (wallet required)
@@ -62,7 +67,7 @@ Create `.env.local`:
 
 ```bash
 # GraphQL endpoint for blockchain data
-NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://indexer.dev.hyperindex.xyz/30b0185/v1/graphql
+NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://indexer.dev.hyperindex.xyz/84d01d4/v1/graphql
 
 # Blockchain explorer for transaction links
 NEXT_PUBLIC_SEPOLIA_EXPLORER=https://sepolia.etherscan.io
@@ -75,6 +80,7 @@ NEXT_PUBLIC_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/your_api_key
 ```
 
 ### 🔑 **Required Setup:**
+
 1. **[Get Privy App ID](https://privy.io)** - For wallet authentication
 2. **[Get Alchemy API Key](https://alchemy.com)** - For reliable RPC (recommended)
 3. **Connect to Sepolia** - Make sure your wallet has Sepolia ETH for gas
