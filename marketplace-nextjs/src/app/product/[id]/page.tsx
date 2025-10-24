@@ -9,6 +9,11 @@ import { AddressDisplay } from '@/components/AddressDisplay';
 import { PurchaseButton } from '@/components/PurchaseButton';
 import { Navbar } from '@/components/Navbar';
 import { CreatorProfile } from '@/lib/db';
+import { useAssetMetadata } from '@/hooks/useAssetMetadata';
+import { useHasPaid } from '@/hooks/useContract';
+import { usePrivy } from '@privy-io/react-auth';
+import { ContentViewer } from '@/components/ContentViewer';
+import { ChatInterface } from '@/components/ChatInterface';
 
 interface ProductPageProps {
   params: Promise<{
@@ -21,6 +26,8 @@ export default function ProductPage({ params }: ProductPageProps) {
   const router = useRouter();
   const productId = Number(resolvedParams.id);
   const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null);
+  const [activeTab, setActiveTab] = useState<'chat' | 'content'>('chat');
+  const { authenticated, user } = usePrivy();
 
   const { loading, error, data } = useQuery(GET_PRODUCT_DETAILS, {
     variables: { productId },
@@ -31,6 +38,17 @@ export default function ProductPage({ params }: ProductPageProps) {
     variables: { productId },
     skip: isNaN(productId),
   });
+
+  // Use the asset metadata hook
+  const product = data?.Product?.[0];
+  const { getTitle, getDescription, metadata } = useAssetMetadata(product?.contentId || null);
+
+  // Check if user owns this product
+  const { data: hasPaid } = useHasPaid(user?.wallet?.address, productId);
+
+  // Check if user created this product
+  const isCreator = authenticated && 
+    user?.wallet?.address?.toLowerCase() === product?.creator?.toLowerCase();
 
   // Fetch creator profile when product data is loaded
   useEffect(() => {
@@ -137,7 +155,6 @@ export default function ProductPage({ params }: ProductPageProps) {
     );
   }
 
-  const product = data?.Product?.[0];
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -318,10 +335,10 @@ export default function ProductPage({ params }: ProductPageProps) {
                         lineHeight: 1.2,
                         marginBottom: '0.5rem',
                         letterSpacing: '-0.01em',
-                        wordBreak: 'break-all',
+                        wordBreak: 'break-word',
                       }}
                     >
-                      {product.contentId}
+                      {getTitle(product.contentId)}
                     </h1>
                     <p
                       style={{
@@ -345,9 +362,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     flex: 1,
                   }}
                 >
-                  Private data stored securely with Nillion's privacy
-                  infrastructure. Content is encrypted and verifiable through AI
-                  agents.
+                  {getDescription()}
                 </p>
 
                 {/* Creator */}
@@ -848,6 +863,181 @@ export default function ProductPage({ params }: ProductPageProps) {
             </div>
           </div>
 
+          {/* Tabbed Interface for Chat and Content */}
+          <div
+            style={{
+              marginTop: '3rem',
+              borderTop: '1px solid #e0e0e0',
+              paddingTop: '3rem',
+            }}
+          >
+            {/* Tab Navigation */}
+            <div
+              style={{
+                display: 'flex',
+                gap: '2rem',
+                borderBottom: '1px solid #e0e0e0',
+                marginBottom: '2rem',
+              }}
+            >
+              <button
+                onClick={() => setActiveTab('chat')}
+                style={{
+                  fontFamily: 'var(--font-inter)',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                  color: activeTab === 'chat' ? '#D97757' : '#666',
+                  background: 'none',
+                  border: 'none',
+                  padding: '1rem 0',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'color 200ms',
+                }}
+              >
+                Ask AI About This Product
+                {activeTab === 'chat' && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '-1px',
+                      left: 0,
+                      right: 0,
+                      height: '2px',
+                      backgroundColor: '#D97757',
+                    }}
+                  />
+                )}
+              </button>
+              
+              {(hasPaid || isCreator) && (
+                <button
+                  onClick={() => setActiveTab('content')}
+                  style={{
+                    fontFamily: 'var(--font-inter)',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                    color: activeTab === 'content' ? '#D97757' : '#666',
+                    background: 'none',
+                    border: 'none',
+                    padding: '1rem 0',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'color 200ms',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  View Full Content
+                  <span
+                    style={{
+                      fontSize: '0.7rem',
+                      backgroundColor: '#D97757',
+                      color: '#fff',
+                      padding: '0.125rem 0.375rem',
+                      borderRadius: '2px',
+                    }}
+                  >
+                    OWNED
+                  </span>
+                  {activeTab === 'content' && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '-1px',
+                        left: 0,
+                        right: 0,
+                        height: '2px',
+                        backgroundColor: '#D97757',
+                      }}
+                    />
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'chat' ? (
+              <div>
+                <div
+                  style={{
+                    marginBottom: '2rem',
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontSize: '1.5rem',
+                      fontWeight: 300,
+                      marginBottom: '0.5rem',
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    Chat with AI about {getTitle(product.contentId)}
+                  </h2>
+                  <p
+                    style={{
+                      fontSize: '0.95rem',
+                      color: '#666',
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    Our AI assistant can answer questions about this encrypted content without exposing the original data. Perfect for understanding what's inside before you buy.
+                  </p>
+                </div>
+                
+                <ChatInterface 
+                  contentId={product.contentId} 
+                  productId={product.productId.toString()}
+                  productTitle={getTitle(product.contentId)}
+                />
+              </div>
+            ) : (
+              (hasPaid || isCreator) && (
+                <div>
+                  <div
+                    style={{
+                      marginBottom: '2rem',
+                    }}
+                  >
+                    <h2
+                      style={{
+                        fontSize: '1.5rem',
+                        fontWeight: 300,
+                        marginBottom: '0.5rem',
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      Your Purchased Content
+                    </h2>
+                    <p
+                      style={{
+                        fontSize: '0.95rem',
+                        color: '#666',
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {isCreator 
+                        ? 'Access and manage your private data stored securely with Nillion\'s privacy infrastructure.'
+                        : 'View and download the private data you\'ve purchased. Content is decrypted on-demand for your security.'
+                      }
+                    </p>
+                  </div>
+                  
+                  <ContentViewer 
+                    contentId={product.contentId} 
+                    productId={product.productId.toString()}
+                    mimeType={metadata?.mimeType}
+                  />
+                </div>
+              )
+            )}
+          </div>
+
         </div>
       </div>
 
@@ -872,6 +1062,14 @@ export default function ProductPage({ params }: ProductPageProps) {
         @media (max-width: 640px) {
           .responsive-product-header div:last-child > div:first-child {
             grid-template-columns: 1fr !important;
+          }
+        }
+        
+        /* Tab responsive design */
+        @media (max-width: 640px) {
+          button[style*="letterSpacing"] {
+            font-size: 0.75rem !important;
+            padding: 0.75rem 0 !important;
           }
         }
       `}</style>

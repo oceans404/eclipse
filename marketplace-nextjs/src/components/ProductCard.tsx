@@ -7,6 +7,7 @@ import { useHasPaid } from '@/hooks/useContract';
 import { PriceDisplay } from './PriceDisplay';
 import { AddressDisplay } from './AddressDisplay';
 import { CreatorProfile } from '@/lib/db';
+import { useAssetMetadata } from '@/hooks/useAssetMetadata';
 
 interface ProductCardProps {
   productId: string;
@@ -25,6 +26,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const router = useRouter();
   const { authenticated, user } = usePrivy();
+
+  // Use the asset metadata hook
+  const { getTitle } = useAssetMetadata(contentId);
 
   // Check if user owns this product
   const { data: hasPaid } = useHasPaid(
@@ -156,12 +160,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               fontWeight: 400,
               marginBottom: '0.5rem',
               letterSpacing: '-0.01em',
-              wordBreak: 'break-all',
+              wordBreak: 'break-word',
               lineHeight: 1.2,
               color: '#1a1a1a',
             }}
           >
-            {contentId}
+            {getTitle(contentId)}
           </h3>
 
           {/* Creator */}

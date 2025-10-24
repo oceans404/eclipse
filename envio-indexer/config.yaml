@@ -2,7 +2,7 @@
 name: eclipse-envio-indexer
 networks:
   - id: 11155111
-    start_block: 0
+    start_block: 9482318
     contracts:
       - name: ProductPaymentService
         address:
@@ -14,7 +14,7 @@ networks:
           - event: ProductUpdated(uint256 indexed productId, uint256 newPrice)
 field_selection:
   transaction_fields:
-    - "hash"
-    - "transactionIndex"
+    - 'hash'
+    - 'transactionIndex'
 unordered_multichain_mode: true
 preload_handlers: true

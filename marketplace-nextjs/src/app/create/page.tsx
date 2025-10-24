@@ -7,6 +7,7 @@ import { usePrivyWallet } from '@/hooks/usePrivyWallet';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { CreatorProfile } from '@/lib/db';
+import FileUpload from '@/components/FileUpload';
 
 export default function CreateProductPage() {
   const { authenticated, user } = usePrivy();
@@ -31,8 +32,15 @@ export default function CreateProductPage() {
   const [formData, setFormData] = useState({
     productId: '',
     price: '',
+    title: '',
+    description: '',
     contentId: '',
   });
+
+  // File upload state
+  const [uploadResult, setUploadResult] = useState<any>(null);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadStep, setUploadStep] = useState<'upload' | 'create' | 'completed'>('upload');
 
   const [submitted, setSubmitted] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -172,8 +180,13 @@ export default function CreateProductPage() {
       return;
     }
 
-    if (!formData.productId || !formData.price || !formData.contentId) {
+    if (!formData.price || !formData.title || !formData.description) {
       alert('Please fill in all fields');
+      return;
+    }
+
+    if (!uploadResult || !formData.contentId) {
+      alert('Please upload a file first');
       return;
     }
 
@@ -197,6 +210,7 @@ export default function CreateProductPage() {
       );
       setSubmitted(true);
       console.log('Product creation transaction:', txHash);
+      setUploadStep('completed');
 
       setTimeout(() => {
         setIsConfirmed(true);
@@ -223,6 +237,43 @@ export default function CreateProductPage() {
       ...prev,
       [e.target.name]: e.target.value,
     }));
+  };
+
+  // Fetch next available product ID
+  const fetchNextProductId = async () => {
+    try {
+      const response = await fetch('/api/next-product-id');
+      if (response.ok) {
+        const data = await response.json();
+        return data.nextProductId;
+      }
+    } catch (error) {
+      console.error('Error fetching next product ID:', error);
+    }
+    // Fallback: return a reasonable default
+    return 10;
+  };
+
+  // Handle successful file upload
+  const handleUploadSuccess = async (result: any) => {
+    setUploadResult(result);
+    setUploadError('');
+    
+    // Auto-generate next product ID
+    const nextProductId = await fetchNextProductId();
+    
+    setFormData(prev => ({
+      ...prev,
+      productId: nextProductId.toString(),
+      contentId: result.contentId,
+    }));
+    setUploadStep('create');
+  };
+
+  // Handle upload error
+  const handleUploadError = (error: string) => {
+    setUploadError(error);
+    setUploadResult(null);
   };
 
   if (!authenticated) {
@@ -634,8 +685,138 @@ export default function CreateProductPage() {
                 </form>
               </>
             ) : (
-              // Product Creation Form (existing form)
+              // Product Creation Form with File Upload
               <>
+                {/* Step Indicator */}
+                <div
+                  style={{
+                    marginBottom: '2rem',
+                    padding: '1rem',
+                    border: '1px solid #e0e0e0',
+                    backgroundColor: '#f5f5f3',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '1.5rem',
+                        height: '1.5rem',
+                        borderRadius: '50%',
+                        backgroundColor: uploadStep === 'upload' ? '#D97757' : uploadResult ? '#22c55e' : '#e0e0e0',
+                        color: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {uploadResult ? '✓' : '1'}
+                    </div>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: uploadResult ? '#22c55e' : uploadStep === 'upload' ? '#D97757' : '#666',
+                      }}
+                    >
+                      Upload & Encrypt File
+                    </span>
+                    
+                    <div
+                      style={{
+                        width: '2rem',
+                        height: '1px',
+                        backgroundColor: uploadResult ? '#22c55e' : '#e0e0e0',
+                      }}
+                    />
+                    
+                    <div
+                      style={{
+                        width: '1.5rem',
+                        height: '1.5rem',
+                        borderRadius: '50%',
+                        backgroundColor: uploadStep === 'create' ? '#D97757' : uploadStep === 'completed' ? '#22c55e' : '#e0e0e0',
+                        color: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {uploadStep === 'completed' ? '✓' : '2'}
+                    </div>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: uploadStep === 'completed' ? '#22c55e' : uploadStep === 'create' ? '#D97757' : '#666',
+                      }}
+                    >
+                      Create Product Listing
+                    </span>
+                  </div>
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.75rem',
+                      color: '#666',
+                      margin: 0,
+                    }}
+                  >
+                    {uploadStep === 'upload' && 'First, upload your file to encrypt and store it securely'}
+                    {uploadStep === 'create' && 'Now create your product listing on the blockchain'}
+                    {uploadStep === 'completed' && 'Your product has been created successfully!'}
+                  </p>
+                </div>
+
+                {/* Upload Error */}
+                {uploadError && (
+                  <div
+                    style={{
+                      marginBottom: '2rem',
+                      padding: '1rem',
+                      backgroundColor: '#fef2f2',
+                      border: '1px solid #fecaca',
+                      color: '#dc2626',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    Upload Error: {uploadError}
+                  </div>
+                )}
+
+                {/* Upload Success */}
+                {uploadResult && (
+                  <div
+                    style={{
+                      marginBottom: '2rem',
+                      padding: '1rem',
+                      backgroundColor: '#f0fdf4',
+                      border: '1px solid #bbf7d0',
+                      color: '#16a34a',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>
+                      ✓ File encrypted and uploaded successfully!
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#15803d' }}>
+                      Content ID: {uploadResult.contentId}
+                    </div>
+                  </div>
+                )}
+
                 {/* Transaction Status */}
                 {(submitted || error) && (
                   <div
@@ -754,53 +935,152 @@ export default function CreateProductPage() {
                 )}
 
                 <form onSubmit={handleSubmit}>
-                  {/* Product ID */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <label
-                      htmlFor="productId"
-                      style={{
-                        display: 'block',
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: '#1a1a1a',
-                        marginBottom: '0.75rem',
-                      }}
-                    >
-                      Product ID *
-                    </label>
-                    <input
-                      type="number"
-                      id="productId"
-                      name="productId"
-                      value={formData.productId}
-                      onChange={handleChange}
-                      placeholder="Enter a unique product ID"
-                      style={{
-                        width: '100%',
-                        padding: '0.625rem',
-                        border: '1px solid #e0e0e0',
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.875rem',
-                        outline: 'none',
-                        transition: 'border-color 200ms',
-                      }}
-                      required
-                      disabled={isLoading || isConfirmed}
-                      onFocus={(e) => (e.target.style.borderColor = '#D97757')}
-                      onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-                    />
-                    <p
-                      style={{
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.8125rem',
-                        color: '#999',
-                        marginTop: '0.5rem',
-                      }}
-                    >
-                      Choose a unique number to identify your product
-                    </p>
-                  </div>
+                  {/* File Upload Section */}
+                  {uploadStep === 'upload' && (
+                    <>
+                      {/* Title */}
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <label
+                          htmlFor="title"
+                          style={{
+                            display: 'block',
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1a1a1a',
+                            marginBottom: '0.75rem',
+                          }}
+                        >
+                          Product Title *
+                        </label>
+                        <input
+                          type="text"
+                          id="title"
+                          name="title"
+                          value={formData.title}
+                          onChange={handleChange}
+                          placeholder="Enter a descriptive title for your content"
+                          style={{
+                            width: '100%',
+                            padding: '0.625rem',
+                            border: '1px solid #e0e0e0',
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.875rem',
+                            outline: 'none',
+                            transition: 'border-color 200ms',
+                          }}
+                          required
+                          onFocus={(e) => (e.target.style.borderColor = '#D97757')}
+                          onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
+                        />
+                      </div>
+
+                      {/* Description */}
+                      <div style={{ marginBottom: '2rem' }}>
+                        <label
+                          htmlFor="description"
+                          style={{
+                            display: 'block',
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1a1a1a',
+                            marginBottom: '0.75rem',
+                          }}
+                        >
+                          Description *
+                        </label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          value={formData.description}
+                          onChange={handleChange}
+                          placeholder="Describe your content - what will buyers receive?"
+                          rows={3}
+                          style={{
+                            width: '100%',
+                            padding: '0.875rem',
+                            border: '1px solid #e0e0e0',
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.875rem',
+                            outline: 'none',
+                            transition: 'border-color 200ms',
+                            resize: 'vertical',
+                          }}
+                          required
+                          onFocus={(e) => (e.target.style.borderColor = '#D97757')}
+                          onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
+                        />
+                      </div>
+
+                      {/* File Upload */}
+                      <FileUpload
+                        onUploadSuccess={handleUploadSuccess}
+                        onUploadError={handleUploadError}
+                        productId={formData.productId || 'temp'}
+                        owner={user?.wallet?.address || ''}
+                        title={formData.title}
+                        description={formData.description}
+                        disabled={!formData.title || !formData.description}
+                      />
+
+                      {!formData.title || !formData.description ? (
+                        <div
+                          style={{
+                            padding: '1rem',
+                            backgroundColor: '#f5f5f3',
+                            border: '1px solid #e0e0e0',
+                            fontSize: '0.875rem',
+                            color: '#666',
+                          }}
+                        >
+                          Please fill in the title and description before uploading your file.
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+
+                  {/* Product Details Section */}
+                  {uploadStep === 'create' && (
+                    <>
+                      {/* Product ID */}
+                      <div style={{ marginBottom: '2rem' }}>
+                        <label
+                          style={{
+                            display: 'block',
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1a1a1a',
+                            marginBottom: '0.75rem',
+                          }}
+                        >
+                          Product ID
+                        </label>
+                        <div
+                          style={{
+                            width: '100%',
+                            padding: '0.625rem',
+                            border: '1px solid #e0e0e0',
+                            backgroundColor: '#f5f5f3',
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.875rem',
+                            color: '#666',
+                          }}
+                        >
+                          {formData.productId || 'Auto-generated after file upload'}
+                        </div>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.8125rem',
+                            color: '#999',
+                            marginTop: '0.5rem',
+                          }}
+                        >
+                          Automatically assigned as the next available ID
+                        </p>
+                      </div>
 
                   {/* Price */}
                   <div style={{ marginBottom: '2rem' }}>
@@ -852,56 +1132,49 @@ export default function CreateProductPage() {
                     </p>
                   </div>
 
-                  {/* Content ID */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <label
-                      htmlFor="contentId"
-                      style={{
-                        display: 'block',
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: '#1a1a1a',
-                        marginBottom: '0.75rem',
-                      }}
-                    >
-                      Content ID / Description *
-                    </label>
-                    <textarea
-                      id="contentId"
-                      name="contentId"
-                      value={formData.contentId}
-                      onChange={handleChange}
-                      placeholder="Enter content ID or description"
-                      rows={4}
-                      style={{
-                        width: '100%',
-                        padding: '0.875rem',
-                        border: '1px solid #e0e0e0',
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.9375rem',
-                        outline: 'none',
-                        transition: 'border-color 200ms',
-                        resize: 'vertical',
-                      }}
-                      required
-                      disabled={isLoading || isConfirmed}
-                      onFocus={(e) => (e.target.style.borderColor = '#D97757')}
-                      onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-                    />
-                    <p
-                      style={{
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.8125rem',
-                        color: '#999',
-                        marginTop: '0.5rem',
-                      }}
-                    >
-                      Describe your content or provide a content identifier
-                    </p>
-                  </div>
+                      {/* Content ID Display */}
+                      <div style={{ marginBottom: '2rem' }}>
+                        <label
+                          style={{
+                            display: 'block',
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1a1a1a',
+                            marginBottom: '0.75rem',
+                          }}
+                        >
+                          Content ID
+                        </label>
+                        <div
+                          style={{
+                            padding: '0.875rem',
+                            border: '1px solid #e0e0e0',
+                            backgroundColor: '#f5f5f3',
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.8125rem',
+                            color: '#666',
+                            wordBreak: 'break-all',
+                          }}
+                        >
+                          {formData.contentId || 'Upload a file to generate content ID'}
+                        </div>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.75rem',
+                            color: '#999',
+                            marginTop: '0.5rem',
+                          }}
+                        >
+                          This ID links your blockchain listing to your encrypted content
+                        </p>
+                      </div>
+                    </>
+                  )}
 
                   {/* Creator Info */}
+                  {uploadStep === 'create' && (
                   <div
                     style={{
                       padding: '1.5rem',
@@ -944,8 +1217,10 @@ export default function CreateProductPage() {
                       You will receive payments directly to this address
                     </p>
                   </div>
+                  )}
 
                   {/* Submit Button */}
+                  {uploadStep === 'create' && (
                   <button
                     type="submit"
                     disabled={isLoading || isConfirmed}
@@ -983,6 +1258,7 @@ export default function CreateProductPage() {
                       'Create Product'
                     )}
                   </button>
+                  )}
                 </form>
               </>
             )}
