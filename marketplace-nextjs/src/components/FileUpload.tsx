@@ -27,6 +27,11 @@ export default function FileUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (file: File) => {
+    // Check if file is a PDF
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      onUploadError('PDF files are not supported. Please upload text, images, JSON, or Markdown files.');
+      return;
+    }
     setSelectedFile(file);
   };
 
@@ -137,7 +142,7 @@ export default function FileUpload({
             }
           }}
           disabled={disabled || uploading}
-          accept=".txt,.pdf,.png,.jpg,.jpeg,.json,.md"
+          accept=".txt,.png,.jpg,.jpeg,.json,.md"
         />
         
         {selectedFile ? (
@@ -243,7 +248,7 @@ export default function FileUpload({
                 color: '#666',
               }}
             >
-              Supports: Text, PDF, Images, JSON, Markdown
+              Supports: Text, Images, JSON, Markdown
             </p>
           </div>
         )}
@@ -281,6 +286,17 @@ export default function FileUpload({
           </span>
         </div>
       )}
+      
+      <style jsx>{`
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -40,7 +40,9 @@ export default function CreateProductPage() {
   // File upload state
   const [uploadResult, setUploadResult] = useState<any>(null);
   const [uploadError, setUploadError] = useState('');
-  const [uploadStep, setUploadStep] = useState<'upload' | 'create' | 'completed'>('upload');
+  const [uploadStep, setUploadStep] = useState<
+    'upload' | 'create' | 'completed'
+  >('upload');
 
   const [submitted, setSubmitted] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -154,14 +156,14 @@ export default function CreateProductPage() {
 
   // Redirect if transaction is confirmed
   React.useEffect(() => {
-    if (isConfirmed && submitted) {
+    if (isConfirmed && submitted && formData.productId) {
       setRedirectCountdown(3);
 
       const interval = setInterval(() => {
         setRedirectCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(interval);
-            window.location.href = '/products';
+            window.location.href = `/product/${formData.productId}`;
             return 0;
           }
           return prev - 1;
@@ -170,7 +172,7 @@ export default function CreateProductPage() {
 
       return () => clearInterval(interval);
     }
-  }, [isConfirmed, submitted]);
+  }, [isConfirmed, submitted, formData.productId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -258,11 +260,11 @@ export default function CreateProductPage() {
   const handleUploadSuccess = async (result: any) => {
     setUploadResult(result);
     setUploadError('');
-    
+
     // Auto-generate next product ID
     const nextProductId = await fetchNextProductId();
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
       productId: nextProductId.toString(),
       contentId: result.contentId,
@@ -358,7 +360,6 @@ export default function CreateProductPage() {
           style={{
             maxWidth: '800px',
             paddingTop: '8rem',
-            paddingBottom: '4rem',
           }}
         >
           {/* Compact Header */}
@@ -445,7 +446,8 @@ export default function CreateProductPage() {
                       margin: 0,
                     }}
                   >
-                    Set up your creator profile before adding products to the marketplace.
+                    Set up your creator profile before adding products to the
+                    marketplace.
                   </p>
                 </div>
 
@@ -709,7 +711,12 @@ export default function CreateProductPage() {
                         width: '1.5rem',
                         height: '1.5rem',
                         borderRadius: '50%',
-                        backgroundColor: uploadStep === 'upload' ? '#D97757' : uploadResult ? '#22c55e' : '#e0e0e0',
+                        backgroundColor:
+                          uploadStep === 'upload'
+                            ? '#D97757'
+                            : uploadResult
+                            ? '#22c55e'
+                            : '#e0e0e0',
                         color: '#fff',
                         display: 'flex',
                         alignItems: 'center',
@@ -725,12 +732,16 @@ export default function CreateProductPage() {
                         fontFamily: 'var(--font-inter)',
                         fontSize: '0.875rem',
                         fontWeight: 500,
-                        color: uploadResult ? '#22c55e' : uploadStep === 'upload' ? '#D97757' : '#666',
+                        color: uploadResult
+                          ? '#22c55e'
+                          : uploadStep === 'upload'
+                          ? '#D97757'
+                          : '#666',
                       }}
                     >
                       Upload & Encrypt File
                     </span>
-                    
+
                     <div
                       style={{
                         width: '2rem',
@@ -738,13 +749,18 @@ export default function CreateProductPage() {
                         backgroundColor: uploadResult ? '#22c55e' : '#e0e0e0',
                       }}
                     />
-                    
+
                     <div
                       style={{
                         width: '1.5rem',
                         height: '1.5rem',
                         borderRadius: '50%',
-                        backgroundColor: uploadStep === 'create' ? '#D97757' : uploadStep === 'completed' ? '#22c55e' : '#e0e0e0',
+                        backgroundColor:
+                          uploadStep === 'create'
+                            ? '#D97757'
+                            : uploadStep === 'completed'
+                            ? '#22c55e'
+                            : '#e0e0e0',
                         color: '#fff',
                         display: 'flex',
                         alignItems: 'center',
@@ -760,7 +776,12 @@ export default function CreateProductPage() {
                         fontFamily: 'var(--font-inter)',
                         fontSize: '0.875rem',
                         fontWeight: 500,
-                        color: uploadStep === 'completed' ? '#22c55e' : uploadStep === 'create' ? '#D97757' : '#666',
+                        color:
+                          uploadStep === 'completed'
+                            ? '#22c55e'
+                            : uploadStep === 'create'
+                            ? '#D97757'
+                            : '#666',
                       }}
                     >
                       Create Product Listing
@@ -774,9 +795,12 @@ export default function CreateProductPage() {
                       margin: 0,
                     }}
                   >
-                    {uploadStep === 'upload' && 'First, upload your file to encrypt and store it securely'}
-                    {uploadStep === 'create' && 'Now create your product listing on the blockchain'}
-                    {uploadStep === 'completed' && 'Your product has been created successfully!'}
+                    {uploadStep === 'upload' &&
+                      'First, upload your file to encrypt and store it securely'}
+                    {uploadStep === 'create' &&
+                      'Now create your product listing on the blockchain'}
+                    {uploadStep === 'completed' &&
+                      'Your product has been created successfully!'}
                   </p>
                 </div>
 
@@ -886,7 +910,9 @@ export default function CreateProductPage() {
                           </span>
                         </div>
                         <button
-                          onClick={() => (window.location.href = '/products')}
+                          onClick={() =>
+                            (window.location.href = `/product/${formData.productId}`)
+                          }
                           style={{
                             fontFamily: 'var(--font-inter)',
                             fontSize: '0.8125rem',
@@ -898,7 +924,7 @@ export default function CreateProductPage() {
                             textDecoration: 'underline',
                           }}
                         >
-                          Go to products page now →
+                          View your product now →
                         </button>
                       </div>
                     )}
@@ -970,8 +996,12 @@ export default function CreateProductPage() {
                             transition: 'border-color 200ms',
                           }}
                           required
-                          onFocus={(e) => (e.target.style.borderColor = '#D97757')}
-                          onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
+                          onFocus={(e) =>
+                            (e.target.style.borderColor = '#D97757')
+                          }
+                          onBlur={(e) =>
+                            (e.target.style.borderColor = '#e0e0e0')
+                          }
                         />
                       </div>
 
@@ -1008,8 +1038,12 @@ export default function CreateProductPage() {
                             resize: 'vertical',
                           }}
                           required
-                          onFocus={(e) => (e.target.style.borderColor = '#D97757')}
-                          onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
+                          onFocus={(e) =>
+                            (e.target.style.borderColor = '#D97757')
+                          }
+                          onBlur={(e) =>
+                            (e.target.style.borderColor = '#e0e0e0')
+                          }
                         />
                       </div>
 
@@ -1034,7 +1068,8 @@ export default function CreateProductPage() {
                             color: '#666',
                           }}
                         >
-                          Please fill in the title and description before uploading your file.
+                          Please fill in the title and description before
+                          uploading your file.
                         </div>
                       ) : null}
                     </>
@@ -1043,9 +1078,10 @@ export default function CreateProductPage() {
                   {/* Product Details Section */}
                   {uploadStep === 'create' && (
                     <>
-                      {/* Product ID */}
+                      {/* Price */}
                       <div style={{ marginBottom: '2rem' }}>
                         <label
+                          htmlFor="price"
                           style={{
                             display: 'block',
                             fontFamily: 'var(--font-inter)',
@@ -1055,21 +1091,35 @@ export default function CreateProductPage() {
                             marginBottom: '0.75rem',
                           }}
                         >
-                          Product ID
+                          Price (PYUSD) *
                         </label>
-                        <div
+                        <input
+                          type="number"
+                          id="price"
+                          name="price"
+                          value={formData.price}
+                          onChange={handleChange}
+                          placeholder="0.00"
+                          step="0.01"
+                          min="0"
                           style={{
                             width: '100%',
                             padding: '0.625rem',
                             border: '1px solid #e0e0e0',
-                            backgroundColor: '#f5f5f3',
                             fontFamily: 'var(--font-inter)',
                             fontSize: '0.875rem',
-                            color: '#666',
+                            outline: 'none',
+                            transition: 'border-color 200ms',
                           }}
-                        >
-                          {formData.productId || 'Auto-generated after file upload'}
-                        </div>
+                          required
+                          disabled={isLoading || isConfirmed}
+                          onFocus={(e) =>
+                            (e.target.style.borderColor = '#D97757')
+                          }
+                          onBlur={(e) =>
+                            (e.target.style.borderColor = '#e0e0e0')
+                          }
+                        />
                         <p
                           style={{
                             fontFamily: 'var(--font-inter)',
@@ -1078,96 +1128,7 @@ export default function CreateProductPage() {
                             marginTop: '0.5rem',
                           }}
                         >
-                          Automatically assigned as the next available ID
-                        </p>
-                      </div>
-
-                  {/* Price */}
-                  <div style={{ marginBottom: '2rem' }}>
-                    <label
-                      htmlFor="price"
-                      style={{
-                        display: 'block',
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: '#1a1a1a',
-                        marginBottom: '0.75rem',
-                      }}
-                    >
-                      Price (PYUSD) *
-                    </label>
-                    <input
-                      type="number"
-                      id="price"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleChange}
-                      placeholder="0.00"
-                      step="0.01"
-                      min="0"
-                      style={{
-                        width: '100%',
-                        padding: '0.625rem',
-                        border: '1px solid #e0e0e0',
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.875rem',
-                        outline: 'none',
-                        transition: 'border-color 200ms',
-                      }}
-                      required
-                      disabled={isLoading || isConfirmed}
-                      onFocus={(e) => (e.target.style.borderColor = '#D97757')}
-                      onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-                    />
-                    <p
-                      style={{
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.8125rem',
-                        color: '#999',
-                        marginTop: '0.5rem',
-                      }}
-                    >
-                      Set your product price in PYUSD
-                    </p>
-                  </div>
-
-                      {/* Content ID Display */}
-                      <div style={{ marginBottom: '2rem' }}>
-                        <label
-                          style={{
-                            display: 'block',
-                            fontFamily: 'var(--font-inter)',
-                            fontSize: '0.875rem',
-                            fontWeight: 500,
-                            color: '#1a1a1a',
-                            marginBottom: '0.75rem',
-                          }}
-                        >
-                          Content ID
-                        </label>
-                        <div
-                          style={{
-                            padding: '0.875rem',
-                            border: '1px solid #e0e0e0',
-                            backgroundColor: '#f5f5f3',
-                            fontFamily: 'var(--font-inter)',
-                            fontSize: '0.8125rem',
-                            color: '#666',
-                            wordBreak: 'break-all',
-                          }}
-                        >
-                          {formData.contentId || 'Upload a file to generate content ID'}
-                        </div>
-                        <p
-                          style={{
-                            fontFamily: 'var(--font-inter)',
-                            fontSize: '0.75rem',
-                            color: '#999',
-                            marginTop: '0.5rem',
-                          }}
-                        >
-                          This ID links your blockchain listing to your encrypted content
+                          Set your product price in PYUSD
                         </p>
                       </div>
                     </>
@@ -1175,89 +1136,89 @@ export default function CreateProductPage() {
 
                   {/* Creator Info */}
                   {uploadStep === 'create' && (
-                  <div
-                    style={{
-                      padding: '1.5rem',
-                      border: '1px solid #e0e0e0',
-                      backgroundColor: '#f5f5f3',
-                      marginBottom: '2rem',
-                    }}
-                  >
-                    <h3
+                    <div
                       style={{
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: '#1a1a1a',
-                        marginBottom: '0.75rem',
+                        padding: '1.5rem',
+                        border: '1px solid #e0e0e0',
+                        backgroundColor: '#f5f5f3',
+                        marginBottom: '2rem',
                       }}
                     >
-                      Creator Information
-                    </h3>
-                    <p
-                      style={{
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.8125rem',
-                        color: '#666',
-                        marginBottom: '0.5rem',
-                      }}
-                    >
-                      <span style={{ fontWeight: 500 }}>Your Address:</span>{' '}
-                      <span style={{ wordBreak: 'break-all' }}>
-                        {user?.wallet?.address}
-                      </span>
-                    </p>
-                    <p
-                      style={{
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.75rem',
-                        color: '#999',
-                      }}
-                    >
-                      You will receive payments directly to this address
-                    </p>
-                  </div>
+                      <h3
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          color: '#1a1a1a',
+                          marginBottom: '0.75rem',
+                        }}
+                      >
+                        Creator Information
+                      </h3>
+                      <p
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.8125rem',
+                          color: '#666',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
+                        <span style={{ fontWeight: 500 }}>Your Address:</span>{' '}
+                        <span style={{ wordBreak: 'break-all' }}>
+                          {user?.wallet?.address}
+                        </span>
+                      </p>
+                      <p
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.75rem',
+                          color: '#999',
+                        }}
+                      >
+                        You will receive payments directly to this address
+                      </p>
+                    </div>
                   )}
 
                   {/* Submit Button */}
                   {uploadStep === 'create' && (
-                  <button
-                    type="submit"
-                    disabled={isLoading || isConfirmed}
-                    className="btn-primary"
-                    style={{
-                      width: '100%',
-                      opacity: isLoading || isConfirmed ? 0.6 : 1,
-                      cursor:
-                        isLoading || isConfirmed ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    {isLoading ? (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.5rem',
-                        }}
-                      >
+                    <button
+                      type="submit"
+                      disabled={isLoading || isConfirmed}
+                      className="btn-primary"
+                      style={{
+                        width: '100%',
+                        opacity: isLoading || isConfirmed ? 0.6 : 1,
+                        cursor:
+                          isLoading || isConfirmed ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {isLoading ? (
                         <div
                           style={{
-                            animation: 'spin 1s linear infinite',
-                            borderRadius: '50%',
-                            height: '1.25rem',
-                            width: '1.25rem',
-                            borderBottom: '2px solid #fafaf8',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
                           }}
-                        ></div>
-                        <span>Submitting...</span>
-                      </div>
-                    ) : isConfirmed ? (
-                      'Product Created ✓'
-                    ) : (
-                      'Create Product'
-                    )}
-                  </button>
+                        >
+                          <div
+                            style={{
+                              animation: 'spin 1s linear infinite',
+                              borderRadius: '50%',
+                              height: '1.25rem',
+                              width: '1.25rem',
+                              borderBottom: '2px solid #fafaf8',
+                            }}
+                          ></div>
+                          <span>Submitting...</span>
+                        </div>
+                      ) : isConfirmed ? (
+                        'Product Created ✓'
+                      ) : (
+                        'Create Product'
+                      )}
+                    </button>
                   )}
                 </form>
               </>

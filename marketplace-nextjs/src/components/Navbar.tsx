@@ -44,7 +44,7 @@ export function Navbar() {
         backgroundColor: 'rgba(250, 250, 248, 0.95)',
         backdropFilter: 'blur(10px)',
         borderBottom: '1px solid #e0e0e0',
-        padding: '2rem 0',
+        padding: '.5rem 0',
       }}
     >
       <div
@@ -120,8 +120,12 @@ export function Navbar() {
                     transition: 'color 200ms',
                     fontWeight: 400,
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#D97757')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#1a1a1a')}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.color = '#D97757')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.color = '#1a1a1a')
+                  }
                 >
                   My Profile
                 </Link>
@@ -170,11 +174,13 @@ export function Navbar() {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = '#D97757';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(217, 151, 87, 0.15)';
+                e.currentTarget.style.boxShadow =
+                  '0 2px 8px rgba(217, 151, 87, 0.15)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = '#e0e0e0';
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.boxShadow =
+                  '0 1px 3px rgba(0, 0, 0, 0.05)';
               }}
             >
               {/* Wallet Info */}
@@ -228,9 +234,9 @@ export function Navbar() {
                     paddingLeft: '0.75rem',
                   }}
                 >
-                  <span 
-                    style={{ 
-                      color: '#999', 
+                  <span
+                    style={{
+                      color: '#999',
                       fontSize: '0.625rem',
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
@@ -240,9 +246,9 @@ export function Navbar() {
                   >
                     PYUSD
                   </span>
-                  <span 
-                    style={{ 
-                      color: '#D97757', 
+                  <span
+                    style={{
+                      color: '#D97757',
                       fontWeight: 500,
                       fontSize: '0.75rem',
                       fontFamily: 'var(--font-inter)',
