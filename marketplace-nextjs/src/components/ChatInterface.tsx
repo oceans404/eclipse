@@ -16,7 +16,11 @@ interface ChatInterfaceProps {
   productTitle: string;
 }
 
-export function ChatInterface({ contentId, productId, productTitle }: ChatInterfaceProps) {
+export function ChatInterface({
+  contentId,
+  productId,
+  productTitle,
+}: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +40,7 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
@@ -50,8 +54,8 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
       content: userMessage,
       timestamp: new Date(),
     };
-    
-    setMessages(prev => [...prev, userMsg]);
+
+    setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
     try {
@@ -72,7 +76,7 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
       }
 
       const data = await response.json();
-      
+
       // Add assistant message
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -81,8 +85,8 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
         timestamp: new Date(),
         tokensUsed: data.tokens_used,
       };
-      
-      setMessages(prev => [...prev, assistantMsg]);
+
+      setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -103,7 +107,7 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
       style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '500px',
+        height: '400px',
         border: '1px solid #e0e0e0',
         backgroundColor: '#fafaf8',
         overflow: 'hidden',
@@ -112,25 +116,25 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
       {/* Simplified Header */}
       <div
         style={{
-          padding: '1rem 1.5rem',
+          padding: '0.75rem 1rem',
           borderBottom: '1px solid #e0e0e0',
           backgroundColor: '#f5f5f3',
           display: 'flex',
           alignItems: 'center',
-          gap: '1rem',
+          gap: '0.75rem',
         }}
       >
         <div
           style={{
-            width: '2.5rem',
-            height: '2.5rem',
+            width: '2rem',
+            height: '2rem',
             borderRadius: '50%',
             backgroundColor: '#D97757',
             color: '#fff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '1.25rem',
+            fontSize: '1rem',
             flexShrink: 0,
           }}
         >
@@ -139,7 +143,7 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
         <div>
           <h3
             style={{
-              fontSize: '0.95rem',
+              fontSize: '0.875rem',
               fontWeight: 500,
               fontFamily: 'var(--font-inter)',
               letterSpacing: '-0.01em',
@@ -150,7 +154,7 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
           </h3>
           <p
             style={{
-              fontSize: '0.75rem',
+              fontSize: '0.7rem',
               color: '#666',
               fontFamily: 'var(--font-inter)',
             }}
@@ -165,24 +169,24 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '1.5rem',
+          padding: '1rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.5rem',
+          gap: '1rem',
         }}
       >
         {messages.length === 0 && !isLoading && (
           <div
             style={{
               textAlign: 'center',
-              padding: '3rem',
+              padding: '2rem',
               color: '#999',
             }}
           >
             <div
               style={{
-                fontSize: '3rem',
-                marginBottom: '1rem',
+                fontSize: '2rem',
+                marginBottom: '0.75rem',
                 opacity: 0.3,
               }}
             >
@@ -190,9 +194,9 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
             </div>
             <p
               style={{
-                fontSize: '0.95rem',
+                fontSize: '0.875rem',
                 fontFamily: 'var(--font-inter)',
-                marginBottom: '1.5rem',
+                marginBottom: '1rem',
               }}
             >
               Ask me anything about this encrypted content
@@ -201,19 +205,21 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '0.75rem',
-                maxWidth: '400px',
+                gap: '0.5rem',
+                maxWidth: '350px',
                 margin: '0 auto',
               }}
             >
               <button
-                onClick={() => handleSubmit({ preventDefault: () => {} } as any)}
+                onClick={() =>
+                  handleSubmit({ preventDefault: () => {} } as any)
+                }
                 onMouseDown={() => setInput('What is this content about?')}
                 style={{
-                  padding: '0.75rem 1rem',
+                  padding: '0.5rem 0.75rem',
                   border: '1px solid #e0e0e0',
                   backgroundColor: '#fafaf8',
-                  fontSize: '0.875rem',
+                  fontSize: '0.75rem',
                   fontFamily: 'var(--font-inter)',
                   color: '#666',
                   cursor: 'pointer',
@@ -232,13 +238,17 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
                 💭 "What is this content about?"
               </button>
               <button
-                onClick={() => handleSubmit({ preventDefault: () => {} } as any)}
-                onMouseDown={() => setInput('Can you summarize the key points?')}
+                onClick={() =>
+                  handleSubmit({ preventDefault: () => {} } as any)
+                }
+                onMouseDown={() =>
+                  setInput('Can you summarize the key points?')
+                }
                 style={{
-                  padding: '0.75rem 1rem',
+                  padding: '0.5rem 0.75rem',
                   border: '1px solid #e0e0e0',
                   backgroundColor: '#fafaf8',
-                  fontSize: '0.875rem',
+                  fontSize: '0.75rem',
                   fontFamily: 'var(--font-inter)',
                   color: '#666',
                   cursor: 'pointer',
@@ -257,13 +267,15 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
                 📋 "Can you summarize the key points?"
               </button>
               <button
-                onClick={() => handleSubmit({ preventDefault: () => {} } as any)}
+                onClick={() =>
+                  handleSubmit({ preventDefault: () => {} } as any)
+                }
                 onMouseDown={() => setInput('What type of file is this?')}
                 style={{
-                  padding: '0.75rem 1rem',
+                  padding: '0.5rem 0.75rem',
                   border: '1px solid #e0e0e0',
                   backgroundColor: '#fafaf8',
-                  fontSize: '0.875rem',
+                  fontSize: '0.75rem',
                   fontFamily: 'var(--font-inter)',
                   color: '#666',
                   cursor: 'pointer',
@@ -300,7 +312,8 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
                 width: '2rem',
                 height: '2rem',
                 borderRadius: '50%',
-                backgroundColor: message.role === 'user' ? '#f5f5f3' : '#D97757',
+                backgroundColor:
+                  message.role === 'user' ? '#f5f5f3' : '#D97757',
                 color: message.role === 'user' ? '#666' : '#fff',
                 display: 'flex',
                 alignItems: 'center',
@@ -541,23 +554,13 @@ export function ChatInterface({ contentId, productId, productTitle }: ChatInterf
             {isLoading ? 'Sending...' : 'Send'}
           </button>
         </div>
-        <p
-          style={{
-            fontSize: '0.75rem',
-            color: '#999',
-            marginTop: '0.75rem',
-            fontFamily: 'var(--font-inter)',
-            textAlign: 'center',
-          }}
-        >
-          Press Enter to send, Shift+Enter for new line
-        </p>
       </form>
 
       {/* Animation for loading dots */}
       <style jsx>{`
         @keyframes pulse {
-          0%, 100% {
+          0%,
+          100% {
             opacity: 0.3;
             transform: scale(0.8);
           }

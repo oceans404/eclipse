@@ -2,7 +2,7 @@
 name: eclipse-envio-indexer
 networks:
   - id: 11155111
-    start_block: 9482318
+    start_block: 9482667
     contracts:
       - name: ProductPaymentService
         address:

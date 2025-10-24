@@ -635,9 +635,9 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                         {revenueData.ProductPaymentService_PaymentReceived.slice(
                           0,
                           3
-                        ).map((payment: any, index: number) => (
+                        ).map((payment: any) => (
                           <a
-                            key={index}
+                            key={payment.transactionHash}
                             href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${payment.transactionHash}`}
                             target="_blank"
                             rel="noopener noreferrer"

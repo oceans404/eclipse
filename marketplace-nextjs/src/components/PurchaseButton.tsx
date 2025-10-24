@@ -14,12 +14,14 @@ interface PurchaseButtonProps {
   productId: number;
   price: string; // PYUSD amount as string
   onPurchaseSuccess?: () => void;
+  compact?: boolean; // Add compact mode for header usage
 }
 
 export function PurchaseButton({
   productId,
   price,
   onPurchaseSuccess,
+  compact = false,
 }: PurchaseButtonProps) {
   const { authenticated, user, login } = usePrivy();
   const [step, setStep] = useState<'idle' | 'approving' | 'purchasing'>('idle');
@@ -122,8 +124,31 @@ export function PurchaseButton({
     return (
       <button
         onClick={handlePurchase}
-        className="btn-primary"
-        style={{ width: '100%' }}
+        className={compact ? '' : 'btn-primary'}
+        style={compact ? {
+          backgroundColor: '#D97757',
+          color: '#fafaf8',
+          padding: '0.625rem 1.5rem',
+          border: '1px solid #D97757',
+          fontSize: '0.875rem',
+          fontFamily: 'var(--font-inter)',
+          fontWeight: 500,
+          cursor: 'pointer',
+          transition: 'all 200ms ease',
+          borderRadius: '4px',
+        } : { width: '100%' }}
+        onMouseEnter={(e) => {
+          if (compact) {
+            e.currentTarget.style.backgroundColor = '#c86548';
+            e.currentTarget.style.borderColor = '#c86548';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (compact) {
+            e.currentTarget.style.backgroundColor = '#D97757';
+            e.currentTarget.style.borderColor = '#D97757';
+          }
+        }}
       >
         Connect Wallet to Purchase
       </button>
@@ -177,9 +202,9 @@ export function PurchaseButton({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div style={compact ? {} : { display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Transaction Status */}
-      {(error || hash) && (
+      {!compact && (error || hash) && (
         <div
           style={{
             padding: '1rem',
@@ -241,11 +266,35 @@ export function PurchaseButton({
       <button
         onClick={handlePurchase}
         disabled={isLoading}
-        className="btn-primary"
-        style={{
+        className={compact ? '' : 'btn-primary'}
+        style={compact ? {
+          backgroundColor: '#D97757',
+          color: '#fafaf8',
+          padding: '0.625rem 1.5rem',
+          border: '1px solid #D97757',
+          fontSize: '0.875rem',
+          fontFamily: 'var(--font-inter)',
+          fontWeight: 500,
+          cursor: isLoading ? 'not-allowed' : 'pointer',
+          transition: 'all 200ms ease',
+          borderRadius: '4px',
+          opacity: isLoading ? 0.6 : 1,
+        } : {
           width: '100%',
           opacity: isLoading ? 0.6 : 1,
           cursor: isLoading ? 'not-allowed' : 'pointer',
+        }}
+        onMouseEnter={(e) => {
+          if (compact && !isLoading) {
+            e.currentTarget.style.backgroundColor = '#c86548';
+            e.currentTarget.style.borderColor = '#c86548';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (compact && !isLoading) {
+            e.currentTarget.style.backgroundColor = '#D97757';
+            e.currentTarget.style.borderColor = '#D97757';
+          }
         }}
       >
         {isLoading ? (
@@ -274,7 +323,7 @@ export function PurchaseButton({
       </button>
 
       {/* Purchase Info */}
-      {!hasEnoughAllowance && (
+      {!compact && !hasEnoughAllowance && (
         <div
           style={{
             fontFamily: 'var(--font-inter)',

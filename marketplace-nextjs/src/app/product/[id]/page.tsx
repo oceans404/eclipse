@@ -25,8 +25,11 @@ export default function ProductPage({ params }: ProductPageProps) {
   const resolvedParams = use(params);
   const router = useRouter();
   const productId = Number(resolvedParams.id);
-  const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null);
+  const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(
+    null
+  );
   const [activeTab, setActiveTab] = useState<'chat' | 'content'>('chat');
+  const [tabInitialized, setTabInitialized] = useState(false);
   const { authenticated, user } = usePrivy();
 
   const { loading, error, data } = useQuery(GET_PRODUCT_DETAILS, {
@@ -41,20 +44,31 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   // Use the asset metadata hook
   const product = data?.Product?.[0];
-  const { getTitle, getDescription, metadata } = useAssetMetadata(product?.contentId || null);
+  const { getTitle, getDescription, metadata } = useAssetMetadata(
+    product?.contentId || null
+  );
 
   // Check if user owns this product
   const { data: hasPaid } = useHasPaid(user?.wallet?.address, productId);
 
   // Check if user created this product
-  const isCreator = authenticated && 
+  const isCreator =
+    authenticated &&
     user?.wallet?.address?.toLowerCase() === product?.creator?.toLowerCase();
+
+  // Set default tab based on access
+  useEffect(() => {
+    if (!tabInitialized && product && (hasPaid || isCreator)) {
+      setActiveTab('content');
+      setTabInitialized(true);
+    }
+  }, [hasPaid, isCreator, product, tabInitialized]);
 
   // Fetch creator profile when product data is loaded
   useEffect(() => {
     const fetchCreatorProfile = async () => {
       if (!data?.Product?.[0]?.creator) return;
-      
+
       try {
         const response = await fetch(`/api/creator/${data.Product[0].creator}`);
         if (response.ok) {
@@ -202,6 +216,12 @@ export default function ProductPage({ params }: ProductPageProps) {
       '0'
     ) || '0';
 
+  // Find user's purchase transaction
+  const userPurchase = data?.ProductPaymentService_PaymentReceived?.find(
+    (payment: any) =>
+      payment.payer.toLowerCase() === user?.wallet?.address?.toLowerCase()
+  );
+
   // Build complete price history
   const priceHistory = [];
   if (priceHistoryData?.added?.[0]) {
@@ -251,488 +271,950 @@ export default function ProductPage({ params }: ProductPageProps) {
           className="container-eclipse"
           style={{
             maxWidth: '1200px',
-            paddingTop: '10rem',
-            paddingBottom: '8rem',
+            paddingTop: '6rem',
           }}
         >
-          {/* Product Info + Stats Dashboard */}
+          {/* Compact Product Header */}
           <div
             style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1.2fr',
-              gap: '2.5rem',
-              alignItems: 'start',
-              paddingBottom: '4rem',
-              borderBottom: '1px solid #e0e0e0',
-              marginBottom: '3rem',
-              minHeight: '280px',
+              marginBottom: '2rem',
             }}
-            className="responsive-product-header"
           >
-            {/* Left: Product Info */}
+            {/* Header Card */}
             <div
               style={{
-                padding: '2rem',
                 border: '1px solid #e0e0e0',
                 backgroundColor: '#fafaf8',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
+                padding: '1.5rem',
+                marginBottom: '2rem',
+                position: 'relative',
               }}
             >
+              {/* Buy Button - Top Right */}
               <div
                 style={{
-                  fontFamily: 'var(--font-inter)',
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.15em',
-                  textTransform: 'uppercase',
-                  color: '#D97757',
-                  marginBottom: '2rem',
-                  fontWeight: 500,
+                  position: 'absolute',
+                  top: '1.5rem',
+                  right: '1.5rem',
                 }}
               >
-                Product #{product.productId}
-              </div>
-
-              {/* Product Content */}
-              <div
-                style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
-              >
-                {/* Product Icon & Name */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1.5rem',
-                    marginBottom: '1.5rem',
-                  }}
-                >
-                  {/* Product Icon Placeholder */}
+                {!isCreator && !hasPaid ? (
+                  <PurchaseButton
+                    productId={product.productId}
+                    price={
+                      product.currentPrice
+                        ? (Number(product.currentPrice) / 1e6).toFixed(2)
+                        : '0.00'
+                    }
+                    onPurchaseSuccess={() => {
+                      window.location.reload();
+                    }}
+                    compact={true}
+                  />
+                ) : isCreator ? (
                   <div
                     style={{
-                      width: '4.5rem',
-                      height: '4.5rem',
-                      backgroundColor: '#f5f5f3',
-                      border: '2px dashed #e0e0e0',
-                      borderRadius: '0.5rem',
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1.75rem',
-                      color: '#999',
-                      flexShrink: 0,
+                      flexDirection: 'column',
+                      alignItems: 'flex-end',
+                      gap: '0.5rem',
                     }}
                   >
-                    🌒
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.375rem 0.75rem',
+                        backgroundColor: '#f5f5f3',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontFamily: 'var(--font-inter)',
+                        fontWeight: 500,
+                        color: '#666',
+                      }}
+                    >
+                      👑
+                      <span>You created this product</span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '0.7rem',
+                        color: '#666',
+                        fontFamily: 'var(--font-inter)',
+                        textAlign: 'right',
+                      }}
+                    >
+                      {formatDate(product.createdAt)} • Price:{' '}
+                      <span style={{ fontWeight: 500, color: '#D97757' }}>
+                        <PriceDisplay priceInPyusd={product.currentPrice} />
+                      </span>
+                    </div>
+                    {priceHistoryData?.added?.[0] && (
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${priceHistoryData.added[0].transactionHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: '0.7rem',
+                          color: '#D97757',
+                          fontFamily: 'var(--font-inter)',
+                          textDecoration: 'none',
+                          borderBottom: '1px solid transparent',
+                          transition: 'border-color 200ms',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderBottomColor = '#D97757';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderBottomColor = 'transparent';
+                        }}
+                      >
+                        View creation transaction →
+                      </a>
+                    )}
                   </div>
+                ) : hasPaid && userPurchase ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-end',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.375rem 0.75rem',
+                        backgroundColor: '#f5f5f3',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontFamily: 'var(--font-inter)',
+                        fontWeight: 500,
+                        color: '#666',
+                      }}
+                    >
+                      ✓
+                      <span>You purchased this product</span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '0.7rem',
+                        color: '#666',
+                        fontFamily: 'var(--font-inter)',
+                        textAlign: 'right',
+                      }}
+                    >
+                      {formatDate(userPurchase.blockTimestamp)} • Paid{' '}
+                      <span style={{ fontWeight: 500, color: '#D97757' }}>
+                        <PriceDisplay priceInPyusd={userPurchase.amount} />
+                      </span>
+                    </div>
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${userPurchase.transactionHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: '0.7rem',
+                        color: '#D97757',
+                        fontFamily: 'var(--font-inter)',
+                        textDecoration: 'none',
+                        borderBottom: '1px solid transparent',
+                        transition: 'border-color 200ms',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderBottomColor = '#D97757';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderBottomColor = 'transparent';
+                      }}
+                    >
+                      View transaction →
+                    </a>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.875rem',
+                      backgroundColor: '#f5f5f3',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontFamily: 'var(--font-inter)',
+                      fontWeight: 500,
+                      color: '#666',
+                    }}
+                  >
+                    ✓
+                    <span>Owned</span>
+                  </div>
+                )}
+              </div>
 
-                  {/* Product Name & Date */}
-                  <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '1.5rem',
+                  alignItems: 'flex-start',
+                  paddingRight: '200px',
+                }}
+                className="responsive-product-header"
+              >
+                {/* Product Icon */}
+                <div
+                  style={{
+                    width: '4rem',
+                    height: '4rem',
+                    backgroundColor: '#f5f5f3',
+                    border: '2px dashed #e0e0e0',
+                    borderRadius: '0.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.75rem',
+                    color: '#999',
+                    flexShrink: 0,
+                  }}
+                >
+                  🌒
+                </div>
+
+                {/* Title and Info */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ marginBottom: '0.5rem' }}>
                     <h1
                       style={{
                         fontSize: '1.5rem',
                         fontWeight: 300,
+                        marginBottom: '0.25rem',
+                        letterSpacing: '-0.02em',
                         lineHeight: 1.2,
-                        marginBottom: '0.5rem',
-                        letterSpacing: '-0.01em',
-                        wordBreak: 'break-word',
                       }}
                     >
                       {getTitle(product.contentId)}
                     </h1>
                     <p
                       style={{
-                        fontSize: '0.875rem',
+                        fontSize: '0.75rem',
                         color: '#666',
                         fontFamily: 'var(--font-inter)',
                       }}
                     >
-                      Created {formatDate(product.createdAt)}
+                      Product #{product.productId} • Created{' '}
+                      {formatDate(product.createdAt)}
                     </p>
                   </div>
-                </div>
 
-                {/* Product Description */}
-                <p
-                  style={{
-                    fontSize: '0.95rem',
-                    color: '#666',
-                    marginBottom: '1.5rem',
-                    lineHeight: 1.6,
-                    flex: 1,
-                  }}
-                >
-                  {getDescription()}
-                </p>
-
-                {/* Creator */}
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <div
+                  <p
                     style={{
-                      fontFamily: 'var(--font-inter)',
-                      fontSize: '0.75rem',
-                      letterSpacing: '0.05em',
-                      textTransform: 'uppercase',
-                      color: '#999',
-                      marginBottom: '0.5rem',
-                      fontWeight: 500,
+                      fontSize: '0.875rem',
+                      color: '#666',
+                      lineHeight: 1.4,
+                      marginBottom: '0.75rem',
                     }}
                   >
-                    Creator
-                  </div>
+                    {getDescription()}
+                  </p>
+
+                  {/* Creator and Stats Row */}
                   <div
                     style={{
                       display: 'flex',
+                      gap: '1.5rem',
                       alignItems: 'center',
-                      gap: '1rem',
-                      padding: '0.75rem',
-                      border: '1px solid #e0e0e0',
-                      backgroundColor: '#f5f5f3',
-                      cursor: 'pointer',
-                      transition: 'border-color 200ms',
-                    }}
-                    onClick={() => router.push(`/creator/${product.creator}`)}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#D97757';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#e0e0e0';
+                      flexWrap: 'wrap',
                     }}
                   >
-                    {/* Creator Profile Image */}
-                    {creatorProfile?.image_url ? (
-                      <img
-                        src={creatorProfile.image_url}
-                        alt={creatorProfile.name || 'Creator'}
-                        style={{
-                          width: '2.5rem',
-                          height: '2.5rem',
-                          borderRadius: '50%',
-                          objectFit: 'cover',
-                          border: '1px solid #e0e0e0',
-                          flexShrink: 0,
-                        }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: '2.5rem',
-                          height: '2.5rem',
-                          borderRadius: '50%',
-                          backgroundColor: '#f5f5f3',
-                          border: '1px solid #e0e0e0',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.25rem',
-                          flexShrink: 0,
-                        }}
-                      >
-                        👤
-                      </div>
-                    )}
-                    
-                    {/* Creator Info */}
-                    <div style={{ flex: 1 }}>
-                      {creatorProfile?.name ? (
-                        <div>
-                          <div
-                            style={{
-                              fontSize: '0.9rem',
-                              color: '#1a1a1a',
-                              fontWeight: 400,
-                              marginBottom: '0.125rem',
-                            }}
-                          >
-                            {creatorProfile.name}
-                          </div>
-                          <div
-                            style={{
-                              fontFamily: 'var(--font-mono, monospace)',
-                              fontSize: '0.75rem',
-                              color: '#666',
-                            }}
-                          >
-                            {product.creator.slice(0, 6)}...
-                            {product.creator.slice(-4)}
-                          </div>
-                        </div>
-                      ) : (
-                        <span
+                    {/* Creator */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => router.push(`/creator/${product.creator}`)}
+                    >
+                      {creatorProfile?.image_url ? (
+                        <img
+                          src={creatorProfile.image_url}
+                          alt={creatorProfile.name || 'Creator'}
                           style={{
-                            fontFamily: 'var(--font-mono, monospace)',
+                            width: '2rem',
+                            height: '2rem',
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            border: '1px solid #e0e0e0',
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: '2rem',
+                            height: '2rem',
+                            borderRadius: '50%',
+                            backgroundColor: '#f5f5f3',
+                            border: '1px solid #e0e0e0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             fontSize: '0.875rem',
-                            color: '#1a1a1a',
                           }}
                         >
-                          {product.creator.slice(0, 6)}...
-                          {product.creator.slice(-4)}
-                        </span>
+                          👤
+                        </div>
                       )}
+                      <div>
+                        <p
+                          style={{
+                            fontSize: '0.75rem',
+                            color: '#999',
+                            fontFamily: 'var(--font-inter)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            marginBottom: '0.125rem',
+                          }}
+                        >
+                          Creator
+                        </p>
+                        <p
+                          style={{
+                            fontSize: '0.875rem',
+                            color: '#D97757',
+                            fontFamily: 'var(--font-inter)',
+                            fontWeight: 500,
+                          }}
+                        >
+                          {creatorProfile?.name ||
+                            `${product.creator.slice(
+                              0,
+                              6
+                            )}...${product.creator.slice(-4)}`}
+                        </p>
+                      </div>
                     </div>
-                    
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.75rem',
-                        color: '#D97757',
-                        fontWeight: 500,
-                        flexShrink: 0,
-                      }}
-                    >
-                      View profile →
-                    </span>
-                  </div>
-                </div>
 
-                {/* Purchase Section - Bottom aligned */}
-                <div style={{ marginTop: 'auto' }}>
-                  <div
-                    style={{
-                      padding: '1.5rem',
-                      border: '1px solid #e0e0e0',
-                      backgroundColor: '#f5f5f3',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.875rem',
-                        letterSpacing: '0.05em',
-                        textTransform: 'uppercase',
-                        color: '#666',
-                        marginBottom: '1rem',
-                        fontWeight: 500,
-                      }}
-                    >
-                      Purchase Product
-                    </h3>
-                    <PurchaseButton
-                      productId={product.productId}
-                      price={
-                        product.currentPrice
-                          ? (Number(product.currentPrice) / 1e6).toFixed(2)
-                          : '0.00'
-                      }
-                      onPurchaseSuccess={() => {
-                        window.location.reload();
-                      }}
-                    />
+                    {/* Sales */}
+                    <div>
+                      <p
+                        style={{
+                          fontSize: '0.75rem',
+                          color: '#999',
+                          fontFamily: 'var(--font-inter)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          marginBottom: '0.125rem',
+                        }}
+                      >
+                        Sales
+                      </p>
+                      <p
+                        style={{
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {totalSales}
+                      </p>
+                    </div>
+
+                    {/* Revenue */}
+                    <div>
+                      <p
+                        style={{
+                          fontSize: '0.75rem',
+                          color: '#999',
+                          fontFamily: 'var(--font-inter)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          marginBottom: '0.125rem',
+                        }}
+                      >
+                        Revenue
+                      </p>
+                      <p
+                        style={{
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                        }}
+                      >
+                        <PriceDisplay priceInPyusd={totalRevenue} />
+                      </p>
+                    </div>
+
+                    {/* Price */}
+                    <div>
+                      <p
+                        style={{
+                          fontSize: '0.75rem',
+                          color: '#999',
+                          fontFamily: 'var(--font-inter)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          marginBottom: '0.125rem',
+                        }}
+                      >
+                        Price
+                      </p>
+                      <p
+                        style={{
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          color: '#D97757',
+                        }}
+                      >
+                        <PriceDisplay priceInPyusd={product.currentPrice} />
+                      </p>
+                    </div>
+
+                    {/* Updates */}
+                    <div>
+                      <p
+                        style={{
+                          fontSize: '0.75rem',
+                          color: '#999',
+                          fontFamily: 'var(--font-inter)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          marginBottom: '0.125rem',
+                        }}
+                      >
+                        Updates
+                      </p>
+                      <p
+                        style={{
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {product.updateCount || 0}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right: Stats + Purchase Dashboard */}
-            <div
-              style={{
-                padding: '2rem',
-                border: '1px solid #e0e0e0',
-                backgroundColor: '#fafaf8',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              {/* Price & Stats Section */}
+
+            {/* Product Info + Stats Dashboard - Remove this old section */}
+            <div style={{ display: 'none' }}>
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '1.5rem',
-                  marginBottom: '2rem',
+                  gridTemplateColumns: '1fr 1.2fr',
+                  gap: '2.5rem',
+                  alignItems: 'start',
+                  paddingBottom: '4rem',
+                  borderBottom: '1px solid #e0e0e0',
+                  marginBottom: '3rem',
+                  minHeight: '280px',
                 }}
+                className="responsive-product-header"
               >
-                {/* Current Price */}
-                <div style={{ textAlign: 'center' }}>
-                  <p
+                {/* Left: Product Info */}
+                <div
+                  style={{
+                    padding: '2rem',
+                    border: '1px solid #e0e0e0',
+                    backgroundColor: '#fafaf8',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <div
                     style={{
-                      fontSize: '2rem',
-                      fontWeight: 500,
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.15em',
+                      textTransform: 'uppercase',
                       color: '#D97757',
-                      marginBottom: '0.5rem',
-                    }}
-                  >
-                    <PriceDisplay priceInPyusd={product.currentPrice} />
-                  </p>
-                  <p
-                    style={{
-                      fontFamily: 'var(--font-inter)',
-                      fontSize: '0.75rem',
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      color: '#999',
+                      marginBottom: '2rem',
                       fontWeight: 500,
                     }}
                   >
-                    Current Price
-                  </p>
-                </div>
-
-                {/* Update Count */}
-                <div style={{ textAlign: 'center' }}>
-                  <p
-                    style={{
-                      fontSize: '2rem',
-                      fontWeight: 300,
-                      color: '#1a1a1a',
-                      marginBottom: '0.5rem',
-                    }}
-                  >
-                    {product.updateCount || 0}
-                  </p>
-                  <p
-                    style={{
-                      fontFamily: 'var(--font-inter)',
-                      fontSize: '0.75rem',
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      color: '#999',
-                      fontWeight: 500,
-                    }}
-                  >
-                    Updates
-                  </p>
-                </div>
-
-                {/* Total Sales */}
-                <div style={{ textAlign: 'center' }}>
-                  <p
-                    style={{
-                      fontSize: '2rem',
-                      fontWeight: 300,
-                      color: '#1a1a1a',
-                      marginBottom: '0.5rem',
-                    }}
-                  >
-                    {totalSales}
-                  </p>
-                  <p
-                    style={{
-                      fontFamily: 'var(--font-inter)',
-                      fontSize: '0.75rem',
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      color: '#999',
-                      fontWeight: 500,
-                    }}
-                  >
-                    Sales
-                  </p>
-                </div>
-
-                {/* Total Revenue */}
-                <div style={{ textAlign: 'center' }}>
-                  <p
-                    style={{
-                      fontFamily: 'var(--font-inter)',
-                      fontSize: '1.25rem',
-                      fontWeight: 500,
-                      color: '#1a1a1a',
-                      marginBottom: '0.5rem',
-                    }}
-                  >
-                    <PriceDisplay priceInPyusd={totalRevenue} />
-                  </p>
-                  <p
-                    style={{
-                      fontFamily: 'var(--font-inter)',
-                      fontSize: '0.75rem',
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      color: '#999',
-                      fontWeight: 500,
-                    }}
-                  >
-                    Revenue
-                  </p>
-                </div>
-              </div>
-
-              {/* Price History - Compact */}
-              {priceHistory.length > 0 && (
-                <div style={{ marginBottom: '2rem' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '0.75rem',
-                      paddingBottom: '0.5rem',
-                      borderBottom: '1px solid #e0e0e0',
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.75rem',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        color: '#666',
-                        fontWeight: 500,
-                      }}
-                    >
-                      Price History
-                    </h3>
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.7rem',
-                        color: '#999',
-                      }}
-                    >
-                      {priceHistory.length} changes
-                    </span>
+                    Product #{product.productId}
                   </div>
+
+                  {/* Product Content */}
                   <div
                     style={{
+                      flex: 1,
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '0.5rem',
-                      maxHeight: '120px',
-                      overflowY: 'auto',
                     }}
                   >
-                    {priceHistory.slice(-3).reverse().map((entry: any, index: number) => (
+                    {/* Product Icon & Name */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1.5rem',
+                        marginBottom: '1.5rem',
+                      }}
+                    >
+                      {/* Product Icon Placeholder */}
                       <div
-                        key={index}
                         style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          padding: '0.5rem',
-                          border: '1px solid #e0e0e0',
+                          width: '4.5rem',
+                          height: '4.5rem',
                           backgroundColor: '#f5f5f3',
-                          fontSize: '0.75rem',
+                          border: '2px dashed #e0e0e0',
+                          borderRadius: '0.5rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.75rem',
+                          color: '#999',
+                          flexShrink: 0,
                         }}
                       >
-                        <div
+                        🌒
+                      </div>
+
+                      {/* Product Name & Date */}
+                      <div style={{ flex: 1 }}>
+                        <h1
                           style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '0.25rem',
+                            fontSize: '1.5rem',
+                            fontWeight: 300,
+                            lineHeight: 1.2,
+                            marginBottom: '0.5rem',
+                            letterSpacing: '-0.01em',
+                            wordBreak: 'break-word',
                           }}
                         >
-                          <span
+                          {getTitle(product.contentId)}
+                        </h1>
+                        <p
+                          style={{
+                            fontSize: '0.875rem',
+                            color: '#666',
+                            fontFamily: 'var(--font-inter)',
+                          }}
+                        >
+                          Created {formatDate(product.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Product Description */}
+                    <p
+                      style={{
+                        fontSize: '0.95rem',
+                        color: '#666',
+                        marginBottom: '1.5rem',
+                        lineHeight: 1.6,
+                        flex: 1,
+                      }}
+                    >
+                      {getDescription()}
+                    </p>
+
+                    {/* Creator */}
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <div
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.75rem',
+                          letterSpacing: '0.05em',
+                          textTransform: 'uppercase',
+                          color: '#999',
+                          marginBottom: '0.5rem',
+                          fontWeight: 500,
+                        }}
+                      >
+                        Creator
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '1rem',
+                          padding: '0.75rem',
+                          border: '1px solid #e0e0e0',
+                          backgroundColor: '#f5f5f3',
+                          cursor: 'pointer',
+                          transition: 'border-color 200ms',
+                        }}
+                        onClick={() =>
+                          router.push(`/creator/${product.creator}`)
+                        }
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = '#D97757';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = '#e0e0e0';
+                        }}
+                      >
+                        {/* Creator Profile Image */}
+                        {creatorProfile?.image_url ? (
+                          <img
+                            src={creatorProfile.image_url}
+                            alt={creatorProfile.name || 'Creator'}
                             style={{
-                              fontFamily: 'var(--font-inter)',
-                              fontWeight: 500,
-                              color: entry.type === 'created' ? '#D97757' : '#1a1a1a',
+                              width: '2.5rem',
+                              height: '2.5rem',
+                              borderRadius: '50%',
+                              objectFit: 'cover',
+                              border: '1px solid #e0e0e0',
+                              flexShrink: 0,
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: '2.5rem',
+                              height: '2.5rem',
+                              borderRadius: '50%',
+                              backgroundColor: '#f5f5f3',
+                              border: '1px solid #e0e0e0',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '1.25rem',
+                              flexShrink: 0,
                             }}
                           >
-                            {entry.type === 'created' ? 'Created' : 'Updated'}
-                          </span>
-                          <span
-                            style={{
-                              fontFamily: 'var(--font-inter)',
-                              fontWeight: 500,
-                              color: '#D97757',
-                            }}
-                          >
-                            <PriceDisplay priceInPyusd={entry.price} />
-                          </span>
+                            👤
+                          </div>
+                        )}
+
+                        {/* Creator Info */}
+                        <div style={{ flex: 1 }}>
+                          {creatorProfile?.name ? (
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: '0.9rem',
+                                  color: '#1a1a1a',
+                                  fontWeight: 400,
+                                  marginBottom: '0.125rem',
+                                }}
+                              >
+                                {creatorProfile.name}
+                              </div>
+                              <div
+                                style={{
+                                  fontFamily: 'var(--font-mono, monospace)',
+                                  fontSize: '0.75rem',
+                                  color: '#666',
+                                }}
+                              >
+                                {product.creator.slice(0, 6)}...
+                                {product.creator.slice(-4)}
+                              </div>
+                            </div>
+                          ) : (
+                            <span
+                              style={{
+                                fontFamily: 'var(--font-mono, monospace)',
+                                fontSize: '0.875rem',
+                                color: '#1a1a1a',
+                              }}
+                            >
+                              {product.creator.slice(0, 6)}...
+                              {product.creator.slice(-4)}
+                            </span>
+                          )}
                         </div>
+
+                        <span
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.75rem',
+                            color: '#D97757',
+                            fontWeight: 500,
+                            flexShrink: 0,
+                          }}
+                        >
+                          View profile →
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Purchase Section - Bottom aligned */}
+                    <div style={{ marginTop: 'auto' }}>
+                      {!isCreator && !hasPaid ? (
+                        <div
+                          style={{
+                            padding: '1.5rem',
+                            border: '1px solid #e0e0e0',
+                            backgroundColor: '#f5f5f3',
+                            textAlign: 'center',
+                          }}
+                        >
+                          <h3
+                            style={{
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '0.875rem',
+                              letterSpacing: '0.05em',
+                              textTransform: 'uppercase',
+                              color: '#666',
+                              marginBottom: '1rem',
+                              fontWeight: 500,
+                            }}
+                          >
+                            Purchase Product
+                          </h3>
+                          <PurchaseButton
+                            productId={product.productId}
+                            price={
+                              product.currentPrice
+                                ? (Number(product.currentPrice) / 1e6).toFixed(
+                                    2
+                                  )
+                                : '0.00'
+                            }
+                            onPurchaseSuccess={() => {
+                              window.location.reload();
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            padding: '1.5rem',
+                            border: '1px solid #e0e0e0',
+                            backgroundColor: '#f5f5f3',
+                            textAlign: 'center',
+                          }}
+                        >
+                          {isCreator ? (
+                            <>
+                              <div
+                                style={{
+                                  fontSize: '1.5rem',
+                                  marginBottom: '0.5rem',
+                                  opacity: 0.7,
+                                }}
+                              >
+                                👑
+                              </div>
+                              <h3
+                                style={{
+                                  fontFamily: 'var(--font-inter)',
+                                  fontSize: '0.875rem',
+                                  letterSpacing: '0.05em',
+                                  textTransform: 'uppercase',
+                                  color: '#666',
+                                  marginBottom: '0.5rem',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                You Created This
+                              </h3>
+                              <p
+                                style={{
+                                  fontSize: '0.875rem',
+                                  color: '#666',
+                                  fontFamily: 'var(--font-inter)',
+                                }}
+                              >
+                                As the creator, you have full access to this
+                                content
+                              </p>
+                            </>
+                          ) : hasPaid ? (
+                            <>
+                              <div
+                                style={{
+                                  fontSize: '1.5rem',
+                                  marginBottom: '0.5rem',
+                                  opacity: 0.7,
+                                }}
+                              >
+                                ✓
+                              </div>
+                              <h3
+                                style={{
+                                  fontFamily: 'var(--font-inter)',
+                                  fontSize: '0.875rem',
+                                  letterSpacing: '0.05em',
+                                  textTransform: 'uppercase',
+                                  color: '#22c55e',
+                                  marginBottom: '0.5rem',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                Already Purchased
+                              </h3>
+                              <p
+                                style={{
+                                  fontSize: '0.875rem',
+                                  color: '#666',
+                                  fontFamily: 'var(--font-inter)',
+                                }}
+                              >
+                                You own this product and have full access
+                              </p>
+                            </>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Stats + Purchase Dashboard */}
+                <div
+                  style={{
+                    padding: '2rem',
+                    border: '1px solid #e0e0e0',
+                    backgroundColor: '#fafaf8',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  {/* Price & Stats Section */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '1.5rem',
+                      marginBottom: '2rem',
+                    }}
+                  >
+                    {/* Current Price */}
+                    <div style={{ textAlign: 'center' }}>
+                      <p
+                        style={{
+                          fontSize: '2rem',
+                          fontWeight: 500,
+                          color: '#D97757',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
+                        <PriceDisplay priceInPyusd={product.currentPrice} />
+                      </p>
+                      <p
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.75rem',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          color: '#999',
+                          fontWeight: 500,
+                        }}
+                      >
+                        Current Price
+                      </p>
+                    </div>
+
+                    {/* Update Count */}
+                    <div style={{ textAlign: 'center' }}>
+                      <p
+                        style={{
+                          fontSize: '2rem',
+                          fontWeight: 300,
+                          color: '#1a1a1a',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
+                        {product.updateCount || 0}
+                      </p>
+                      <p
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.75rem',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          color: '#999',
+                          fontWeight: 500,
+                        }}
+                      >
+                        Updates
+                      </p>
+                    </div>
+
+                    {/* Total Sales */}
+                    <div style={{ textAlign: 'center' }}>
+                      <p
+                        style={{
+                          fontSize: '2rem',
+                          fontWeight: 300,
+                          color: '#1a1a1a',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
+                        {totalSales}
+                      </p>
+                      <p
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.75rem',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          color: '#999',
+                          fontWeight: 500,
+                        }}
+                      >
+                        Sales
+                      </p>
+                    </div>
+
+                    {/* Total Revenue */}
+                    <div style={{ textAlign: 'center' }}>
+                      <p
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '1.25rem',
+                          fontWeight: 500,
+                          color: '#1a1a1a',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
+                        <PriceDisplay priceInPyusd={totalRevenue} />
+                      </p>
+                      <p
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.75rem',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          color: '#999',
+                          fontWeight: 500,
+                        }}
+                      >
+                        Revenue
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Price History - Compact */}
+                  {priceHistory.length > 0 && (
+                    <div style={{ marginBottom: '2rem' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '0.75rem',
+                          paddingBottom: '0.5rem',
+                          borderBottom: '1px solid #e0e0e0',
+                        }}
+                      >
+                        <h3
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.75rem',
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            color: '#666',
+                            fontWeight: 500,
+                          }}
+                        >
+                          Price History
+                        </h3>
                         <span
                           style={{
                             fontFamily: 'var(--font-inter)',
@@ -740,111 +1222,106 @@ export default function ProductPage({ params }: ProductPageProps) {
                             color: '#999',
                           }}
                         >
-                          {formatDateNoYear(entry.timestamp)}
+                          {priceHistory.length} changes
                         </span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Recent Purchases - Compact */}
-              {data?.ProductPaymentService_PaymentReceived &&
-                data.ProductPaymentService_PaymentReceived.length > 0 && (
-                  <div style={{ marginBottom: '2rem' }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '0.75rem',
-                        paddingBottom: '0.5rem',
-                        borderBottom: '1px solid #e0e0e0',
-                      }}
-                    >
-                      <h3
+                      <div
                         style={{
-                          fontFamily: 'var(--font-inter)',
-                          fontSize: '0.75rem',
-                          letterSpacing: '0.1em',
-                          textTransform: 'uppercase',
-                          color: '#666',
-                          fontWeight: 500,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.5rem',
+                          maxHeight: '120px',
+                          overflowY: 'auto',
                         }}
                       >
-                        Latest Purchases
-                      </h3>
-                      <span
-                        style={{
-                          fontFamily: 'var(--font-inter)',
-                          fontSize: '0.7rem',
-                          color: '#999',
-                        }}
-                      >
-                        {data.ProductPaymentService_PaymentReceived.length}
-                      </span>
+                        {priceHistory
+                          .slice(-3)
+                          .reverse()
+                          .map((entry: any, index: number) => (
+                            <div
+                              key={`price-${entry.timestamp}-${index}`}
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                padding: '0.5rem',
+                                border: '1px solid #e0e0e0',
+                                backgroundColor: '#f5f5f3',
+                                fontSize: '0.75rem',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  marginBottom: '0.25rem',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontFamily: 'var(--font-inter)',
+                                    fontWeight: 500,
+                                    color:
+                                      entry.type === 'created'
+                                        ? '#D97757'
+                                        : '#1a1a1a',
+                                  }}
+                                >
+                                  {entry.type === 'created'
+                                    ? 'Created'
+                                    : 'Updated'}
+                                </span>
+                                <span
+                                  style={{
+                                    fontFamily: 'var(--font-inter)',
+                                    fontWeight: 500,
+                                    color: '#D97757',
+                                  }}
+                                >
+                                  <PriceDisplay priceInPyusd={entry.price} />
+                                </span>
+                              </div>
+                              <span
+                                style={{
+                                  fontFamily: 'var(--font-inter)',
+                                  fontSize: '0.7rem',
+                                  color: '#999',
+                                }}
+                              >
+                                {formatDateNoYear(entry.timestamp)}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
                     </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.5rem',
-                      }}
-                    >
-                      {data.ProductPaymentService_PaymentReceived.slice(
-                        0,
-                        2
-                      ).map((payment: any, index: number) => (
-                        <a
-                          key={index}
-                          href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${payment.transactionHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                  )}
+
+                  {/* Recent Purchases - Compact */}
+                  {data?.ProductPaymentService_PaymentReceived &&
+                    data.ProductPaymentService_PaymentReceived.length > 0 && (
+                      <div style={{ marginBottom: '2rem' }}>
+                        <div
                           style={{
                             display: 'flex',
-                            flexDirection: 'column',
-                            padding: '0.5rem',
-                            border: '1px solid #e0e0e0',
-                            backgroundColor: '#f5f5f3',
-                            textDecoration: 'none',
-                            color: 'inherit',
-                            transition: 'border-color 200ms',
-                            fontSize: '0.75rem',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '0.75rem',
+                            paddingBottom: '0.5rem',
+                            borderBottom: '1px solid #e0e0e0',
                           }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.borderColor = '#D97757')
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.borderColor = '#e0e0e0')
-                          }
                         >
-                          <div
+                          <h3
                             style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              marginBottom: '0.25rem',
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '0.75rem',
+                              letterSpacing: '0.1em',
+                              textTransform: 'uppercase',
+                              color: '#666',
+                              fontWeight: 500,
                             }}
                           >
-                            <span
-                              style={{
-                                fontFamily: 'var(--font-inter)',
-                                fontWeight: 500,
-                              }}
-                            >
-                              {payment.payer.slice(0, 6)}...
-                              {payment.payer.slice(-4)}
-                            </span>
-                            <span
-                              style={{
-                                fontFamily: 'var(--font-inter)',
-                                fontWeight: 500,
-                                color: '#D97757',
-                              }}
-                            >
-                              <PriceDisplay priceInPyusd={payment.amount} />
-                            </span>
-                          </div>
+                            Latest Purchases
+                          </h3>
                           <span
                             style={{
                               fontFamily: 'var(--font-inter)',
@@ -852,100 +1329,125 @@ export default function ProductPage({ params }: ProductPageProps) {
                               color: '#999',
                             }}
                           >
-                            {formatDateNoYear(payment.blockTimestamp)}
+                            {data.ProductPaymentService_PaymentReceived.length}
                           </span>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.5rem',
+                          }}
+                        >
+                          {data.ProductPaymentService_PaymentReceived.slice(
+                            0,
+                            2
+                          ).map((payment: any, index: number) => (
+                            <a
+                              key={`payment-${payment.transactionHash}-${index}`}
+                              href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${payment.transactionHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                padding: '0.5rem',
+                                border: '1px solid #e0e0e0',
+                                backgroundColor: '#f5f5f3',
+                                textDecoration: 'none',
+                                color: 'inherit',
+                                transition: 'border-color 200ms',
+                                fontSize: '0.75rem',
+                              }}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.borderColor = '#D97757')
+                              }
+                              onMouseLeave={(e) =>
+                                (e.currentTarget.style.borderColor = '#e0e0e0')
+                              }
+                            >
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  marginBottom: '0.25rem',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontFamily: 'var(--font-inter)',
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  {payment.payer.slice(0, 6)}...
+                                  {payment.payer.slice(-4)}
+                                </span>
+                                <span
+                                  style={{
+                                    fontFamily: 'var(--font-inter)',
+                                    fontWeight: 500,
+                                    color: '#D97757',
+                                  }}
+                                >
+                                  <PriceDisplay priceInPyusd={payment.amount} />
+                                </span>
+                              </div>
+                              <span
+                                style={{
+                                  fontFamily: 'var(--font-inter)',
+                                  fontSize: '0.7rem',
+                                  color: '#999',
+                                }}
+                              >
+                                {formatDateNoYear(payment.blockTimestamp)}
+                              </span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Tabbed Interface for Chat and Content */}
-          <div
-            style={{
-              marginTop: '3rem',
-              borderTop: '1px solid #e0e0e0',
-              paddingTop: '3rem',
-            }}
-          >
-            {/* Tab Navigation */}
+            {/* Tabbed Interface for Chat and Content */}
             <div
               style={{
-                display: 'flex',
-                gap: '2rem',
-                borderBottom: '1px solid #e0e0e0',
-                marginBottom: '2rem',
+                border: '1px solid #e0e0e0',
+                backgroundColor: '#fafaf8',
+                overflow: 'hidden',
               }}
             >
-              <button
-                onClick={() => setActiveTab('chat')}
+              {/* Tab Navigation */}
+              <div
                 style={{
-                  fontFamily: 'var(--font-inter)',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase',
-                  color: activeTab === 'chat' ? '#D97757' : '#666',
-                  background: 'none',
-                  border: 'none',
-                  padding: '1rem 0',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'color 200ms',
+                  display: 'flex',
+                  gap: '2rem',
+                  borderBottom: '1px solid #e0e0e0',
+                  padding: '0 2rem',
+                  backgroundColor: '#f5f5f3',
                 }}
               >
-                Ask AI About This Product
-                {activeTab === 'chat' && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '-1px',
-                      left: 0,
-                      right: 0,
-                      height: '2px',
-                      backgroundColor: '#D97757',
-                    }}
-                  />
-                )}
-              </button>
-              
-              {(hasPaid || isCreator) && (
                 <button
-                  onClick={() => setActiveTab('content')}
+                  onClick={() => setActiveTab('chat')}
                   style={{
                     fontFamily: 'var(--font-inter)',
                     fontSize: '0.875rem',
                     fontWeight: 500,
                     letterSpacing: '0.05em',
                     textTransform: 'uppercase',
-                    color: activeTab === 'content' ? '#D97757' : '#666',
+                    color: activeTab === 'chat' ? '#D97757' : '#666',
                     background: 'none',
                     border: 'none',
                     padding: '1rem 0',
                     cursor: 'pointer',
                     position: 'relative',
                     transition: 'color 200ms',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
                   }}
                 >
-                  View Full Content
-                  <span
-                    style={{
-                      fontSize: '0.7rem',
-                      backgroundColor: '#D97757',
-                      color: '#fff',
-                      padding: '0.125rem 0.375rem',
-                      borderRadius: '2px',
-                    }}
-                  >
-                    OWNED
-                  </span>
-                  {activeTab === 'content' && (
+                  Ask AI About This Product
+                  {activeTab === 'chat' && (
                     <div
                       style={{
                         position: 'absolute',
@@ -958,121 +1460,138 @@ export default function ProductPage({ params }: ProductPageProps) {
                     />
                   )}
                 </button>
-              )}
-            </div>
 
-            {/* Tab Content */}
-            {activeTab === 'chat' ? (
-              <div>
-                <div
-                  style={{
-                    marginBottom: '2rem',
-                  }}
-                >
-                  <h2
+                {(hasPaid || isCreator) && (
+                  <button
+                    onClick={() => setActiveTab('content')}
                     style={{
-                      fontSize: '1.5rem',
-                      fontWeight: 300,
-                      marginBottom: '0.5rem',
-                      letterSpacing: '-0.02em',
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      color: activeTab === 'content' ? '#D97757' : '#666',
+                      background: 'none',
+                      border: 'none',
+                      padding: '1rem 0',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'color 200ms',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
                     }}
                   >
-                    Chat with AI about {getTitle(product.contentId)}
-                  </h2>
-                  <p
-                    style={{
-                      fontSize: '0.95rem',
-                      color: '#666',
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    Our AI assistant can answer questions about this encrypted content without exposing the original data. Perfect for understanding what's inside before you buy.
-                  </p>
-                </div>
-                
-                <ChatInterface 
-                  contentId={product.contentId} 
-                  productId={product.productId.toString()}
-                  productTitle={getTitle(product.contentId)}
-                />
+                    View Full Content
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        backgroundColor: '#D97757',
+                        color: '#fff',
+                        padding: '0.125rem 0.375rem',
+                        borderRadius: '2px',
+                      }}
+                    >
+                      {isCreator ? 'CREATOR' : 'OWNED'}
+                    </span>
+                    {activeTab === 'content' && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: '-1px',
+                          left: 0,
+                          right: 0,
+                          height: '2px',
+                          backgroundColor: '#D97757',
+                        }}
+                      />
+                    )}
+                  </button>
+                )}
               </div>
-            ) : (
-              (hasPaid || isCreator) && (
-                <div>
-                  <div
-                    style={{
-                      marginBottom: '2rem',
-                    }}
-                  >
-                    <h2
+
+              {/* Tab Content */}
+              <div style={{ padding: '1.5rem' }}>
+                {activeTab === 'chat' ? (
+                  <div>
+                    <div
                       style={{
-                        fontSize: '1.5rem',
-                        fontWeight: 300,
-                        marginBottom: '0.5rem',
-                        letterSpacing: '-0.02em',
+                        marginBottom: '1rem',
                       }}
                     >
-                      Your Purchased Content
-                    </h2>
-                    <p
-                      style={{
-                        fontSize: '0.95rem',
-                        color: '#666',
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {isCreator 
-                        ? 'Access and manage your private data stored securely with Nillion\'s privacy infrastructure.'
-                        : 'View and download the private data you\'ve purchased. Content is decrypted on-demand for your security.'
-                      }
-                    </p>
+                      <p
+                        style={{
+                          fontSize: '0.875rem',
+                          color: '#666',
+                          lineHeight: 1.5,
+                          fontFamily: 'var(--font-inter)',
+                        }}
+                      >
+                        Ask the Eclipse AI assistant anything about this
+                        encrypted content. Get answers to make you feel more
+                        confident in this purchase.
+                      </p>
+                    </div>
+
+                    <ChatInterface
+                      contentId={product.contentId}
+                      productId={product.productId.toString()}
+                      productTitle={getTitle(product.contentId)}
+                    />
                   </div>
-                  
-                  <ContentViewer 
-                    contentId={product.contentId} 
-                    productId={product.productId.toString()}
-                    mimeType={metadata?.mimeType}
-                  />
-                </div>
-              )
-            )}
+                ) : hasPaid || isCreator ? (
+                  <div>
+                    <ContentViewer
+                      contentId={product.contentId}
+                      productId={product.productId.toString()}
+                      mimeType={metadata?.mimeType}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </div>
-
         </div>
+
+        {/* Loading spinner animation */}
+        <style jsx>
+          {`
+            @keyframes spin {
+              from {
+                transform: rotate(0deg);
+              }
+              to {
+                transform: rotate(360deg);
+              }
+            }
+
+            @media (max-width: 768px) {
+              .responsive-product-header {
+                padding-right: 0 !important;
+              }
+              .responsive-product-header + div {
+                position: static !important;
+                margin-top: 1rem;
+                text-align: left !important;
+              }
+            }
+
+            @media (max-width: 640px) {
+              .responsive-product-header div:last-child > div:first-child {
+                grid-template-columns: 1fr !important;
+              }
+            }
+
+            /* Tab responsive design */
+            @media (max-width: 640px) {
+              button[style*='letterSpacing'] {
+                font-size: 0.75rem !important;
+                padding: 0.75rem 0 !important;
+              }
+            }
+          `}
+        </style>
       </div>
-
-      {/* Loading spinner animation */}
-      <style jsx>{`
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        @media (max-width: 768px) {
-          .responsive-product-header {
-            grid-template-columns: 1fr !important;
-            gap: 2rem !important;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .responsive-product-header div:last-child > div:first-child {
-            grid-template-columns: 1fr !important;
-          }
-        }
-        
-        /* Tab responsive design */
-        @media (max-width: 640px) {
-          button[style*="letterSpacing"] {
-            font-size: 0.75rem !important;
-            padding: 0.75rem 0 !important;
-          }
-        }
-      `}</style>
     </>
   );
 }
