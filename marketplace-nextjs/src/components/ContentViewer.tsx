@@ -7,12 +7,14 @@ interface ContentViewerProps {
   contentId: string;
   productId: string;
   mimeType?: string;
+  title?: string;
 }
 
 export function ContentViewer({
   contentId,
   productId,
   mimeType,
+  title = 'Private Content',
 }: ContentViewerProps) {
   const [content, setContent] = useState<string | null>(null);
   const [contentBlob, setContentBlob] = useState<Blob | null>(null);
@@ -158,7 +160,7 @@ export function ContentViewer({
             fontWeight: 500,
           }}
         >
-          Private Content
+          {title}
         </h3>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button

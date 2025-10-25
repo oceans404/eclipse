@@ -1552,6 +1552,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                       contentId={product.contentId}
                       productId={product.productId.toString()}
                       mimeType={metadata?.mimeType}
+                      title={getTitle(product.contentId)}
                     />
                   </div>
                 ) : null}

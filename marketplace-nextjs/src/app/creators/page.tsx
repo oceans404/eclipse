@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { useQuery } from '@apollo/client';
 import { GET_ALL_CREATORS } from '@/lib/queries';
 import { CreatorCard } from '@/components/CreatorCard';
@@ -9,6 +10,7 @@ import { CreatorProfile } from '@/lib/db';
 import Link from 'next/link';
 
 export default function CreatorsPage() {
+  const { authenticated } = usePrivy();
   const { loading, error, data } = useQuery(GET_ALL_CREATORS);
   const [creatorProfiles, setCreatorProfiles] = useState<{
     [address: string]: CreatorProfile;
@@ -162,12 +164,14 @@ export default function CreatorsPage() {
             >
               Meet the creators.
             </h1>
-            <Link
-              href="/create"
-              style={{ fontSize: '1.25rem', color: '#d97757' }}
-            >
-              <button className="btn-primary">Become a creator</button>
-            </Link>
+            {!authenticated && (
+              <Link
+                href="/create"
+                style={{ fontSize: '1.25rem', color: '#d97757' }}
+              >
+                <button className="btn-primary">Become a creator</button>
+              </Link>
+            )}
           </div>
 
           {/* Creators Grid or Empty State */}
