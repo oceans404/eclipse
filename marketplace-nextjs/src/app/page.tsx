@@ -52,7 +52,7 @@ export default function LandingPage() {
               Github Repo
             </Link>
             <Link href="/products" className="btn-nav">
-              Launch App
+              Launch Marketplace
             </Link>
           </div>
         </div>

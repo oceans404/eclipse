@@ -6,6 +6,7 @@ import { GET_ALL_CREATORS } from '@/lib/queries';
 import { CreatorCard } from '@/components/CreatorCard';
 import { Navbar } from '@/components/Navbar';
 import { CreatorProfile } from '@/lib/db';
+import Link from 'next/link';
 
 export default function CreatorsPage() {
   const { loading, error, data } = useQuery(GET_ALL_CREATORS);
@@ -143,28 +144,30 @@ export default function CreatorsPage() {
       <Navbar />
       <div className="min-h-screen">
         <div className="container-eclipse" style={{ maxWidth: '1400px' }}>
-          {/* Header */}
           <div
             style={{
-              textAlign: 'center',
-              paddingTop: '6rem',
-              paddingBottom: '2rem',
+              marginTop: '6rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              width: '100%',
             }}
           >
-            <div className="hero-label" style={{ marginBottom: '.5rem' }}>
-              Creator Directory
-            </div>
             <h1
               style={{
                 fontSize: '2.5rem',
                 fontWeight: 300,
                 lineHeight: 1.1,
-                marginBottom: '1rem',
                 letterSpacing: '-0.02em',
               }}
             >
               Meet the creators.
             </h1>
+            <Link
+              href="/create"
+              style={{ fontSize: '1.25rem', color: '#d97757' }}
+            >
+              <button className="btn-primary">Become a creator</button>
+            </Link>
           </div>
 
           {/* Creators Grid or Empty State */}

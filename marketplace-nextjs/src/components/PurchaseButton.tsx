@@ -210,7 +210,7 @@ export function PurchaseButton({
           }
         }}
       >
-        Connect Wallet to Purchase
+        Connect Wallet to Purchase for ${price}
       </button>
     );
   }

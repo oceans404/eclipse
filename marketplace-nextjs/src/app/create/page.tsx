@@ -10,7 +10,8 @@ import { CreatorProfile } from '@/lib/db';
 import FileUpload from '@/components/FileUpload';
 
 export default function CreateProductPage() {
-  const { authenticated, user } = usePrivy();
+  const { login, authenticated, user } = usePrivy();
+
   const { addProduct, isLoading, hash, error } = usePrivyWallet();
   const router = useRouter();
 
@@ -27,9 +28,11 @@ export default function CreateProductPage() {
   });
   const [profileSubmitting, setProfileSubmitting] = useState(false);
   const [profileError, setProfileError] = useState('');
-  
+
   // Profile image upload state
-  const [selectedProfileFile, setSelectedProfileFile] = useState<File | null>(null);
+  const [selectedProfileFile, setSelectedProfileFile] = useState<File | null>(
+    null
+  );
   const [profilePreviewUrl, setProfilePreviewUrl] = useState<string>('');
   const profileFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -366,13 +369,10 @@ export default function CreateProductPage() {
               marginBottom: '2rem',
             }}
           >
-            Please connect your wallet to create products
+            Please connect your wallet to become a creator
           </p>
-          <button
-            onClick={() => (window.location.href = '/products')}
-            className="btn-primary"
-          >
-            Browse Products
+          <button onClick={login} className="btn-nav">
+            Connect Wallet
           </button>
         </div>
       </div>
@@ -606,7 +606,7 @@ export default function CreateProductPage() {
                     >
                       Profile Image
                     </label>
-                    
+
                     {/* Image Preview */}
                     {profilePreviewUrl && (
                       <div
@@ -696,7 +696,9 @@ export default function CreateProductPage() {
                         }
                       }}
                     >
-                      {profilePreviewUrl ? 'Change Profile Image' : 'Upload Profile Image'}
+                      {profilePreviewUrl
+                        ? 'Change Profile Image'
+                        : 'Upload Profile Image'}
                     </button>
                     <p
                       style={{
@@ -950,7 +952,13 @@ export default function CreateProductPage() {
                       fontSize: '0.875rem',
                     }}
                   >
-                    <div style={{ fontWeight: 500, marginBottom: '0.5rem', color: '#D97757' }}>
+                    <div
+                      style={{
+                        fontWeight: 500,
+                        marginBottom: '0.5rem',
+                        color: '#D97757',
+                      }}
+                    >
                       ✓ File encrypted and uploaded successfully!
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#666' }}>
