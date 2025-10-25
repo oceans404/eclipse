@@ -1,0 +1,42 @@
+# nilCC-Compliant Docker Compose Configuration
+version: '3.8'
+
+services:
+  tee-storage-and-agent:
+    image: node:20
+    container_name: eclipse-tee-storage-and-agent
+    working_dir: /app
+    
+    # Mount individual files like your working example
+    volumes:
+      # Source files
+      - ${FILES}/src/index.ts:/app/src/index.ts
+      - ${FILES}/src/crypto.ts:/app/src/crypto.ts
+      - ${FILES}/src/nillion.ts:/app/src/nillion.ts
+      - ${FILES}/src/ai.ts:/app/src/ai.ts
+      - ${FILES}/src/blockchain.ts:/app/src/blockchain.ts
+      
+      # Configuration files
+      - ${FILES}/package.json:/app/package.json
+      - ${FILES}/package-lock.json:/app/package-lock.json
+      - ${FILES}/tsconfig.json:/app/tsconfig.json
+      
+    
+    ports:
+      - "3001:3001"
+    
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MASTER_KEY=${MASTER_KEY}
+      - NILLION_API_KEY=${NILLION_API_KEY}
+      - NILLION_COLLECTION_ID=${NILLION_COLLECTION_ID}
+      - GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY}
+      - SEPOLIA_RPC_URL=${SEPOLIA_RPC_URL}
+      - PAYMENT_SERVICE_ADDRESS=${PAYMENT_SERVICE_ADDRESS}
+      - BLOB_READ_WRITE_TOKEN=${BLOB_READ_WRITE_TOKEN}
+    
+    # Install deps and run with tsx (TypeScript directly)
+    command: sh -c "cd /app && npm ci && npx tsx src/index.ts"
+    
+    restart: unless-stopped

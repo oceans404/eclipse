@@ -1,0 +1,35 @@
+{
+  "name": "eclipse-tee-storage-and-agent",
+  "version": "1.0.0",
+  "description": "TEE-based storage and AI agent service for Eclipse marketplace",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js --external:@nillion/secretvaults --external:@nillion/nuc --external:@vercel/blob --external:@ai-sdk/google --external:ai --external:express --external:multer --external:viem --external:crypto",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist temp",
+    "test": "echo \"No tests yet\"",
+    "generate-key": "node scripts/generate-master-key.js"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "2.0.20",
+    "@nillion/nuc": "^0.1.1",
+    "@nillion/secretvaults": "^0.1.7",
+    "@vercel/blob": "^0.23.0",
+    "ai": "^5.0.0",
+    "express": "^4.18.2",
+    "form-data": "^4.0.4",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^3.3.2",
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.20.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

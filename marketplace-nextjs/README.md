@@ -94,12 +94,6 @@ The marketplace is now **fully connected** to the Sepolia blockchain:
 - **Real-time sync**: All transactions appear instantly in the UI
 - **Gas optimized**: Proper gas estimation prevents failed transactions
 
-## 🚧 Coming Next
-
-- **Nillion Integration**: Private data storage (nilDB) and AI verification (nilAI)
-- **Enhanced UX**: Transaction batching and gasless meta-transactions
-- **Mobile Support**: Progressive Web App with mobile wallet integration
-
 ## 🔗 Related
 
 - [Smart Contracts](../onchain-payments/) - PYUSD payment processing

@@ -30,8 +30,7 @@ Eclipse solves this with a private AI agent that has access to the encrypted con
 - [Hardhat 3](https://ethglobal.com/events/ethonline2025/prizes#hardhat) for local smart contract development + testing
 - [Envio](https://ethglobal.com/events/ethonline2025/prizes#envio) HyperIndex or HyperSync for optimized indexing of emitted payment events
 - [Nillion Private Storage](https://docs.nillion.com/build/private-storage/overview) (nilDB) for private image storage
-- [Nillion Private LLMs](https://docs.nillion.com/build/private-llms/overview) (nilAI) for private image analysis (multimodal image + text prompt)
-- [Nillion Private Compute](https://docs.nillion.com/build/compute/overview) (nilCC) for verifiably granting data access via [Nillion nuc](https://docs.nillion.com/build/private-storage/overview#nuc-tokens) (JWTs) for data permissioning upon payment
+- Google Google Gemini Flash 2 within a Nillion TEE - [nilCC](https://docs.nillion.com/build/compute/overview) for private image analysis (multimodal image + text prompt)
 
 ## Project Structure
 
@@ -62,6 +61,23 @@ Eclipse marketplace frontend built with Next.js 15.
 - **Creator Profiles**: View creator statistics and product portfolios
 - **Transaction Tracking**: Complete price history and Etherscan links
 - **Real-time Data**: Apollo Client synced with Envio GraphQL API
+
+### 🔐 [tee-storage-and-agent/](./tee-storage-and-agent/)
+
+TEE-based storage and AI agent service running in Nillion's nilCC infrastructure.
+
+- **Secure Encryption**: AES-256-GCM encryption with master key protection
+- **Private Storage**: Nillion integration for encrypted metadata and key storage
+- **AI Agent**: Google Gemini 2.0 Flash for multimodal content analysis (text + images)
+- **Privacy Guardrails**: Enforces strict rules to prevent content leakage during AI interactions
+- **Purchase Verification**: Blockchain integration to verify PYUSD payments before granting access
+- **nilCC Compliant**: Runs in Nillion's trusted execution environment for secure processing
+
+**Key Features**:
+- Encrypts uploaded content and stores in Vercel Blob + Nillion
+- Enables AI-powered verification without exposing raw data
+- Decrypts content only in memory for authorized downloads
+- Supports text, images (PNG/JPEG/WebP), and JSON files
 
 ---
 

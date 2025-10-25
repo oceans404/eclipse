@@ -218,7 +218,7 @@ export function Navbar() {
           )}
 
           {/* Get PYUSD Link - shows when balance is 0 */}
-          {authenticated && pyusdBalance?.value === 0n && (
+          {authenticated && pyusdBalance?.value === BigInt(0) && (
             <a
               href="https://faucet.paxos.com/"
               target="_blank"

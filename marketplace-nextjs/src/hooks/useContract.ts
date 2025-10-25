@@ -58,7 +58,7 @@ export function useContractWrite() {
       functionName: 'approve',
       args: [CONTRACTS.PRODUCT_PAYMENT_SERVICE.address, amountBigInt],
       // Add gas configuration to prevent overestimation
-      gas: 100000n, // Reasonable gas limit for approve
+      gas: BigInt(100000), // Reasonable gas limit for approve
     });
   };
 
@@ -79,7 +79,7 @@ export function useContractWrite() {
       functionName: 'payForProduct',
       args: [BigInt(productId)],
       // Add gas configuration to prevent overestimation
-      gas: 150000n, // Reasonable gas limit for payForProduct
+      gas: BigInt(150000), // Reasonable gas limit for payForProduct
     });
   };
 

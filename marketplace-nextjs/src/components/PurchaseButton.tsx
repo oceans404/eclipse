@@ -76,7 +76,7 @@ export function PurchaseButton({
           ...CONTRACTS.PYUSD,
           functionName: 'approve',
           args: [CONTRACTS.PRODUCT_PAYMENT_SERVICE.address, amountBigInt],
-          gas: 100000n,
+          gas: BigInt(100000),
         });
       } else {
         // Direct purchase if already approved
@@ -87,7 +87,7 @@ export function PurchaseButton({
           ...CONTRACTS.PRODUCT_PAYMENT_SERVICE,
           functionName: 'payForProduct',
           args: [BigInt(productId)],
-          gas: 150000n,
+          gas: BigInt(150000),
         });
       }
     } catch (err) {
@@ -117,7 +117,7 @@ export function PurchaseButton({
           ...CONTRACTS.PRODUCT_PAYMENT_SERVICE,
           functionName: 'payForProduct',
           args: [BigInt(productId)],
-          gas: 150000n,
+          gas: BigInt(150000),
         });
       }
     };
