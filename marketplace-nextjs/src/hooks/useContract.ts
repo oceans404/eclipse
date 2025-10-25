@@ -51,12 +51,14 @@ export function useContractWrite() {
     });
 
   // Approve PYUSD spending
-  const approvePyusd = (amount: string) => {
+  const approvePyusd = async (amount: string) => {
     const amountBigInt = parseUnits(amount, PYUSD_DECIMALS);
-    writeContract({
+    return writeContract({
       ...CONTRACTS.PYUSD,
       functionName: 'approve',
       args: [CONTRACTS.PRODUCT_PAYMENT_SERVICE.address, amountBigInt],
+      // Add gas configuration to prevent overestimation
+      gas: 100000n, // Reasonable gas limit for approve
     });
   };
 
@@ -71,11 +73,13 @@ export function useContractWrite() {
   };
 
   // Pay for a product
-  const payForProduct = (productId: number) => {
-    writeContract({
+  const payForProduct = async (productId: number) => {
+    return writeContract({
       ...CONTRACTS.PRODUCT_PAYMENT_SERVICE,
       functionName: 'payForProduct',
       args: [BigInt(productId)],
+      // Add gas configuration to prevent overestimation
+      gas: 150000n, // Reasonable gas limit for payForProduct
     });
   };
 

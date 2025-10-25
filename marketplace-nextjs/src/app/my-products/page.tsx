@@ -15,8 +15,10 @@ import { CreatorProfile } from '@/lib/db';
 
 export default function MyProductsPage() {
   const { authenticated, user, login } = usePrivy();
-  const [creatorProfiles, setCreatorProfiles] = useState<Map<string, CreatorProfile>>(new Map());
-  
+  const [creatorProfiles, setCreatorProfiles] = useState<
+    Map<string, CreatorProfile>
+  >(new Map());
+
   // Slider refs and states
   const ownedSliderRef = useRef<HTMLDivElement>(null);
   const createdSliderRef = useRef<HTMLDivElement>(null);
@@ -64,12 +66,14 @@ export default function MyProductsPage() {
     const fetchCreatorProfiles = async () => {
       const allProducts = [
         ...(detailsData?.Product || []),
-        ...(createdData?.Product || [])
+        ...(createdData?.Product || []),
       ];
 
       if (allProducts.length === 0) return;
 
-      const uniqueCreators = [...new Set(allProducts.map((p: any) => p.creator))];
+      const uniqueCreators = [
+        ...new Set(allProducts.map((p: any) => p.creator)),
+      ];
       const profiles = new Map<string, CreatorProfile>();
 
       await Promise.all(
@@ -230,23 +234,30 @@ export default function MyProductsPage() {
   };
 
   // Slider navigation functions
-  const scrollSlider = (ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') => {
+  const scrollSlider = (
+    ref: React.RefObject<HTMLDivElement | null>,
+    direction: 'left' | 'right'
+  ) => {
     if (!ref.current) return;
-    
+
     const scrollAmount = 320; // Width of one product card + gap
     const currentScroll = ref.current.scrollLeft;
-    const newScroll = direction === 'left' 
-      ? Math.max(0, currentScroll - scrollAmount)
-      : currentScroll + scrollAmount;
-    
+    const newScroll =
+      direction === 'left'
+        ? Math.max(0, currentScroll - scrollAmount)
+        : currentScroll + scrollAmount;
+
     ref.current.scrollTo({
       left: newScroll,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   };
 
   // Check scroll positions for button visibility
-  const updateScrollPosition = (ref: React.RefObject<HTMLDivElement | null>, setPosition: (pos: number) => void) => {
+  const updateScrollPosition = (
+    ref: React.RefObject<HTMLDivElement | null>,
+    setPosition: (pos: number) => void
+  ) => {
     if (!ref.current) return;
     setPosition(ref.current.scrollLeft);
   };
@@ -259,69 +270,76 @@ export default function MyProductsPage() {
           {/* Header */}
           <div
             style={{
-              textAlign: 'center',
-              paddingTop: '12rem',
-              paddingBottom: '6rem',
+              paddingTop: '8rem',
+              paddingBottom: '2rem',
               borderBottom: '1px solid #e0e0e0',
+              display: 'flex',
+              alignItems: 'baseline',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem',
             }}
           >
+            <div>
+              <h1
+                style={{
+                  fontSize: '2rem',
+                  fontWeight: 300,
+                  lineHeight: 1.1,
+                  marginBottom: '0.5rem',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                My Products
+              </h1>
+              <p
+                style={{
+                  fontSize: '0.875rem',
+                  color: '#666',
+                  fontFamily: 'var(--font-inter)',
+                }}
+              >
+                Products you've purchased and created on Eclipse
+              </p>
+            </div>
             <div
               style={{
-                fontFamily: 'var(--font-inter)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                color: '#D97757',
-                marginBottom: '2.5rem',
-                fontWeight: 500,
-              }}
-            >
-              Your Collection
-            </div>
-            <h1
-              style={{
-                fontSize: '4.5rem',
-                fontWeight: 300,
-                lineHeight: 1.1,
-                marginBottom: '2rem',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              My products.
-            </h1>
-            <p
-              style={{
-                fontSize: '1.25rem',
+                display: 'flex',
+                gap: '1rem',
+                alignItems: 'center',
                 color: '#666',
-                maxWidth: '42rem',
-                margin: '0 auto',
-                lineHeight: 1.7,
+                fontSize: '0.875rem',
+                fontFamily: 'var(--font-inter)',
               }}
             >
-              Products you've purchased and created on Eclipse
-            </p>
+              <span>{ownedProducts.length} owned</span>
+              <span>•</span>
+              <span>{createdProducts.length} created</span>
+            </div>
           </div>
 
           {/* Owned Products Section */}
-          <div style={{ padding: '6rem 0', borderBottom: '1px solid #e0e0e0' }}>
+          <div style={{ padding: '3rem 0', borderBottom: '1px solid #e0e0e0' }}>
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '4rem',
+                marginBottom: '1.5rem',
               }}
             >
               <h2
                 style={{
-                  fontSize: '2.5rem',
-                  fontWeight: 300,
+                  fontSize: '1.125rem',
+                  fontWeight: 400,
                   letterSpacing: '-0.01em',
                 }}
               >
                 Products I own
               </h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}
+              >
                 {ownedProducts.length > 0 && (
                   <>
                     <span
@@ -342,8 +360,10 @@ export default function MyProductsPage() {
                           width: '2.5rem',
                           height: '2.5rem',
                           border: '1px solid #e0e0e0',
-                          backgroundColor: ownedScrollPosition > 0 ? '#fafaf8' : '#f5f5f3',
-                          cursor: ownedScrollPosition > 0 ? 'pointer' : 'not-allowed',
+                          backgroundColor:
+                            ownedScrollPosition > 0 ? '#fafaf8' : '#f5f5f3',
+                          cursor:
+                            ownedScrollPosition > 0 ? 'pointer' : 'not-allowed',
                           opacity: ownedScrollPosition > 0 ? 1 : 0.5,
                           display: 'flex',
                           alignItems: 'center',
@@ -358,7 +378,8 @@ export default function MyProductsPage() {
                           }
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = ownedScrollPosition > 0 ? '#fafaf8' : '#f5f5f3';
+                          e.currentTarget.style.backgroundColor =
+                            ownedScrollPosition > 0 ? '#fafaf8' : '#f5f5f3';
                           e.currentTarget.style.color = '#1a1a1a';
                         }}
                       >
@@ -398,33 +419,35 @@ export default function MyProductsPage() {
               <div
                 style={{
                   textAlign: 'center',
-                  padding: '6rem 3rem',
+                  padding: '3rem',
                   border: '1px solid #e0e0e0',
+                  backgroundColor: '#fafaf8',
                 }}
               >
                 <div
                   style={{
-                    fontSize: '4rem',
-                    marginBottom: '2rem',
-                    opacity: 0.2,
+                    fontSize: '2rem',
+                    marginBottom: '1rem',
+                    opacity: 0.3,
                   }}
                 >
                   🛒
                 </div>
                 <h3
                   style={{
-                    fontSize: '2rem',
+                    fontSize: '1.25rem',
                     fontWeight: 300,
-                    marginBottom: '1rem',
+                    marginBottom: '0.75rem',
                   }}
                 >
                   No products owned yet
                 </h3>
                 <p
                   style={{
-                    fontSize: '1.125rem',
+                    fontSize: '0.875rem',
                     color: '#666',
-                    marginBottom: '2rem',
+                    marginBottom: '1.5rem',
+                    fontFamily: 'var(--font-inter)',
                   }}
                 >
                   Start exploring the marketplace
@@ -437,19 +460,23 @@ export default function MyProductsPage() {
               <div
                 style={{
                   position: 'relative',
-                  overflow: 'hidden',
+                  overflowX: 'hidden',
+                  overflowY: 'visible',
                 }}
               >
                 <div
                   ref={ownedSliderRef}
-                  onScroll={() => updateScrollPosition(ownedSliderRef, setOwnedScrollPosition)}
+                  onScroll={() =>
+                    updateScrollPosition(ownedSliderRef, setOwnedScrollPosition)
+                  }
                   style={{
                     display: 'flex',
                     gap: '2rem',
                     overflowX: 'auto',
+                    overflowY: 'visible',
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none',
-                    paddingBottom: '1rem',
+                    paddingTop: '0.5rem', // Small top padding for container
                   }}
                 >
                   <style jsx>{`
@@ -457,112 +484,117 @@ export default function MyProductsPage() {
                       display: none;
                     }
                   `}</style>
-                {[...ownedProducts]
-                  .sort((a: any, b: any) => {
-                    const purchaseA = purchaseDetailsMap.get(a.productId);
-                    const purchaseB = purchaseDetailsMap.get(b.productId);
-                    return (
-                      Number(purchaseB?.purchaseDate || 0) -
-                      Number(purchaseA?.purchaseDate || 0)
-                    );
-                  })
-                  .map((product: any) => {
-                    const purchaseDetails = purchaseDetailsMap.get(
-                      product.productId
-                    );
-                    return (
-                      <div 
-                        key={product.productId}
-                        style={{
-                          flexShrink: 0,
-                          width: '300px',
-                        }}
-                      >
-                        <ProductCard
-                          productId={product.productId}
-                          contentId={product.contentId}
-                          currentPrice={product.currentPrice}
-                          creator={product.creator}
-                          creatorProfile={creatorProfiles.get(product.creator) || null}
-                        />
+                  {[...ownedProducts]
+                    .sort((a: any, b: any) => {
+                      const purchaseA = purchaseDetailsMap.get(a.productId);
+                      const purchaseB = purchaseDetailsMap.get(b.productId);
+                      return (
+                        Number(purchaseB?.purchaseDate || 0) -
+                        Number(purchaseA?.purchaseDate || 0)
+                      );
+                    })
+                    .map((product: any) => {
+                      const purchaseDetails = purchaseDetailsMap.get(
+                        product.productId
+                      );
+                      return (
+                        <div
+                          key={product.productId}
+                          style={{
+                            flexShrink: 0,
+                            width: '300px',
+                            paddingTop: '8px', // Space for hover animation
+                          }}
+                        >
+                          <ProductCard
+                            productId={product.productId}
+                            contentId={product.contentId}
+                            currentPrice={product.currentPrice}
+                            creator={product.creator}
+                            creatorProfile={
+                              creatorProfiles.get(product.creator) || null
+                            }
+                          />
 
-                        {/* Purchase Info */}
-                        {purchaseDetails && (
-                          <div
-                            style={{
-                              marginTop: '1rem',
-                              padding: '1rem',
-                              border: '1px solid #e0e0e0',
-                              backgroundColor: '#f5f5f3',
-                            }}
-                          >
-                            <p
+                          {/* Purchase Info */}
+                          {purchaseDetails && (
+                            <div
                               style={{
-                                fontFamily: 'var(--font-inter)',
-                                fontSize: '0.75rem',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                                color: '#999',
-                                marginBottom: '0.5rem',
+                                marginTop: '1rem',
+                                padding: '1rem',
+                                border: '1px solid #e0e0e0',
+                                backgroundColor: '#f5f5f3',
                               }}
                             >
-                              Purchased
-                            </p>
-                            <p
-                              style={{
-                                fontFamily: 'var(--font-inter)',
-                                fontSize: '0.875rem',
-                                color: '#1a1a1a',
-                                marginBottom: '0.5rem',
-                              }}
-                            >
-                              {formatDate(purchaseDetails.purchaseDate)}
-                            </p>
-                            <a
-                              href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${purchaseDetails.transactionHash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                fontFamily: 'var(--font-inter)',
-                                fontSize: '0.75rem',
-                                color: '#D97757',
-                                textDecoration: 'none',
-                                borderBottom: '1px solid #D97757',
-                                paddingBottom: '0.125rem',
-                              }}
-                            >
-                              View transaction →
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                              <p
+                                style={{
+                                  fontFamily: 'var(--font-inter)',
+                                  fontSize: '0.75rem',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em',
+                                  color: '#999',
+                                  marginBottom: '0.5rem',
+                                }}
+                              >
+                                Purchased
+                              </p>
+                              <p
+                                style={{
+                                  fontFamily: 'var(--font-inter)',
+                                  fontSize: '0.875rem',
+                                  color: '#1a1a1a',
+                                  marginBottom: '0.5rem',
+                                }}
+                              >
+                                {formatDate(purchaseDetails.purchaseDate)}
+                              </p>
+                              <a
+                                href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${purchaseDetails.transactionHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  fontFamily: 'var(--font-inter)',
+                                  fontSize: '0.75rem',
+                                  color: '#D97757',
+                                  textDecoration: 'none',
+                                  borderBottom: '1px solid #D97757',
+                                  paddingBottom: '0.125rem',
+                                }}
+                              >
+                                View transaction →
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             )}
           </div>
 
           {/* Created Products Section */}
-          <div style={{ padding: '6rem 0 8rem' }}>
+          <div style={{ padding: '3rem 0 4rem' }}>
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '4rem',
+                marginBottom: '1.5rem',
               }}
             >
               <h2
                 style={{
-                  fontSize: '2.5rem',
-                  fontWeight: 300,
+                  fontSize: '1.125rem',
+                  fontWeight: 400,
                   letterSpacing: '-0.01em',
                 }}
               >
                 Products I created
               </h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}
+              >
                 {createdProducts.length > 0 && (
                   <>
                     <span
@@ -583,8 +615,12 @@ export default function MyProductsPage() {
                           width: '2.5rem',
                           height: '2.5rem',
                           border: '1px solid #e0e0e0',
-                          backgroundColor: createdScrollPosition > 0 ? '#fafaf8' : '#f5f5f3',
-                          cursor: createdScrollPosition > 0 ? 'pointer' : 'not-allowed',
+                          backgroundColor:
+                            createdScrollPosition > 0 ? '#fafaf8' : '#f5f5f3',
+                          cursor:
+                            createdScrollPosition > 0
+                              ? 'pointer'
+                              : 'not-allowed',
                           opacity: createdScrollPosition > 0 ? 1 : 0.5,
                           display: 'flex',
                           alignItems: 'center',
@@ -599,7 +635,8 @@ export default function MyProductsPage() {
                           }
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = createdScrollPosition > 0 ? '#fafaf8' : '#f5f5f3';
+                          e.currentTarget.style.backgroundColor =
+                            createdScrollPosition > 0 ? '#fafaf8' : '#f5f5f3';
                           e.currentTarget.style.color = '#1a1a1a';
                         }}
                       >
@@ -639,33 +676,35 @@ export default function MyProductsPage() {
               <div
                 style={{
                   textAlign: 'center',
-                  padding: '6rem 3rem',
+                  padding: '3rem',
                   border: '1px solid #e0e0e0',
+                  backgroundColor: '#fafaf8',
                 }}
               >
                 <div
                   style={{
-                    fontSize: '4rem',
-                    marginBottom: '2rem',
-                    opacity: 0.2,
+                    fontSize: '2rem',
+                    marginBottom: '1rem',
+                    opacity: 0.3,
                   }}
                 >
                   ✨
                 </div>
                 <h3
                   style={{
-                    fontSize: '2rem',
+                    fontSize: '1.25rem',
                     fontWeight: 300,
-                    marginBottom: '1rem',
+                    marginBottom: '0.75rem',
                   }}
                 >
                   No products created yet
                 </h3>
                 <p
                   style={{
-                    fontSize: '1.125rem',
+                    fontSize: '0.875rem',
                     color: '#666',
-                    marginBottom: '2rem',
+                    marginBottom: '1.5rem',
+                    fontFamily: 'var(--font-inter)',
                   }}
                 >
                   Ready to become a creator?
@@ -678,19 +717,27 @@ export default function MyProductsPage() {
               <div
                 style={{
                   position: 'relative',
-                  overflow: 'hidden',
+                  overflowX: 'hidden',
+                  overflowY: 'visible',
                 }}
               >
                 <div
                   ref={createdSliderRef}
-                  onScroll={() => updateScrollPosition(createdSliderRef, setCreatedScrollPosition)}
+                  onScroll={() =>
+                    updateScrollPosition(
+                      createdSliderRef,
+                      setCreatedScrollPosition
+                    )
+                  }
                   style={{
                     display: 'flex',
                     gap: '2rem',
                     overflowX: 'auto',
+                    overflowY: 'visible',
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none',
-                    paddingBottom: '1rem',
+                    paddingBottom: '10rem', // Added extra padding for creator info boxes
+                    paddingTop: '0.5rem', // Small top padding for container
                   }}
                 >
                   <style jsx>{`
@@ -698,85 +745,88 @@ export default function MyProductsPage() {
                       display: none;
                     }
                   `}</style>
-                {[...createdProducts]
-                  .sort(
-                    (a: any, b: any) =>
-                      Number(b.createdAt || 0) - Number(a.createdAt || 0)
-                  )
-                  .map((product: any) => (
-                    <div 
-                      key={product.productId}
-                      style={{
-                        flexShrink: 0,
-                        width: '300px',
-                      }}
-                    >
-                      <ProductCard
-                        productId={product.productId}
-                        contentId={product.contentId}
-                        currentPrice={product.currentPrice}
-                        creator={product.creator}
-                        creatorProfile={creatorProfiles.get(product.creator) || null}
-                      />
-
-                      {/* Creator Info */}
+                  {[...createdProducts]
+                    .sort(
+                      (a: any, b: any) =>
+                        Number(b.createdAt || 0) - Number(a.createdAt || 0)
+                    )
+                    .map((product: any) => (
                       <div
+                        key={product.productId}
                         style={{
-                          marginTop: '1rem',
-                          padding: '1rem',
-                          border: '1px solid #e0e0e0',
-                          backgroundColor: '#f5f5f3',
+                          flexShrink: 0,
+                          width: '300px',
+                          paddingTop: '8px', // Space for hover animation
                         }}
                       >
-                        <p
+                        <ProductCard
+                          productId={product.productId}
+                          contentId={product.contentId}
+                          currentPrice={product.currentPrice}
+                          creator={product.creator}
+                          creatorProfile={
+                            creatorProfiles.get(product.creator) || null
+                          }
+                        />
+
+                        {/* Creator Info */}
+                        <div
                           style={{
-                            fontFamily: 'var(--font-inter)',
-                            fontSize: '0.75rem',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            color: '#999',
-                            marginBottom: '0.5rem',
+                            marginTop: '1rem',
+                            padding: '1rem',
+                            border: '1px solid #e0e0e0',
+                            backgroundColor: '#f5f5f3',
                           }}
                         >
-                          Created
-                        </p>
-                        <p
-                          style={{
-                            fontFamily: 'var(--font-inter)',
-                            fontSize: '0.875rem',
-                            color: '#1a1a1a',
-                            marginBottom: '0.5rem',
-                          }}
-                        >
-                          {formatDate(product.createdAt)}
-                        </p>
-                        <p
-                          style={{
-                            fontFamily: 'var(--font-inter)',
-                            fontSize: '0.75rem',
-                            color: '#666',
-                            marginBottom: '0.5rem',
-                          }}
-                        >
-                          {product.updateCount || 0} update
-                          {product.updateCount !== 1 ? 's' : ''}
-                        </p>
-                        <Link
-                          href={`/product/${product.productId}`}
-                          style={{
-                            fontFamily: 'var(--font-inter)',
-                            fontSize: '0.75rem',
-                            color: '#D97757',
-                            textDecoration: 'none',
-                            borderBottom: '1px solid #D97757',
-                            paddingBottom: '0.125rem',
-                          }}
-                        >
-                          View sales data →
-                        </Link>
+                          <p
+                            style={{
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '0.75rem',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              color: '#999',
+                              marginBottom: '0.5rem',
+                            }}
+                          >
+                            Created
+                          </p>
+                          <p
+                            style={{
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '0.875rem',
+                              color: '#1a1a1a',
+                              marginBottom: '0.5rem',
+                            }}
+                          >
+                            {formatDate(product.createdAt)}
+                          </p>
+                          <p
+                            style={{
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '0.75rem',
+                              color: '#666',
+                              marginBottom: '0.5rem',
+                            }}
+                          >
+                            {product.updateCount || 0} update
+                            {product.updateCount !== 1 ? 's' : ''}
+                          </p>
+                          <Link
+                            href={`/product/${product.productId}`}
+                            style={{
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '0.75rem',
+                              color: '#D97757',
+                              textDecoration: 'none',
+                              borderBottom: '1px solid #D97757',
+                              paddingBottom: '0.125rem',
+                            }}
+                          >
+                            View sales data →
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             )}

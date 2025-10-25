@@ -28,7 +28,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const { authenticated, user } = usePrivy();
 
   // Use the asset metadata hook
-  const { getTitle } = useAssetMetadata(contentId);
+  const { getTitle, getDescription } = useAssetMetadata(contentId);
 
   // Check if user owns this product
   const { data: hasPaid } = useHasPaid(
@@ -68,18 +68,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px) rotate(0.5deg)';
         e.currentTarget.style.filter = 'brightness(1.05)';
-        const cardElement = e.currentTarget.querySelector('.product-card-inner') as HTMLElement;
+        const cardElement = e.currentTarget.querySelector(
+          '.product-card-inner'
+        ) as HTMLElement;
         if (cardElement) {
-          cardElement.style.background = 'linear-gradient(135deg, #f8f8f6 0%, #efefed 50%, #f5f5f3 100%)';
-          cardElement.style.boxShadow = '0 8px 25px rgba(217, 151, 87, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+          cardElement.style.background =
+            'linear-gradient(135deg, #f8f8f6 0%, #efefed 50%, #f5f5f3 100%)';
+          cardElement.style.boxShadow =
+            '0 8px 25px rgba(217, 151, 87, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
         }
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0) rotate(0deg)';
         e.currentTarget.style.filter = 'brightness(1)';
-        const cardElement = e.currentTarget.querySelector('.product-card-inner') as HTMLElement;
+        const cardElement = e.currentTarget.querySelector(
+          '.product-card-inner'
+        ) as HTMLElement;
         if (cardElement) {
-          cardElement.style.background = 'linear-gradient(135deg, #f5f5f3 0%, #e8e8e6 100%)';
+          cardElement.style.background =
+            'linear-gradient(135deg, #f5f5f3 0%, #e8e8e6 100%)';
           cardElement.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
         }
       }}
@@ -143,12 +150,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Placeholder Icon */}
         <div
           style={{
-            fontSize: '3rem',
+            fontSize: '1.5rem',
             color: '#d0d0ce',
             marginBottom: '1.5rem',
           }}
         >
-          🌒
+          {isCreator || hasPaid ? '🌔' : '🌑'}
         </div>
 
         {/* Product Info */}
@@ -158,7 +165,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             style={{
               fontSize: '1.125rem',
               fontWeight: 400,
-              marginBottom: '0.5rem',
+              marginBottom: '0.25rem',
               letterSpacing: '-0.01em',
               wordBreak: 'break-word',
               lineHeight: 1.2,
@@ -167,6 +174,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           >
             {getTitle(contentId)}
           </h3>
+
+          {/* Description */}
+          <p
+            style={{
+              fontSize: '0.8125rem',
+              color: '#666',
+              marginBottom: '0.75rem',
+              lineHeight: 1.4,
+              maxHeight: '2.8rem',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              padding: '0 0.5rem',
+            }}
+          >
+            {getDescription()}
+          </p>
 
           {/* Creator */}
           <div

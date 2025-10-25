@@ -79,7 +79,7 @@ The project uses a modular architecture:
 
 5. **Event Indexing** (`envio-indexer/`):
 
-   - **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/84d01d4/v1/graphql
+   - **Live GraphQL API**: https://indexer.dev.hyperindex.xyz/0ae1800/v1/graphql
    - **Dual Entity System**: Historical events + current Product state tracking
    - **Event Handlers**: Process PaymentReceived, ProductAdded, and ProductUpdated events
    - **Smart State Management**: Product entity auto-updates with price changes

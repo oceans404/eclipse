@@ -14,8 +14,10 @@ interface CreatorCardProps {
 
 export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
   const router = useRouter();
-  const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null);
-  
+  const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(
+    null
+  );
+
   const { data: statsData } = useQuery(GET_CREATOR_STATS, {
     variables: { creator },
   });
@@ -68,18 +70,25 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px) rotate(0.5deg)';
         e.currentTarget.style.filter = 'brightness(1.05)';
-        const cardElement = e.currentTarget.querySelector('.creator-card-inner') as HTMLElement;
+        const cardElement = e.currentTarget.querySelector(
+          '.creator-card-inner'
+        ) as HTMLElement;
         if (cardElement) {
-          cardElement.style.background = 'linear-gradient(135deg, #f8f8f6 0%, #efefed 50%, #f5f5f3 100%)';
-          cardElement.style.boxShadow = '0 8px 25px rgba(217, 151, 87, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+          cardElement.style.background =
+            'linear-gradient(135deg, #f8f8f6 0%, #efefed 50%, #f5f5f3 100%)';
+          cardElement.style.boxShadow =
+            '0 8px 25px rgba(217, 151, 87, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
         }
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0) rotate(0deg)';
         e.currentTarget.style.filter = 'brightness(1)';
-        const cardElement = e.currentTarget.querySelector('.creator-card-inner') as HTMLElement;
+        const cardElement = e.currentTarget.querySelector(
+          '.creator-card-inner'
+        ) as HTMLElement;
         if (cardElement) {
-          cardElement.style.background = 'linear-gradient(135deg, #f5f5f3 0%, #e8e8e6 100%)';
+          cardElement.style.background =
+            'linear-gradient(135deg, #f5f5f3 0%, #e8e8e6 100%)';
           cardElement.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
         }
       }}
@@ -115,7 +124,9 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             width: '5rem',
             height: '5rem',
             backgroundColor: '#f5f5f3',
-            border: creatorProfile?.image_url ? '2px solid #e0e0e0' : '2px dashed #e0e0e0',
+            border: creatorProfile?.image_url
+              ? '2px solid #e0e0e0'
+              : '2px dashed #e0e0e0',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
@@ -173,6 +184,28 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             }}
           >
             Creator
+          </p>
+        )}
+
+        {/* Creator Description */}
+        {creatorProfile?.description && (
+          <p
+            style={{
+              fontSize: '0.875rem',
+              color: '#666',
+              textAlign: 'center',
+              marginBottom: '0.75rem',
+              lineHeight: 1.4,
+              maxHeight: '2.8rem',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              padding: '0 1rem',
+            }}
+          >
+            {creatorProfile.description}
           </p>
         )}
 
@@ -265,7 +298,7 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
                 color: '#D97757',
               }}
             >
-              {pyusdToFormatted(totalRevenue)}
+              ${pyusdToFormatted(totalRevenue)}
             </p>
             <p
               style={{

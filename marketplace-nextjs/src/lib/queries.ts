@@ -82,7 +82,6 @@ export const GET_PRICE_HISTORY = gql`
     ) {
       price
       blockTimestamp
-      transactionHash
     }
     updates: ProductPaymentService_ProductUpdated(
       where: { productId: { _eq: $productId } }
@@ -90,7 +89,6 @@ export const GET_PRICE_HISTORY = gql`
     ) {
       newPrice
       blockTimestamp
-      transactionHash
     }
   }
 `;

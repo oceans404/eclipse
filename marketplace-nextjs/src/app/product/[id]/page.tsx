@@ -37,7 +37,11 @@ export default function ProductPage({ params }: ProductPageProps) {
     skip: isNaN(productId),
   });
 
-  const { data: priceHistoryData } = useQuery(GET_PRICE_HISTORY, {
+  const {
+    data: priceHistoryData,
+    loading: priceHistoryLoading,
+    error: priceHistoryError,
+  } = useQuery(GET_PRICE_HISTORY, {
     variables: { productId },
     skip: isNaN(productId),
   });
@@ -229,6 +233,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       price: priceHistoryData.added[0].price,
       timestamp: priceHistoryData.added[0].blockTimestamp,
       type: 'created',
+      transactionHash: priceHistoryData.added[0].transactionHash,
     });
   }
   if (priceHistoryData?.updates) {
@@ -237,10 +242,19 @@ export default function ProductPage({ params }: ProductPageProps) {
         price: update.newPrice,
         timestamp: update.blockTimestamp,
         type: 'updated',
+        transactionHash: update.transactionHash,
       });
     });
   }
   priceHistory.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+
+  // Debug log
+  if (isCreator) {
+    console.log('Price history data:', priceHistoryData);
+    console.log('Price history loading:', priceHistoryLoading);
+    console.log('Price history error:', priceHistoryError);
+    console.log('Product ID:', productId);
+  }
 
   const formatDate = (timestamp: string) => {
     return new Date(Number(timestamp) * 1000).toLocaleString('en-US', {
@@ -299,18 +313,39 @@ export default function ProductPage({ params }: ProductPageProps) {
                 }}
               >
                 {!isCreator && !hasPaid ? (
-                  <PurchaseButton
-                    productId={product.productId}
-                    price={
-                      product.currentPrice
-                        ? (Number(product.currentPrice) / 1e6).toFixed(2)
-                        : '0.00'
-                    }
-                    onPurchaseSuccess={() => {
-                      window.location.reload();
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
                     }}
-                    compact={true}
-                  />
+                  >
+                    <PurchaseButton
+                      productId={product.productId}
+                      price={
+                        product.currentPrice
+                          ? (Number(product.currentPrice) / 1e6).toFixed(2)
+                          : '0.00'
+                      }
+                      onPurchaseSuccess={() => {
+                        window.location.reload();
+                      }}
+                      compact={true}
+                    />
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.7rem',
+                        color: '#666',
+                        marginTop: '0.5rem',
+                        textAlign: 'center',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      Buy in 2 steps: <br /> 1. Approve PYUSD spending cap{' '}
+                      <br /> 2. Purchase product
+                    </p>
+                  </div>
                 ) : isCreator ? (
                   <div
                     style={{
@@ -351,29 +386,6 @@ export default function ProductPage({ params }: ProductPageProps) {
                         <PriceDisplay priceInPyusd={product.currentPrice} />
                       </span>
                     </div>
-                    {priceHistoryData?.added?.[0] && (
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${priceHistoryData.added[0].transactionHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          fontSize: '0.7rem',
-                          color: '#D97757',
-                          fontFamily: 'var(--font-inter)',
-                          textDecoration: 'none',
-                          borderBottom: '1px solid transparent',
-                          transition: 'border-color 200ms',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderBottomColor = '#D97757';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderBottomColor = 'transparent';
-                        }}
-                      >
-                        View creation transaction →
-                      </a>
-                    )}
                   </div>
                 ) : hasPaid && userPurchase ? (
                   <div
@@ -399,8 +411,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                         color: '#666',
                       }}
                     >
-                      ✓
-                      <span>You purchased this product</span>
+                      ✓<span>You purchased this product</span>
                     </div>
                     <div
                       style={{
@@ -453,8 +464,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                       color: '#666',
                     }}
                   >
-                    ✓
-                    <span>Owned</span>
+                    ✓<span>Owned</span>
                   </div>
                 )}
               </div>
@@ -484,7 +494,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     flexShrink: 0,
                   }}
                 >
-                  🌒
+                  {isCreator || hasPaid ? '🌔' : '🌑'}
                 </div>
 
                 {/* Title and Info */}
@@ -702,7 +712,6 @@ export default function ProductPage({ params }: ProductPageProps) {
                 </div>
               </div>
             </div>
-
 
             {/* Product Info + Stats Dashboard - Remove this old section */}
             <div style={{ display: 'none' }}>
@@ -978,6 +987,23 @@ export default function ProductPage({ params }: ProductPageProps) {
                               window.location.reload();
                             }}
                           />
+                          <p
+                            style={{
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '0.75rem',
+                              color: '#666',
+                              marginTop: '1rem',
+                              textAlign: 'center',
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            <strong style={{ color: '#1a1a1a' }}>Note:</strong>{' '}
+                            Purchase is a 2-step process
+                            <br />
+                            1) Approve PYUSD spending
+                            <br />
+                            2) Complete product purchase
+                          </p>
                         </div>
                       ) : (
                         <div
@@ -1514,25 +1540,6 @@ export default function ProductPage({ params }: ProductPageProps) {
               <div style={{ padding: '1.5rem' }}>
                 {activeTab === 'chat' ? (
                   <div>
-                    <div
-                      style={{
-                        marginBottom: '1rem',
-                      }}
-                    >
-                      <p
-                        style={{
-                          fontSize: '0.875rem',
-                          color: '#666',
-                          lineHeight: 1.5,
-                          fontFamily: 'var(--font-inter)',
-                        }}
-                      >
-                        Ask the Eclipse AI assistant anything about this
-                        encrypted content. Get answers to make you feel more
-                        confident in this purchase.
-                      </p>
-                    </div>
-
                     <ChatInterface
                       contentId={product.contentId}
                       productId={product.productId.toString()}

@@ -138,7 +138,7 @@ export function ChatInterface({
             flexShrink: 0,
           }}
         >
-          🤖
+          🌜
         </div>
         <div>
           <h3
@@ -159,7 +159,8 @@ export function ChatInterface({
               fontFamily: 'var(--font-inter)',
             }}
           >
-            Powered by Nillion's secure content analysis
+            This AI assistant analyzes the encrypted content and answers your
+            questions to make you feel more confident in this purchase.
           </p>
         </div>
       </div>
@@ -183,24 +184,6 @@ export function ChatInterface({
               color: '#999',
             }}
           >
-            <div
-              style={{
-                fontSize: '2rem',
-                marginBottom: '0.75rem',
-                opacity: 0.3,
-              }}
-            >
-              💬
-            </div>
-            <p
-              style={{
-                fontSize: '0.875rem',
-                fontFamily: 'var(--font-inter)',
-                marginBottom: '1rem',
-              }}
-            >
-              Ask me anything about this encrypted content
-            </p>
             <div
               style={{
                 display: 'flex',
@@ -236,35 +219,6 @@ export function ChatInterface({
                 }}
               >
                 💭 "What is this content about?"
-              </button>
-              <button
-                onClick={() =>
-                  handleSubmit({ preventDefault: () => {} } as any)
-                }
-                onMouseDown={() =>
-                  setInput('Can you summarize the key points?')
-                }
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  border: '1px solid #e0e0e0',
-                  backgroundColor: '#fafaf8',
-                  fontSize: '0.75rem',
-                  fontFamily: 'var(--font-inter)',
-                  color: '#666',
-                  cursor: 'pointer',
-                  transition: 'all 200ms',
-                  textAlign: 'left',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#D97757';
-                  e.currentTarget.style.backgroundColor = '#f5f5f3';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#e0e0e0';
-                  e.currentTarget.style.backgroundColor = '#fafaf8';
-                }}
-              >
-                📋 "Can you summarize the key points?"
               </button>
               <button
                 onClick={() =>
@@ -323,7 +277,7 @@ export function ChatInterface({
                 border: message.role === 'user' ? '1px solid #e0e0e0' : 'none',
               }}
             >
-              {message.role === 'user' ? '👤' : '🤖'}
+              {message.role === 'user' ? '👤' : '🌜'}
             </div>
 
             {/* Message Content */}
@@ -408,7 +362,7 @@ export function ChatInterface({
                 flexShrink: 0,
               }}
             >
-              🤖
+              🌜
             </div>
             <div style={{ flex: 1 }}>
               <div

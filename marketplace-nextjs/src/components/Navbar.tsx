@@ -7,9 +7,14 @@ import { formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES, PYUSD_DECIMALS } from '@/lib/config';
 import { GET_PRODUCTS_BY_CREATOR } from '@/lib/queries';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { CreatorProfile } from '@/lib/db';
 
 export function Navbar() {
   const { login, logout, authenticated, user } = usePrivy();
+  const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(
+    null
+  );
 
   // Get PYUSD balance if user is connected
   const { data: pyusdBalance } = useBalance({
@@ -27,6 +32,27 @@ export function Navbar() {
   });
 
   const hasCreatedProducts = createdProductsData?.Product?.length > 0;
+
+  // Fetch creator profile if user is a creator
+  useEffect(() => {
+    const fetchCreatorProfile = async () => {
+      if (hasCreatedProducts && user?.wallet?.address) {
+        try {
+          const response = await fetch(`/api/creator/${user.wallet.address}`);
+          if (response.ok) {
+            const profile = await response.json();
+            setCreatorProfile(profile);
+          }
+        } catch (error) {
+          console.error('Error fetching creator profile:', error);
+        }
+      } else {
+        setCreatorProfile(null);
+      }
+    };
+
+    fetchCreatorProfile();
+  }, [hasCreatedProducts, user?.wallet?.address]);
 
   const formatPyusdBalance = (balance: bigint | undefined) => {
     if (!balance) return '0.00';
@@ -111,25 +137,6 @@ export function Navbar() {
           </Link>
           {authenticated && (
             <>
-              {hasCreatedProducts && (
-                <Link
-                  href={`/creator/${user?.wallet?.address}`}
-                  style={{
-                    textDecoration: 'none',
-                    color: '#1a1a1a',
-                    transition: 'color 200ms',
-                    fontWeight: 400,
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = '#D97757')
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = '#1a1a1a')
-                  }
-                >
-                  My Profile
-                </Link>
-              )}
               <Link
                 href="/my-products"
                 style={{
@@ -156,7 +163,94 @@ export function Navbar() {
               >
                 Create
               </Link>
+              {hasCreatedProducts && (
+                <Link
+                  href={`/creator/${user?.wallet?.address}`}
+                  style={{
+                    textDecoration: 'none',
+                    color: '#1a1a1a',
+                    transition: 'color 200ms',
+                    fontWeight: 400,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#D97757';
+                    const img = e.currentTarget.querySelector(
+                      'img'
+                    ) as HTMLElement;
+                    if (img) {
+                      img.style.borderColor = '#D97757';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#1a1a1a';
+                    const img = e.currentTarget.querySelector(
+                      'img'
+                    ) as HTMLElement;
+                    if (img) {
+                      img.style.borderColor = '#e0e0e0';
+                    }
+                  }}
+                >
+                  {creatorProfile?.image_url && (
+                    <img
+                      src={creatorProfile.image_url}
+                      alt={creatorProfile.name}
+                      style={{
+                        width: '1.5rem',
+                        height: '1.5rem',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '1px solid #e0e0e0',
+                        transition: 'border-color 200ms',
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  )}
+                  My Profile
+                </Link>
+              )}
             </>
+          )}
+
+          {/* Get PYUSD Link - shows when balance is 0 */}
+          {authenticated && pyusdBalance?.value === 0n && (
+            <a
+              href="https://faucet.paxos.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                textDecoration: 'none',
+                color: '#D97757',
+                fontFamily: 'var(--font-inter)',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                padding: '0.5rem 1rem',
+                border: '1px solid #D97757',
+                borderRadius: '0.25rem',
+                transition: 'all 200ms ease',
+                display: 'inline-block',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#D97757';
+                e.currentTarget.style.color = '#fafaf8';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow =
+                  '0 2px 8px rgba(217, 151, 87, 0.25)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#D97757';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              Get Eth Sepolia PYUSD
+            </a>
           )}
 
           {/* Wallet Section */}

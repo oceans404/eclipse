@@ -147,57 +147,34 @@ export default function CreatorsPage() {
           <div
             style={{
               textAlign: 'center',
-              paddingTop: '12rem',
-              paddingBottom: '6rem',
-              borderBottom: '1px solid #e0e0e0',
+              paddingTop: '6rem',
+              paddingBottom: '2rem',
             }}
           >
-            <div
-              style={{
-                fontFamily: 'var(--font-inter)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                color: '#D97757',
-                marginBottom: '2.5rem',
-                fontWeight: 500,
-              }}
-            >
+            <div className="hero-label" style={{ marginBottom: '.5rem' }}>
               Creator Directory
             </div>
             <h1
               style={{
-                fontSize: '4.5rem',
+                fontSize: '2.5rem',
                 fontWeight: 300,
                 lineHeight: 1.1,
-                marginBottom: '2rem',
+                marginBottom: '1rem',
                 letterSpacing: '-0.02em',
               }}
             >
               Meet the creators.
             </h1>
-            <p
-              style={{
-                fontSize: '1.25rem',
-                color: '#666',
-                maxWidth: '42rem',
-                margin: '0 auto',
-                lineHeight: 1.7,
-              }}
-            >
-              The talented individuals powering Eclipse marketplace with private
-              data.
-            </p>
           </div>
 
           {/* Creators Grid or Empty State */}
-          <div style={{ padding: '6rem 0 8rem' }}>
+          <div style={{ padding: '2rem 0 4rem' }}>
             {creators.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '8rem 0' }}>
+              <div style={{ textAlign: 'center', padding: '4rem 0' }}>
                 <div
                   style={{
-                    fontSize: '4.5rem',
-                    marginBottom: '2rem',
+                    fontSize: '3rem',
+                    marginBottom: '1rem',
                     opacity: 0.2,
                   }}
                 >
@@ -205,14 +182,14 @@ export default function CreatorsPage() {
                 </div>
                 <h3
                   style={{
-                    fontSize: '3rem',
+                    fontSize: '1.5rem',
                     fontWeight: 300,
-                    marginBottom: '1rem',
+                    marginBottom: '0.5rem',
                   }}
                 >
                   No creators yet
                 </h3>
-                <p style={{ fontSize: '1.125rem', color: '#666' }}>
+                <p style={{ fontSize: '0.875rem', color: '#666' }}>
                   Be the first to create and sell content
                 </p>
               </div>
@@ -221,7 +198,7 @@ export default function CreatorsPage() {
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                  gap: '4rem 3rem',
+                  gap: '2rem',
                 }}
               >
                 {sortedCreators.map((creator: string) => (

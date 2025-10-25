@@ -11,7 +11,12 @@ import { CreatorProfile } from '@/lib/db';
 export default function ProductsPage() {
   const [sortBy, setSortBy] = useState<'price' | 'newest' | 'oldest'>('newest');
   const [searchTerm, setSearchTerm] = useState('');
-  const [creatorProfiles, setCreatorProfiles] = useState<Map<string, CreatorProfile>>(new Map());
+  const [creatorProfiles, setCreatorProfiles] = useState<
+    Map<string, CreatorProfile>
+  >(new Map());
+  const [productTitles, setProductTitles] = useState<Map<string, string>>(
+    new Map()
+  );
   const { authenticated, user } = usePrivy();
 
   const { loading, error, data } = useQuery(GET_ALL_PRODUCTS);
@@ -27,7 +32,9 @@ export default function ProductsPage() {
     const fetchCreatorProfiles = async () => {
       if (!data?.Product) return;
 
-      const uniqueCreators = [...new Set(data.Product.map((p: any) => p.creator))] as string[];
+      const uniqueCreators = [
+        ...new Set(data.Product.map((p: any) => p.creator)),
+      ] as string[];
       const profiles = new Map<string, CreatorProfile>();
 
       await Promise.all(
@@ -48,6 +55,40 @@ export default function ProductsPage() {
     };
 
     fetchCreatorProfiles();
+  }, [data]);
+
+  // Fetch product titles for search functionality
+  useEffect(() => {
+    const fetchProductTitles = async () => {
+      if (!data?.Product) return;
+
+      const titles = new Map<string, string>();
+
+      await Promise.all(
+        data.Product.map(async (product: any) => {
+          try {
+            const response = await fetch(
+              `/api/asset/${encodeURIComponent(product.contentId)}`
+            );
+            if (response.ok) {
+              const metadata = await response.json();
+              if (metadata.title) {
+                titles.set(product.contentId, metadata.title);
+              }
+            }
+          } catch (error) {
+            console.error(
+              `Failed to fetch title for ${product.contentId}:`,
+              error
+            );
+          }
+        })
+      );
+
+      setProductTitles(titles);
+    };
+
+    fetchProductTitles();
   }, [data]);
 
   if (loading) {
@@ -123,30 +164,25 @@ export default function ProductsPage() {
   const userAddress = user?.wallet?.address?.toLowerCase();
 
   const filteredProducts = products
-    .filter(
-      (product: any) =>
-        product.contentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.creator.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter((product: any) => {
+      const searchLower = searchTerm.toLowerCase();
+
+      // Search by product title
+      const productTitle = productTitles.get(product.contentId) || '';
+      if (productTitle.toLowerCase().includes(searchLower)) return true;
+
+      // Search by creator address
+      if (product.creator.toLowerCase().includes(searchLower)) return true;
+
+      // Search by creator name
+      const creatorProfile = creatorProfiles.get(product.creator);
+      if (creatorProfile?.name?.toLowerCase().includes(searchLower))
+        return true;
+
+      return false;
+    })
     .sort((a: any, b: any) => {
-      // First, determine ownership status for priority sorting
-      const aIsCreated =
-        authenticated && userAddress === a.creator.toLowerCase();
-      const aIsOwned = ownedProductIds.has(a.productId);
-      const aIsAvailable = !aIsCreated && !aIsOwned;
-
-      const bIsCreated =
-        authenticated && userAddress === b.creator.toLowerCase();
-      const bIsOwned = ownedProductIds.has(b.productId);
-      const bIsAvailable = !bIsCreated && !bIsOwned;
-
-      // Priority order: Available > Owned > Created
-      if (aIsAvailable && !bIsAvailable) return -1;
-      if (!aIsAvailable && bIsAvailable) return 1;
-      if (aIsOwned && bIsCreated) return -1;
-      if (aIsCreated && bIsOwned) return 1;
-
-      // If same ownership status, sort by user preference
+      // Sort by user preference
       switch (sortBy) {
         case 'price':
           const priceA = BigInt(a.currentPrice || '0');
@@ -175,32 +211,31 @@ export default function ProductsPage() {
           <div
             style={{
               textAlign: 'center',
-              paddingTop: '12rem',
-              paddingBottom: '6rem',
-              borderBottom: '1px solid #e0e0e0',
+              paddingTop: '6rem',
+              paddingBottom: '.5rem',
             }}
           >
-            <div className="hero-label">Browse Marketplace</div>
+            <div className="hero-label" style={{ marginBottom: '.5rem' }}>
+              Browse Marketplace
+            </div>
             <h1
               style={{
-                fontSize: '4.5rem',
+                fontSize: '2.5rem',
                 fontWeight: 300,
                 lineHeight: 1.1,
-                marginBottom: '2rem',
+                marginBottom: '1rem',
                 letterSpacing: '-0.02em',
               }}
             >
-              Private data,
-              <br />
-              verified by AI.
+              Private data, verified by AI.
             </h1>
             <p
               style={{
-                fontSize: '1.25rem',
+                fontSize: '1rem',
                 color: '#666',
-                maxWidth: '42rem',
+                maxWidth: '36rem',
                 margin: '0 auto',
-                lineHeight: 1.7,
+                lineHeight: 1.5,
               }}
             >
               Each product is encrypted and verifiable through our private AI
@@ -211,209 +246,120 @@ export default function ProductsPage() {
           {/* Filters Section */}
           <div
             style={{
-              padding: '3rem 0',
-              borderBottom: '1px solid #e0e0e0',
+              padding: '1.5rem 0',
             }}
           >
             <div
               style={{
                 display: 'flex',
-                justifyContent: 'space-between',
+                gap: '0.75rem',
                 alignItems: 'center',
-                gap: '2rem',
-                flexWrap: 'wrap',
               }}
             >
-              <p
+              <div style={{ position: 'relative', flex: 1 }}>
+                <input
+                  type="text"
+                  placeholder="Search products or creators..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.625rem 1rem 0.625rem 2.5rem',
+                    border: '1px solid #e0e0e0',
+                    backgroundColor: '#fafaf8',
+                    color: '#1a1a1a',
+                    fontSize: '0.8125rem',
+                    fontFamily: 'var(--font-inter)',
+                    outline: 'none',
+                    transition: 'all 200ms',
+                    borderRadius: '6px',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#D97757';
+                    e.target.style.backgroundColor = '#fff';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e0e0e0';
+                    e.target.style.backgroundColor = '#fafaf8';
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '0.875rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: '#999',
+                    fontSize: '0.875rem',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  🔍
+                </div>
+              </div>
+
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
                 style={{
-                  fontSize: '0.875rem',
-                  color: '#666',
+                  padding: '0.625rem 2.5rem 0.625rem 1rem',
+                  border: '1px solid #e0e0e0',
+                  backgroundColor: '#fafaf8',
+                  fontSize: '0.8125rem',
+                  color: '#1a1a1a',
                   fontFamily: 'var(--font-inter)',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  outline: 'none',
+                  transition: 'all 200ms',
+                  borderRadius: '6px',
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 0.7rem center',
+                  backgroundSize: '1rem',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#D97757';
+                  e.currentTarget.style.backgroundColor = '#fff';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#e0e0e0';
+                  e.currentTarget.style.backgroundColor = '#fafaf8';
                 }}
               >
-                Showing {filteredProducts.length} product
-                {filteredProducts.length !== 1 ? 's' : ''}
-              </p>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="price">Price: Low to High</option>
+              </select>
 
               <div
                 style={{
-                  display: 'flex',
-                  gap: '2rem',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
+                  padding: '0.375rem 0.875rem',
+                  backgroundColor: '#f5f5f3',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '20px',
+                  fontSize: '0.75rem',
+                  color: '#666',
+                  fontFamily: 'var(--font-inter)',
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <div style={{ flex: 1, minWidth: '300px' }}>
-                  <input
-                    type="text"
-                    placeholder="Search products or creators..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem 1.5rem',
-                      border: '1px solid #e0e0e0',
-                      backgroundColor: '#fafaf8',
-                      color: '#1a1a1a',
-                      fontSize: '0.875rem',
-                      fontFamily: 'var(--font-inter)',
-                      outline: 'none',
-                      transition: 'border-color 200ms',
-                    }}
-                    onFocus={(e) => (e.target.style.borderColor = '#D97757')}
-                    onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-                  />
-                </div>
-
-                <div
-                  style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}
-                >
-                  <span
-                    style={{
-                      fontSize: '0.875rem',
-                      color: '#666',
-                      fontFamily: 'var(--font-inter)',
-                    }}
-                  >
-                    Sort by
-                  </span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      border: '1px solid #e0e0e0',
-                      backgroundColor: '#fafaf8',
-                      fontSize: '0.875rem',
-                      color: '#1a1a1a',
-                      fontFamily: 'var(--font-inter)',
-                      cursor: 'pointer',
-                      outline: 'none',
-                      transition: 'border-color 200ms',
-                    }}
-                    onFocus={(e) =>
-                      (e.currentTarget.style.borderColor = '#D97757')
-                    }
-                    onBlur={(e) =>
-                      (e.currentTarget.style.borderColor = '#e0e0e0')
-                    }
-                  >
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="price">Price: Low to High</option>
-                  </select>
-                </div>
+                {filteredProducts.length} product
+                {filteredProducts.length !== 1 ? 's' : ''}
               </div>
             </div>
           </div>
 
-          {/* Ownership Legend - Only show when wallet is connected */}
-          {authenticated && (
-            <div
-              style={{
-                padding: '2rem 0',
-                borderBottom: '1px solid #e0e0e0',
-              }}
-            >
-              <div style={{ textAlign: 'center' }}>
-                <h3
-                  style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: '#666',
-                    marginBottom: '1.5rem',
-                    fontFamily: 'var(--font-inter)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                  }}
-                >
-                  Product Status
-                </h3>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: '3rem',
-                    fontSize: '0.875rem',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '0.75rem',
-                        height: '0.75rem',
-                        backgroundColor: '#D97757',
-                        borderRadius: '50%',
-                      }}
-                    ></div>
-                    <span
-                      style={{ color: '#666', fontFamily: 'var(--font-inter)' }}
-                    >
-                      Created by you
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '0.75rem',
-                        height: '0.75rem',
-                        backgroundColor: '#1a1a1a',
-                        borderRadius: '50%',
-                      }}
-                    ></div>
-                    <span
-                      style={{ color: '#666', fontFamily: 'var(--font-inter)' }}
-                    >
-                      Owned by you
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '0.75rem',
-                        height: '0.75rem',
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '50%',
-                      }}
-                    ></div>
-                    <span
-                      style={{ color: '#666', fontFamily: 'var(--font-inter)' }}
-                    >
-                      Available to purchase
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Products Grid */}
-          <div style={{ padding: '6rem 0 8rem' }}>
+          <div style={{ padding: '2rem 0 4rem' }}>
             {filteredProducts.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '8rem 0' }}>
+              <div style={{ textAlign: 'center', padding: '4rem 0' }}>
                 <div
                   style={{
-                    fontSize: '4.5rem',
-                    marginBottom: '2rem',
+                    fontSize: '3rem',
+                    marginBottom: '1rem',
                     opacity: 0.2,
                   }}
                 >
@@ -421,14 +367,14 @@ export default function ProductsPage() {
                 </div>
                 <h3
                   style={{
-                    fontSize: '3rem',
+                    fontSize: '1.5rem',
                     fontWeight: 300,
-                    marginBottom: '1rem',
+                    marginBottom: '0.5rem',
                   }}
                 >
                   No products found
                 </h3>
-                <p style={{ fontSize: '1.125rem', color: '#666' }}>
+                <p style={{ fontSize: '0.875rem', color: '#666' }}>
                   {searchTerm
                     ? 'Try adjusting your search terms'
                     : 'Be the first to add a product'}
@@ -439,7 +385,7 @@ export default function ProductsPage() {
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                  gap: '4rem 3rem',
+                  gap: '2rem',
                 }}
               >
                 {filteredProducts.map((product: any) => (
@@ -449,7 +395,9 @@ export default function ProductsPage() {
                     contentId={product.contentId}
                     currentPrice={product.currentPrice}
                     creator={product.creator}
-                    creatorProfile={creatorProfiles.get(product.creator) || null}
+                    creatorProfile={
+                      creatorProfiles.get(product.creator) || null
+                    }
                   />
                 ))}
               </div>

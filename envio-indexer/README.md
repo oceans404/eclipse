@@ -4,7 +4,7 @@
 
 ## Live Deployment
 
-🚀 **Hosted GraphQL API**: https://indexer.dev.hyperindex.xyz/84d01d4/v1/graphql
+🚀 **Hosted GraphQL API**: https://indexer.dev.hyperindex.xyz/0ae1800/v1/graphql
 
 ## Contract Info
 

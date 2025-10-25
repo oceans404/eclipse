@@ -1,14 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import {
-  useContractWrite,
-  usePyusdAllowance,
-  useHasPaid,
-} from '@/hooks/useContract';
+import { usePyusdAllowance, useHasPaid } from '@/hooks/useContract';
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatUnits, parseUnits } from 'viem';
 import { PYUSD_DECIMALS } from '@/lib/config';
+import { CONTRACTS } from '@/lib/contracts';
 
 interface PurchaseButtonProps {
   productId: number;
@@ -26,15 +24,28 @@ export function PurchaseButton({
   const { authenticated, user, login } = usePrivy();
   const [step, setStep] = useState<'idle' | 'approving' | 'purchasing'>('idle');
 
+  // Separate contract write hooks for approval and purchase
   const {
-    approvePyusd,
-    payForProduct,
-    isPending,
-    isConfirming,
-    isConfirmed,
-    hash,
-    error,
-  } = useContractWrite();
+    writeContract: writeApproval,
+    data: approvalHash,
+    error: approvalError,
+    isPending: isApprovalPending,
+  } = useWriteContract();
+  const {
+    writeContract: writePurchase,
+    data: purchaseHash,
+    error: purchaseError,
+    isPending: isPurchasePending,
+  } = useWriteContract();
+
+  // Separate transaction receipt hooks
+  const { isLoading: isApprovalConfirming, isSuccess: isApprovalConfirmed } =
+    useWaitForTransactionReceipt({ hash: approvalHash });
+
+  const { isLoading: isPurchaseConfirming, isSuccess: isPurchaseConfirmed } =
+    useWaitForTransactionReceipt({ hash: purchaseHash });
+
+  const [shouldAutoPurchase, setShouldAutoPurchase] = useState(false);
 
   // Check if user already owns this product
   const { data: hasPaid } = useHasPaid(user?.wallet?.address, productId);
@@ -55,37 +66,82 @@ export function PurchaseButton({
 
     try {
       if (!hasEnoughAllowance) {
-        // Auto-batched flow: Approve then immediately purchase
-        setStep('approving');
-        console.log('Starting auto-batched purchase flow...');
-
         // Step 1: Approve PYUSD spending
-        await approvePyusd(price);
-        console.log('Approval completed, starting purchase...');
+        setStep('approving');
+        setShouldAutoPurchase(true); // Mark that we should auto-purchase after approval
+        console.log('Starting batched approval + purchase flow...');
 
-        // Small delay to ensure approval is processed
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Step 2: Automatically trigger purchase
-        setStep('purchasing');
-        await payForProduct(productId);
-        console.log('Purchase completed!');
+        const amountBigInt = parseUnits(price, PYUSD_DECIMALS);
+        writeApproval({
+          ...CONTRACTS.PYUSD,
+          functionName: 'approve',
+          args: [CONTRACTS.PRODUCT_PAYMENT_SERVICE.address, amountBigInt],
+          gas: 100000n,
+        });
       } else {
         // Direct purchase if already approved
         setStep('purchasing');
-        await payForProduct(productId);
+        setShouldAutoPurchase(false);
+
+        writePurchase({
+          ...CONTRACTS.PRODUCT_PAYMENT_SERVICE,
+          functionName: 'payForProduct',
+          args: [BigInt(productId)],
+          gas: 150000n,
+        });
       }
     } catch (err) {
       console.error('Purchase error:', err);
       setStep('idle');
+      setShouldAutoPurchase(false);
     }
   };
 
+  // Effect to handle the approval confirmation and trigger the purchase
+  React.useEffect(() => {
+    const handleApprovalConfirmed = async () => {
+      if (isApprovalConfirmed && shouldAutoPurchase && step === 'approving') {
+        console.log('Approval confirmed, initiating purchase...');
+
+        // Update step
+        setStep('purchasing');
+
+        // Refetch allowance to ensure it's updated
+        await refetchAllowance();
+
+        // Small delay to ensure blockchain state is updated
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Trigger the purchase
+        writePurchase({
+          ...CONTRACTS.PRODUCT_PAYMENT_SERVICE,
+          functionName: 'payForProduct',
+          args: [BigInt(productId)],
+          gas: 150000n,
+        });
+      }
+    };
+
+    handleApprovalConfirmed();
+  }, [
+    isApprovalConfirmed,
+    shouldAutoPurchase,
+    step,
+    productId,
+    writePurchase,
+    refetchAllowance,
+  ]);
+
   // Handle final transaction confirmation (purchase completion)
-  if (isConfirmed && step === 'purchasing') {
-    setStep('idle');
-    onPurchaseSuccess?.();
-  }
+  React.useEffect(() => {
+    if (isPurchaseConfirmed && step === 'purchasing') {
+      console.log('Purchase transaction confirmed!');
+      setStep('idle');
+      setShouldAutoPurchase(false);
+      // Only call onPurchaseSuccess when the purchase is complete
+      onPurchaseSuccess?.();
+    }
+  }, [isPurchaseConfirmed, step, onPurchaseSuccess]);
 
   // If user already owns this product
   if (hasPaid) {
@@ -125,18 +181,22 @@ export function PurchaseButton({
       <button
         onClick={handlePurchase}
         className={compact ? '' : 'btn-primary'}
-        style={compact ? {
-          backgroundColor: '#D97757',
-          color: '#fafaf8',
-          padding: '0.625rem 1.5rem',
-          border: '1px solid #D97757',
-          fontSize: '0.875rem',
-          fontFamily: 'var(--font-inter)',
-          fontWeight: 500,
-          cursor: 'pointer',
-          transition: 'all 200ms ease',
-          borderRadius: '4px',
-        } : { width: '100%' }}
+        style={
+          compact
+            ? {
+                backgroundColor: '#D97757',
+                color: '#fafaf8',
+                padding: '0.625rem 1.5rem',
+                border: '1px solid #D97757',
+                fontSize: '0.875rem',
+                fontFamily: 'var(--font-inter)',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'all 200ms ease',
+                borderRadius: '4px',
+              }
+            : { width: '100%' }
+        }
         onMouseEnter={(e) => {
           if (compact) {
             e.currentTarget.style.backgroundColor = '#c86548';
@@ -156,22 +216,28 @@ export function PurchaseButton({
   }
 
   const getButtonText = () => {
-    if (isPending || isConfirming) {
-      if (step === 'approving') {
-        return isPending ? 'Approving PYUSD...' : 'Approval Confirming...';
-      } else if (step === 'purchasing') {
-        return isPending ? 'Processing Purchase...' : 'Purchase Confirming...';
-      }
+    if (step === 'approving') {
+      if (isApprovalPending) return 'Approving PYUSD...';
+      if (isApprovalConfirming) return 'Approval Confirming...';
+    } else if (step === 'purchasing') {
+      if (isPurchasePending) return 'Processing Purchase...';
+      if (isPurchaseConfirming) return 'Purchase Confirming...';
     }
 
     if (!hasEnoughAllowance) {
-      return `Buy for ${price} PYUSD`;
+      return `Buy for $${price} PYUSD`;
     }
 
     return `Purchase for ${price} PYUSD`;
   };
 
-  const isLoading = isPending || isConfirming;
+  const isLoading =
+    isApprovalPending ||
+    isApprovalConfirming ||
+    isPurchasePending ||
+    isPurchaseConfirming;
+  const error = approvalError || purchaseError;
+  const hash = step === 'approving' ? approvalHash : purchaseHash;
 
   // Helper function to get user-friendly error messages
   const getErrorMessage = (error: any) => {
@@ -202,7 +268,11 @@ export function PurchaseButton({
   };
 
   return (
-    <div style={compact ? {} : { display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div
+      style={
+        compact ? {} : { display: 'flex', flexDirection: 'column', gap: '1rem' }
+      }
+    >
       {/* Transaction Status */}
       {!compact && (error || hash) && (
         <div
@@ -255,7 +325,7 @@ export function PurchaseButton({
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.7')}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
               >
-                View on Etherscan →
+                View Onchain →
               </a>
             </div>
           )}
@@ -267,23 +337,27 @@ export function PurchaseButton({
         onClick={handlePurchase}
         disabled={isLoading}
         className={compact ? '' : 'btn-primary'}
-        style={compact ? {
-          backgroundColor: '#D97757',
-          color: '#fafaf8',
-          padding: '0.625rem 1.5rem',
-          border: '1px solid #D97757',
-          fontSize: '0.875rem',
-          fontFamily: 'var(--font-inter)',
-          fontWeight: 500,
-          cursor: isLoading ? 'not-allowed' : 'pointer',
-          transition: 'all 200ms ease',
-          borderRadius: '4px',
-          opacity: isLoading ? 0.6 : 1,
-        } : {
-          width: '100%',
-          opacity: isLoading ? 0.6 : 1,
-          cursor: isLoading ? 'not-allowed' : 'pointer',
-        }}
+        style={
+          compact
+            ? {
+                backgroundColor: '#D97757',
+                color: '#fafaf8',
+                padding: '0.625rem 1.5rem',
+                border: '1px solid #D97757',
+                fontSize: '0.875rem',
+                fontFamily: 'var(--font-inter)',
+                fontWeight: 500,
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                transition: 'all 200ms ease',
+                borderRadius: '4px',
+                opacity: isLoading ? 0.6 : 1,
+              }
+            : {
+                width: '100%',
+                opacity: isLoading ? 0.6 : 1,
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+              }
+        }
         onMouseEnter={(e) => {
           if (compact && !isLoading) {
             e.currentTarget.style.backgroundColor = '#c86548';

@@ -6,15 +6,18 @@ interface PriceDisplayProps {
   className?: string;
 }
 
-export const PriceDisplay: React.FC<PriceDisplayProps> = ({ priceInPyusd, className = '' }) => {
+export const PriceDisplay: React.FC<PriceDisplayProps> = ({
+  priceInPyusd,
+  className = '',
+}) => {
   const pyusdValue = pyusdToFormatted(priceInPyusd);
 
   return (
-    <span 
+    <span
       className={`font-semibold ${className}`}
       title={`${priceInPyusd} PYUSD (6 decimals)`}
     >
-      {pyusdValue} PYUSD
+      ${pyusdValue}
     </span>
   );
 };

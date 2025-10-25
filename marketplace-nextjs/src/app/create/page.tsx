@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import React from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { usePrivyWallet } from '@/hooks/usePrivyWallet';
@@ -27,6 +27,11 @@ export default function CreateProductPage() {
   });
   const [profileSubmitting, setProfileSubmitting] = useState(false);
   const [profileError, setProfileError] = useState('');
+  
+  // Profile image upload state
+  const [selectedProfileFile, setSelectedProfileFile] = useState<File | null>(null);
+  const [profilePreviewUrl, setProfilePreviewUrl] = useState<string>('');
+  const profileFileInputRef = useRef<HTMLInputElement>(null);
 
   // Product creation state
   const [formData, setFormData] = useState({
@@ -76,6 +81,34 @@ export default function CreateProductPage() {
     fetchCreatorProfile();
   }, [authenticated, user?.wallet?.address]);
 
+  // Handle profile image file selection
+  const handleProfileFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setProfileError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileError('Image size must be less than 5MB');
+      return;
+    }
+
+    setSelectedProfileFile(file);
+    setProfileError('');
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfilePreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Handle profile form submission
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,12 +122,37 @@ export default function CreateProductPage() {
     }
 
     try {
+      let imageUrl = profileFormData.image_url;
+
+      // Upload image if a new file was selected
+      if (selectedProfileFile) {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', selectedProfileFile);
+        uploadFormData.append('address', user.wallet.address);
+
+        const uploadResponse = await fetch('/api/upload-profile-image', {
+          method: 'POST',
+          body: uploadFormData,
+        });
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          throw new Error(errorData.error || 'Failed to upload image');
+        }
+
+        const { url } = await uploadResponse.json();
+        imageUrl = url;
+      }
+
       const response = await fetch(`/api/creator/${user.wallet.address}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(profileFormData),
+        body: JSON.stringify({
+          ...profileFormData,
+          image_url: imageUrl,
+        }),
       });
 
       if (!response.ok) {
@@ -157,7 +215,7 @@ export default function CreateProductPage() {
   // Redirect if transaction is confirmed
   React.useEffect(() => {
     if (isConfirmed && submitted && formData.productId) {
-      setRedirectCountdown(3);
+      setRedirectCountdown(5);
 
       const interval = setInterval(() => {
         setRedirectCountdown((prev) => {
@@ -359,37 +417,27 @@ export default function CreateProductPage() {
           className="container-eclipse"
           style={{
             maxWidth: '800px',
-            paddingTop: '8rem',
+            paddingTop: '6rem',
           }}
         >
           {/* Compact Header */}
           <div
             style={{
               textAlign: 'center',
-              paddingBottom: '2rem',
+              paddingBottom: '1.5rem',
               borderBottom: '1px solid #e0e0e0',
-              marginBottom: '2rem',
+              marginBottom: '1.5rem',
             }}
           >
-            <div
-              style={{
-                fontFamily: 'var(--font-inter)',
-                fontSize: '0.7rem',
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                color: '#D97757',
-                marginBottom: '1rem',
-                fontWeight: 500,
-              }}
-            >
+            <div className="hero-label">
               {showProfileForm ? 'Creator Setup' : 'Add to Marketplace'}
             </div>
             <h1
               style={{
-                fontSize: '2.5rem',
+                fontSize: '2rem',
                 fontWeight: 300,
                 lineHeight: 1.1,
-                marginBottom: '0.75rem',
+                marginBottom: '0.5rem',
                 letterSpacing: '-0.02em',
               }}
             >
@@ -397,9 +445,9 @@ export default function CreateProductPage() {
             </h1>
             <p
               style={{
-                fontSize: '0.95rem',
+                fontSize: '0.875rem',
                 color: '#666',
-                maxWidth: '32rem',
+                maxWidth: '28rem',
                 margin: '0 auto',
               }}
             >
@@ -413,7 +461,7 @@ export default function CreateProductPage() {
           <div
             style={{
               border: '1px solid #e0e0e0',
-              padding: '2rem',
+              padding: '1.5rem',
             }}
           >
             {showProfileForm ? (
@@ -421,8 +469,8 @@ export default function CreateProductPage() {
               <>
                 <div
                   style={{
-                    marginBottom: '1.5rem',
-                    padding: '1rem',
+                    marginBottom: '1rem',
+                    padding: '0.75rem',
                     border: '1px solid #e0e0e0',
                     backgroundColor: '#f5f5f3',
                   }}
@@ -468,7 +516,7 @@ export default function CreateProductPage() {
 
                 <form onSubmit={handleProfileSubmit}>
                   {/* Profile Name */}
-                  <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ marginBottom: '1rem' }}>
                     <label
                       htmlFor="name"
                       style={{
@@ -506,7 +554,7 @@ export default function CreateProductPage() {
                   </div>
 
                   {/* Profile Description */}
-                  <div style={{ marginBottom: '2rem' }}>
+                  <div style={{ marginBottom: '1.5rem' }}>
                     <label
                       htmlFor="description"
                       style={{
@@ -526,7 +574,7 @@ export default function CreateProductPage() {
                       value={profileFormData.description}
                       onChange={handleProfileChange}
                       placeholder="Tell others about yourself and your expertise"
-                      rows={4}
+                      rows={3}
                       style={{
                         width: '100%',
                         padding: '0.875rem',
@@ -544,10 +592,9 @@ export default function CreateProductPage() {
                     />
                   </div>
 
-                  {/* Profile Image URL */}
-                  <div style={{ marginBottom: '2rem' }}>
+                  {/* Profile Image */}
+                  <div style={{ marginBottom: '1.5rem' }}>
                     <label
-                      htmlFor="image_url"
                       style={{
                         display: 'block',
                         fontFamily: 'var(--font-inter)',
@@ -557,47 +604,119 @@ export default function CreateProductPage() {
                         marginBottom: '0.75rem',
                       }}
                     >
-                      Profile Image URL
+                      Profile Image
                     </label>
+                    
+                    {/* Image Preview */}
+                    {profilePreviewUrl && (
+                      <div
+                        style={{
+                          marginBottom: '1rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '1rem',
+                        }}
+                      >
+                        <img
+                          src={profilePreviewUrl}
+                          alt="Profile preview"
+                          style={{
+                            width: '5rem',
+                            height: '5rem',
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            border: '1px solid #e0e0e0',
+                          }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          {selectedProfileFile ? (
+                            <p
+                              style={{
+                                fontFamily: 'var(--font-inter)',
+                                fontSize: '0.875rem',
+                                color: '#1a1a1a',
+                              }}
+                            >
+                              New image selected: {selectedProfileFile.name}
+                            </p>
+                          ) : (
+                            <p
+                              style={{
+                                fontFamily: 'var(--font-inter)',
+                                fontSize: '0.875rem',
+                                color: '#666',
+                              }}
+                            >
+                              Profile image preview
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* File Upload */}
                     <input
-                      type="url"
-                      id="image_url"
-                      name="image_url"
-                      value={profileFormData.image_url}
-                      onChange={handleProfileChange}
-                      placeholder="https://example.com/your-profile-image.jpg"
+                      ref={profileFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfileFileSelect}
+                      style={{ display: 'none' }}
+                      disabled={profileSubmitting}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => profileFileInputRef.current?.click()}
+                      disabled={profileSubmitting}
                       style={{
-                        width: '100%',
-                        padding: '0.625rem',
+                        padding: '0.75rem 1.5rem',
                         border: '1px solid #e0e0e0',
+                        backgroundColor: '#f5f5f3',
+                        color: '#1a1a1a',
                         fontFamily: 'var(--font-inter)',
                         fontSize: '0.875rem',
-                        outline: 'none',
-                        transition: 'border-color 200ms',
+                        cursor: profileSubmitting ? 'not-allowed' : 'pointer',
+                        transition: 'all 200ms',
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        opacity: profileSubmitting ? 0.5 : 1,
                       }}
-                      disabled={profileSubmitting}
-                      onFocus={(e) => (e.target.style.borderColor = '#D97757')}
-                      onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-                    />
+                      onMouseEnter={(e) => {
+                        if (!profileSubmitting) {
+                          e.currentTarget.style.borderColor = '#D97757';
+                          e.currentTarget.style.backgroundColor = '#fafaf8';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!profileSubmitting) {
+                          e.currentTarget.style.borderColor = '#e0e0e0';
+                          e.currentTarget.style.backgroundColor = '#f5f5f3';
+                        }
+                      }}
+                    >
+                      {profilePreviewUrl ? 'Change Profile Image' : 'Upload Profile Image'}
+                    </button>
                     <p
                       style={{
                         fontFamily: 'var(--font-inter)',
-                        fontSize: '0.8125rem',
-                        color: '#999',
+                        fontSize: '0.75rem',
+                        color: '#666',
                         marginTop: '0.5rem',
                       }}
                     >
-                      Optional: URL to your profile picture
+                      Optional: Upload a profile picture (max 5MB, images only)
                     </p>
                   </div>
 
                   {/* Creator Address Info */}
                   <div
                     style={{
-                      padding: '1.5rem',
+                      padding: '1rem',
                       border: '1px solid #e0e0e0',
                       backgroundColor: '#f5f5f3',
-                      marginBottom: '2rem',
+                      marginBottom: '1.5rem',
                     }}
                   >
                     <h3
@@ -692,8 +811,8 @@ export default function CreateProductPage() {
                 {/* Step Indicator */}
                 <div
                   style={{
-                    marginBottom: '2rem',
-                    padding: '1rem',
+                    marginBottom: '1.5rem',
+                    padding: '0.75rem',
                     border: '1px solid #e0e0e0',
                     backgroundColor: '#f5f5f3',
                   }}
@@ -715,7 +834,7 @@ export default function CreateProductPage() {
                           uploadStep === 'upload'
                             ? '#D97757'
                             : uploadResult
-                            ? '#22c55e'
+                            ? '#D97757'
                             : '#e0e0e0',
                         color: '#fff',
                         display: 'flex',
@@ -733,7 +852,7 @@ export default function CreateProductPage() {
                         fontSize: '0.875rem',
                         fontWeight: 500,
                         color: uploadResult
-                          ? '#22c55e'
+                          ? '#D97757'
                           : uploadStep === 'upload'
                           ? '#D97757'
                           : '#666',
@@ -746,7 +865,7 @@ export default function CreateProductPage() {
                       style={{
                         width: '2rem',
                         height: '1px',
-                        backgroundColor: uploadResult ? '#22c55e' : '#e0e0e0',
+                        backgroundColor: uploadResult ? '#D97757' : '#e0e0e0',
                       }}
                     />
 
@@ -759,7 +878,7 @@ export default function CreateProductPage() {
                           uploadStep === 'create'
                             ? '#D97757'
                             : uploadStep === 'completed'
-                            ? '#22c55e'
+                            ? '#D97757'
                             : '#e0e0e0',
                         color: '#fff',
                         display: 'flex',
@@ -778,7 +897,7 @@ export default function CreateProductPage() {
                         fontWeight: 500,
                         color:
                           uploadStep === 'completed'
-                            ? '#22c55e'
+                            ? '#D97757'
                             : uploadStep === 'create'
                             ? '#D97757'
                             : '#666',
@@ -824,18 +943,17 @@ export default function CreateProductPage() {
                 {uploadResult && (
                   <div
                     style={{
-                      marginBottom: '2rem',
+                      marginBottom: '1.5rem',
                       padding: '1rem',
-                      backgroundColor: '#f0fdf4',
-                      border: '1px solid #bbf7d0',
-                      color: '#16a34a',
+                      backgroundColor: '#f5f5f3',
+                      border: '1px solid #e0e0e0',
                       fontSize: '0.875rem',
                     }}
                   >
-                    <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>
+                    <div style={{ fontWeight: 500, marginBottom: '0.5rem', color: '#D97757' }}>
                       ✓ File encrypted and uploaded successfully!
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#15803d' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#666' }}>
                       Content ID: {uploadResult.contentId}
                     </div>
                   </div>
@@ -965,7 +1083,7 @@ export default function CreateProductPage() {
                   {uploadStep === 'upload' && (
                     <>
                       {/* Title */}
-                      <div style={{ marginBottom: '1.5rem' }}>
+                      <div style={{ marginBottom: '1rem' }}>
                         <label
                           htmlFor="title"
                           style={{
@@ -1006,7 +1124,7 @@ export default function CreateProductPage() {
                       </div>
 
                       {/* Description */}
-                      <div style={{ marginBottom: '2rem' }}>
+                      <div style={{ marginBottom: '1.5rem' }}>
                         <label
                           htmlFor="description"
                           style={{
@@ -1026,7 +1144,7 @@ export default function CreateProductPage() {
                           value={formData.description}
                           onChange={handleChange}
                           placeholder="Describe your content - what will buyers receive?"
-                          rows={3}
+                          rows={2}
                           style={{
                             width: '100%',
                             padding: '0.875rem',
@@ -1079,7 +1197,7 @@ export default function CreateProductPage() {
                   {uploadStep === 'create' && (
                     <>
                       {/* Price */}
-                      <div style={{ marginBottom: '2rem' }}>
+                      <div style={{ marginBottom: '1.5rem' }}>
                         <label
                           htmlFor="price"
                           style={{
@@ -1138,10 +1256,10 @@ export default function CreateProductPage() {
                   {uploadStep === 'create' && (
                     <div
                       style={{
-                        padding: '1.5rem',
+                        padding: '1rem',
                         border: '1px solid #e0e0e0',
                         backgroundColor: '#f5f5f3',
-                        marginBottom: '2rem',
+                        marginBottom: '1.5rem',
                       }}
                     >
                       <h3
