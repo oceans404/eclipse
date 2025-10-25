@@ -364,6 +364,36 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                           >
                             Copy
                           </button>
+                          <a
+                            href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/address/${resolvedParams.address}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              padding: '0.25rem 0.5rem',
+                              border: '1px solid #e0e0e0',
+                              backgroundColor: 'transparent',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              transition: 'all 200ms',
+                              fontSize: '0.7rem',
+                              fontFamily: 'var(--font-inter)',
+                              fontWeight: 500,
+                              color: '#666',
+                              textDecoration: 'none',
+                              display: 'inline-block',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = '#D97757';
+                              e.currentTarget.style.color = '#D97757';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = '#e0e0e0';
+                              e.currentTarget.style.color = '#666';
+                            }}
+                            title="View on Etherscan"
+                          >
+                            View onchain →
+                          </a>
                         </div>
                       </div>
                       {/* Edit Profile Button - Inline with name */}
