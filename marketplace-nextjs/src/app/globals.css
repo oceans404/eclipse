@@ -18,7 +18,7 @@ body {
   overflow-x: hidden;
   background-color: #fafaf8;
   color: #1a1a1a;
-  font-family: var(--font-crimson-pro);
+  font-family: var(--font-inter);
   line-height: 1.6;
   font-size: 18px;
 }
@@ -40,6 +40,7 @@ h4,
 h5,
 h6 {
   font-weight: 300;
+  font-family: var(--font-crimson-pro);
 }
 
 /* Container */
@@ -59,7 +60,7 @@ nav {
   background-color: rgba(250, 250, 248, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid #e0e0e0;
-  padding: 2rem 0;
+  padding: 1.5rem 0;
 }
 
 nav .container-eclipse {
@@ -77,7 +78,7 @@ nav .container-eclipse {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 3rem;
+  gap: 2.5rem;
   font-family: var(--font-inter);
   font-size: 0.875rem;
 }
@@ -100,6 +101,7 @@ nav .container-eclipse {
   border: 1px solid #1a1a1a;
   font-size: 0.875rem;
   font-family: var(--font-inter);
+  border-radius: 0;
 }
 
 .btn-nav:hover {
@@ -111,30 +113,39 @@ nav .container-eclipse {
   transition: all 200ms ease;
   background-color: #1a1a1a;
   color: #fafaf8;
-  padding: 1.125rem 3rem;
+  padding: 1rem 2.5rem;
   border: 1px solid #1a1a1a;
   font-size: 0.875rem;
   font-family: var(--font-inter);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 0;
 }
 
 .btn-primary:hover {
   background-color: #d97757;
   border-color: #d97757;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(217, 119, 87, 0.2);
 }
 
 .btn-secondary {
   transition: all 200ms ease;
   background-color: transparent;
   color: #1a1a1a;
-  padding: 1.125rem 3rem;
+  padding: 1rem 2.5rem;
   border: 1px solid #1a1a1a;
   font-size: 0.875rem;
   font-family: var(--font-inter);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 0;
 }
 
 .btn-secondary:hover {
   background-color: #1a1a1a;
   color: #fafaf8;
+  transform: translateY(-1px);
 }
 
 /* Parallax Background */
@@ -151,29 +162,30 @@ nav .container-eclipse {
 .parallax-layer {
   position: absolute;
   border-radius: 50%;
-  opacity: 0.25;
+  opacity: 0.2;
   transition: transform 0.3s ease-out;
+  filter: blur(80px);
 }
 
 .parallax-layer-1 {
-  width: 800px;
-  height: 800px;
+  width: 900px;
+  height: 900px;
   background: radial-gradient(circle, #d97757 0%, transparent 70%);
-  top: -200px;
-  right: -200px;
+  top: -250px;
+  right: -250px;
 }
 
 .parallax-layer-2 {
-  width: 600px;
-  height: 600px;
+  width: 700px;
+  height: 700px;
   background: radial-gradient(circle, #1a1a1a 0%, transparent 70%);
-  bottom: -100px;
-  left: -100px;
+  bottom: -150px;
+  left: -150px;
 }
 
 .parallax-layer-3 {
-  width: 400px;
-  height: 400px;
+  width: 500px;
+  height: 500px;
   background: radial-gradient(circle, #d97757 0%, transparent 70%);
   top: 50%;
   left: 30%;
@@ -181,8 +193,8 @@ nav .container-eclipse {
 }
 
 .parallax-layer-4 {
-  width: 500px;
-  height: 500px;
+  width: 600px;
+  height: 600px;
   background: radial-gradient(circle, #1a1a1a 0%, transparent 70%);
   top: 20%;
   right: 20%;
@@ -190,8 +202,11 @@ nav .container-eclipse {
 
 /* Sections */
 .hero {
-  padding: 14rem 0 10rem;
+  padding: 16rem 0 12rem;
   border-bottom: 1px solid #e0e0e0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
 }
 
 .hero-content {
@@ -201,38 +216,38 @@ nav .container-eclipse {
 }
 
 .hero-label {
-  font-family: var(--font-inter);
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
+  font-size: 1.25rem;
+  margin-top: 1rem;
+  line-height: 1;
+  opacity: 0.9;
+  font-family: var(--font-crimson-pro);
   color: #d97757;
-  margin-bottom: 2.5rem;
-  font-weight: 500;
 }
 
 .hero h1 {
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-weight: 300;
-  line-height: 1.1;
-  margin-bottom: 2.5rem;
+  line-height: 1.15;
+  margin-bottom: 2rem;
   letter-spacing: -0.02em;
 }
 
 .hero-subtitle {
-  font-size: 1.5rem;
+  font-size: 1.375rem;
   color: #666;
   margin-bottom: 4rem;
-  max-width: 700px;
+  max-width: 650px;
   margin-left: auto;
   margin-right: auto;
-  line-height: 1.6;
-  font-weight: 300;
+  line-height: 1.7;
+  font-weight: 400;
+  font-family: var(--font-inter);
 }
 
 .hero-buttons {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .problem-statement {
@@ -250,30 +265,31 @@ nav .container-eclipse {
 .section-label {
   font-family: var(--font-inter);
   font-size: 0.75rem;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #999;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   font-weight: 500;
 }
 
 .how-it-works .section-label {
-  color: rgba(250, 250, 248, 0.6);
+  color: rgba(250, 250, 248, 0.5);
 }
 
 .problem-content h2 {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 300;
-  line-height: 1.2;
-  margin-bottom: 2.5rem;
+  line-height: 1.25;
+  margin-bottom: 3rem;
   letter-spacing: -0.02em;
 }
 
 .problem-content p {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   color: #666;
   line-height: 1.8;
   margin-bottom: 2rem;
+  font-family: var(--font-inter);
 }
 
 .how-it-works {
@@ -292,8 +308,16 @@ nav .container-eclipse {
   left: -50%;
   right: -50%;
   bottom: 0;
-  background: radial-gradient(circle at 20% 80%, rgba(217, 151, 87, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(217, 151, 87, 0.08) 0%, transparent 50%);
+  background: radial-gradient(
+      circle at 20% 80%,
+      rgba(217, 119, 87, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(217, 119, 87, 0.06) 0%,
+      transparent 50%
+    );
   pointer-events: none;
 }
 
@@ -303,24 +327,25 @@ nav .container-eclipse {
 }
 
 .how-it-works-header h2 {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 300;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   letter-spacing: -0.02em;
 }
 
 .how-it-works-header p {
-  font-size: 1.25rem;
-  color: rgba(250, 250, 248, 0.8);
+  font-size: 1.125rem;
+  color: rgba(250, 250, 248, 0.75);
   max-width: 700px;
   margin: 0 auto;
   line-height: 1.7;
+  font-family: var(--font-inter);
 }
 
 .steps-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 5rem;
+  gap: 4rem;
 }
 
 .step {
@@ -330,23 +355,24 @@ nav .container-eclipse {
 .step-number {
   font-family: var(--font-inter);
   font-size: 0.75rem;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
   color: #d97757;
   margin-bottom: 2rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .step h3 {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 400;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   letter-spacing: -0.01em;
 }
 
 .step p {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   color: rgba(250, 250, 248, 0.7);
-  line-height: 1.8;
+  line-height: 1.75;
+  font-family: var(--font-inter);
 }
 
 .feature-highlight {
@@ -385,6 +411,7 @@ nav .container-eclipse {
   color: #666;
   line-height: 1.8;
   margin-bottom: 2rem;
+  font-family: var(--font-inter);
 }
 
 .feature-link {
@@ -416,7 +443,13 @@ nav .container-eclipse {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(to right, transparent 0%, #e0e0e0 20%, #e0e0e0 80%, transparent 100%);
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    #e0e0e0 20%,
+    #e0e0e0 80%,
+    transparent 100%
+  );
 }
 
 .benefits-header {
@@ -425,21 +458,21 @@ nav .container-eclipse {
 }
 
 .benefits-header h2 {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 300;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   letter-spacing: -0.02em;
 }
 
 .benefits-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 3rem;
+  gap: 2.5rem;
 }
 
 .benefit {
-  transition: all 200ms ease;
-  padding: 3rem;
+  transition: all 250ms ease;
+  padding: 2.5rem 2rem;
   border: 1px solid #e0e0e0;
   background-color: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
@@ -447,31 +480,32 @@ nav .container-eclipse {
 
 .benefit:hover {
   border-color: #d97757;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
 }
 
 .benefit-title {
-  font-size: 1.5rem;
+  font-size: 1.375rem;
   font-weight: 400;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
 .benefit-for {
   font-family: var(--font-inter);
   font-size: 0.75rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: #d97757;
   margin-bottom: 1rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .benefit-description {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   color: #666;
-  line-height: 1.8;
+  line-height: 1.75;
 }
 
 .tech {
@@ -498,6 +532,7 @@ nav .container-eclipse {
   color: #666;
   margin-bottom: 4rem;
   line-height: 1.7;
+  font-family: var(--font-inter);
 }
 
 .tech-stack {
@@ -528,17 +563,17 @@ nav .container-eclipse {
 }
 
 .cta-content h2 {
-  font-size: 4rem;
+  font-size: 3.5rem;
   font-weight: 300;
-  margin-bottom: 3rem;
+  margin-bottom: 2.5rem;
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .cta-buttons {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 footer {
@@ -566,6 +601,7 @@ footer {
   color: #666;
   line-height: 1.7;
   font-size: 1rem;
+  font-family: var(--font-inter);
 }
 
 .footer-title {
@@ -628,8 +664,12 @@ footer {
     grid-template-columns: 1fr;
   }
 
+  .hero {
+    min-height: auto;
+  }
+
   .hero h1 {
-    font-size: 3.5rem;
+    font-size: 3rem;
   }
 
   .problem-content h2,
@@ -639,7 +679,11 @@ footer {
   }
 
   .cta-content h2 {
-    font-size: 3rem;
+    font-size: 2.75rem;
+  }
+
+  .steps-grid {
+    gap: 3rem;
   }
 }
 
@@ -653,11 +697,15 @@ footer {
   }
 
   .hero {
-    padding: 10rem 0 6rem;
+    padding: 12rem 0 8rem;
+  }
+
+  .hero-label {
+    font-size: 3rem;
   }
 
   .hero h1 {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
   }
 
   .hero-subtitle {
@@ -667,9 +715,32 @@ footer {
   .hero-buttons,
   .cta-buttons {
     flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    text-align: center;
   }
 
   .tech-stack {
     grid-template-columns: 1fr;
+  }
+
+  .problem-statement {
+    padding: 8rem 0;
+  }
+
+  .how-it-works {
+    padding: 8rem 0;
+  }
+
+  .benefits {
+    padding: 8rem 0;
+  }
+
+  .cta {
+    padding: 8rem 0;
   }
 }

@@ -9,7 +9,11 @@ interface ContentViewerProps {
   mimeType?: string;
 }
 
-export function ContentViewer({ contentId, productId, mimeType }: ContentViewerProps) {
+export function ContentViewer({
+  contentId,
+  productId,
+  mimeType,
+}: ContentViewerProps) {
   const [content, setContent] = useState<string | null>(null);
   const [contentBlob, setContentBlob] = useState<Blob | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,8 +55,9 @@ export function ContentViewer({ contentId, productId, mimeType }: ContentViewerP
       }
 
       // Get the content type from response
-      const contentType = response.headers.get('content-type') || mimeType || 'text/plain';
-      
+      const contentType =
+        response.headers.get('content-type') || mimeType || 'text/plain';
+
       // Handle different content types
       if (contentType.startsWith('image/')) {
         // For images, create a blob and object URL
@@ -67,7 +72,9 @@ export function ContentViewer({ contentId, productId, mimeType }: ContentViewerP
       }
       setIsVisible(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to decrypt content');
+      setError(
+        err instanceof Error ? err.message : 'Failed to decrypt content'
+      );
     } finally {
       setLoading(false);
     }
@@ -117,7 +124,9 @@ export function ContentViewer({ contentId, productId, mimeType }: ContentViewerP
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to download content');
+      setError(
+        err instanceof Error ? err.message : 'Failed to download content'
+      );
     }
   };
 
@@ -168,7 +177,11 @@ export function ContentViewer({ contentId, productId, mimeType }: ContentViewerP
               transition: 'opacity 200ms',
             }}
           >
-            {loading ? 'Decrypting...' : isVisible && content ? 'Hide Content' : 'View Content'}
+            {loading
+              ? 'Decrypting...'
+              : isVisible && content
+              ? 'Hide Content'
+              : 'View Content'}
           </button>
           <button
             onClick={handleDownload}
@@ -277,7 +290,7 @@ export function ContentViewer({ contentId, productId, mimeType }: ContentViewerP
               margin: 0,
             }}
           >
-            Click "View Content" to decrypt and display the private data
+            Click "View Content"
           </p>
         </div>
       )}

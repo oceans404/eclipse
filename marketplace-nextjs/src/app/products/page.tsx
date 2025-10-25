@@ -238,8 +238,7 @@ export default function ProductsPage() {
                 lineHeight: 1.5,
               }}
             >
-              Each product is encrypted and verifiable through our private AI
-              agent before purchase.
+              Ask anything about any product before buying.
             </p>
           </div>
 

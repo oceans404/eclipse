@@ -79,6 +79,7 @@ export function Navbar() {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          fontFamily: 'var(--font-crimson-pro)',
         }}
       >
         {/* Logo */}
