@@ -19,12 +19,15 @@ if (typeof window !== 'undefined') {
   (window as typeof window & { Buffer: typeof Buffer }).Buffer = Buffer;
 }
 
-function attachBigIntMethods(proto: {
+type BigIntCapableBuffer = {
+  [index: number]: number;
   readBigUInt64BE?: (offset?: number) => bigint;
   readBigUInt64LE?: (offset?: number) => bigint;
   writeBigUInt64BE?: (value: bigint, offset?: number) => number;
   writeBigUInt64LE?: (value: bigint, offset?: number) => number;
-}) {
+};
+
+function attachBigIntMethods(proto?: BigIntCapableBuffer) {
   if (!proto) return;
 
   if (typeof BigInt === 'undefined') {
@@ -32,7 +35,10 @@ function attachBigIntMethods(proto: {
   }
 
   if (!proto.readBigUInt64BE) {
-    proto.readBigUInt64BE = function readBigUInt64BE(offset = 0) {
+    proto.readBigUInt64BE = function readBigUInt64BE(
+      this: BigIntCapableBuffer,
+      offset = 0
+    ) {
       let result = 0n;
       for (let i = 0; i < 8; i++) {
         result = (result << 8n) + BigInt(this[offset + i]);
@@ -42,7 +48,10 @@ function attachBigIntMethods(proto: {
   }
 
   if (!proto.readBigUInt64LE) {
-    proto.readBigUInt64LE = function readBigUInt64LE(offset = 0) {
+    proto.readBigUInt64LE = function readBigUInt64LE(
+      this: BigIntCapableBuffer,
+      offset = 0
+    ) {
       let result = 0n;
       for (let i = 7; i >= 0; i--) {
         result = (result << 8n) + BigInt(this[offset + i]);
@@ -53,6 +62,7 @@ function attachBigIntMethods(proto: {
 
   if (!proto.writeBigUInt64BE) {
     proto.writeBigUInt64BE = function writeBigUInt64BE(
+      this: BigIntCapableBuffer,
       value: bigint,
       offset = 0
     ) {
@@ -67,6 +77,7 @@ function attachBigIntMethods(proto: {
 
   if (!proto.writeBigUInt64LE) {
     proto.writeBigUInt64LE = function writeBigUInt64LE(
+      this: BigIntCapableBuffer,
       value: bigint,
       offset = 0
     ) {

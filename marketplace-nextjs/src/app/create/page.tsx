@@ -7,6 +7,7 @@ import { usePrivyWallet } from '@/hooks/usePrivyWallet';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { CreatorProfile } from '@/lib/db';
+import { EXPLORER_URL } from '@/lib/config';
 import FileUpload from '@/components/FileUpload';
 
 export default function CreateProductPage() {
