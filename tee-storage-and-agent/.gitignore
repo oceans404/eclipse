@@ -33,4 +33,7 @@ Thumbs.db
 # Test coverage
 coverage/
 .nyc_output/
-scripts/
+
+# Local scripts (only track measurement hash helper)
+scripts/*
+!scripts/measurement-hash.sh
