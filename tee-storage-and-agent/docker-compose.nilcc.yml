@@ -10,7 +10,7 @@ services:
 
     # Load sensitive vars from the repo .env (must live inside ${FILES})
     env_file:
-      - ${FILES}/.env
+      - ${FILES}/tee.env
 
     environment:
       # Security keys
@@ -39,28 +39,34 @@ services:
     ports:
       - '3001:3001'
 
-    networks:
-      - internal
-
     restart: unless-stopped
 
     # Volume mounts must remain within ${FILES} to satisfy nilCC requirements.
+    # Mount individual files so the compose bundle only needs what's listed here.
     volumes:
       # Application files
       - ${FILES}/package.json:/app/package.json
       - ${FILES}/package-lock.json:/app/package-lock.json
       - ${FILES}/tsconfig.json:/app/tsconfig.json
 
-      # Source directory for development
-      - ${FILES}/src:/app/src
-
-      # Temporary processing directory
-      - ${FILES}/temp:/app/temp
+      # Source files (keep in sync with src/)
+      - ${FILES}/src/index.ts:/app/src/index.ts
+      - ${FILES}/src/ai.ts:/app/src/ai.ts
+      - ${FILES}/src/blockchain.ts:/app/src/blockchain.ts
+      - ${FILES}/src/config.ts:/app/src/config.ts
+      - ${FILES}/src/crypto.ts:/app/src/crypto.ts
+      - ${FILES}/src/nillion.ts:/app/src/nillion.ts
+      - ${FILES}/src/routes-assets.ts:/app/src/routes-assets.ts
+      - ${FILES}/src/routes-chat.ts:/app/src/routes-chat.ts
+      - ${FILES}/src/routes-decrypt.ts:/app/src/routes-decrypt.ts
+      - ${FILES}/src/routes-dev-tools.ts:/app/src/routes-dev-tools.ts
+      - ${FILES}/src/routes-health.ts:/app/src/routes-health.ts
+      - ${FILES}/src/routes-metadata.ts:/app/src/routes-metadata.ts
+      - ${FILES}/src/routes-verified-list.ts:/app/src/routes-verified-list.ts
+      - ${FILES}/src/service-context.ts:/app/src/service-context.ts
+      - ${FILES}/src/utils.ts:/app/src/utils.ts
+      - ${FILES}/src/verified-list.ts:/app/src/verified-list.ts
+      - ${FILES}/src/zkpassport.ts:/app/src/zkpassport.ts
 
     # Development command with TypeScript compilation and nodemon
     command: sh -c "cd /app && npm ci && npm run dev"
-
-networks:
-  internal:
-    name: eclipse-network-dev
-# No named volumes - everything mounted from host
