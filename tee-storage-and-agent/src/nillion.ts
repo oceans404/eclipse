@@ -1,5 +1,6 @@
 import { SecretVaultBuilderClient, Did } from '@nillion/secretvaults';
 import { Keypair } from '@nillion/nuc';
+import { config } from './config.js';
 
 export interface AssetData {
   _id: string;
@@ -32,11 +33,7 @@ export class NillionService {
   private initialized = false;
 
   constructor() {
-    const collectionId = process.env.NILLION_COLLECTION_ID;
-    if (!collectionId) {
-      throw new Error('NILLION_COLLECTION_ID environment variable is required');
-    }
-    this.collectionId = collectionId;
+    this.collectionId = config.nillion.collectionId;
   }
 
   /**
@@ -46,10 +43,7 @@ export class NillionService {
     if (this.initialized) return;
 
     try {
-      const apiKey = process.env.NILLION_API_KEY;
-      if (!apiKey) {
-        throw new Error('NILLION_API_KEY environment variable is required');
-      }
+      const apiKey = config.nillion.apiKey;
 
       // Initialize builder client
       // Create keypair from API key

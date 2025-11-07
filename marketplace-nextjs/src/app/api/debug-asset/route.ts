@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const encryptionServiceUrl = process.env.ENCRYPTION_SERVICE_URL;
-    
+    const encryptionServiceUrl = process.env.NILCC_SERVICE_URL;
+
     if (!encryptionServiceUrl) {
       return NextResponse.json(
         { error: 'Encryption service not configured' },
@@ -13,12 +13,9 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { contentId } = body;
-    
+
     if (!contentId) {
-      return NextResponse.json(
-        { error: 'Missing contentId' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing contentId' }, { status: 400 });
     }
 
     console.log('[Debug-Asset] Checking asset:', contentId);
@@ -27,7 +24,7 @@ export async function POST(request: NextRequest) {
     const metadataResponse = await fetch(
       `${encryptionServiceUrl}/asset-metadata/${encodeURIComponent(contentId)}`
     );
-    
+
     const metadataExists = metadataResponse.ok;
     const metadata = metadataExists ? await metadataResponse.json() : null;
 
@@ -37,7 +34,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         error: 'Invalid contentId format',
         contentId,
-        expectedFormat: 'nillion://[collectionId]/[recordId]'
+        expectedFormat: 'nillion://[collectionId]/[recordId]',
       });
     }
 
@@ -51,25 +48,25 @@ export async function POST(request: NextRequest) {
       contentId,
       parsed: {
         collectionId,
-        recordId
+        recordId,
       },
       checks: {
         encryptionServiceHealthy: serviceHealthy,
         metadataExists,
-        metadata: metadata || 'Not found'
+        metadata: metadata || 'Not found',
       },
       debug: {
         encryptionServiceUrl,
-        expectedCollectionId: process.env.NILLION_COLLECTION_ID || 'Not set in Next.js env'
-      }
+        expectedCollectionId:
+          process.env.NILLION_COLLECTION_ID || 'Not set in Next.js env',
+      },
     });
-    
   } catch (error) {
     console.error('Debug asset error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

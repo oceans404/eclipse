@@ -3,8 +3,8 @@ import { CHAIN_CONFIG } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
-    const encryptionServiceUrl = process.env.ENCRYPTION_SERVICE_URL;
-    
+    const encryptionServiceUrl = process.env.NILCC_SERVICE_URL;
+
     if (!encryptionServiceUrl) {
       return NextResponse.json(
         { error: 'Encryption service not configured' },
@@ -13,15 +13,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Validate required fields
-    const {
-      contentId,
-      requesterAddress,
-      productId,
-      chainId,
-    } = body;
-    
+    const { contentId, requesterAddress, productId, chainId } = body;
+
     if (!contentId || !requesterAddress) {
       return NextResponse.json(
         { error: 'Missing required fields: contentId, requesterAddress' },
@@ -40,28 +35,35 @@ export async function POST(request: NextRequest) {
       requesterAddress,
       productId: productId ? parseInt(productId) : undefined,
       chainId: resolvedChainId,
-      url: `${encryptionServiceUrl}/decrypt-for-download`
+      url: `${encryptionServiceUrl}/decrypt-for-download`,
     });
 
     // Forward the request to the encryption service
-    const response = await fetch(`${encryptionServiceUrl}/decrypt-for-download`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contentId,
-        requesterAddress,
-        productId: productId ? parseInt(productId) : undefined,
-        chainId: resolvedChainId,
-      }),
-    });
+    const response = await fetch(
+      `${encryptionServiceUrl}/decrypt-for-download`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contentId,
+          requesterAddress,
+          productId: productId ? parseInt(productId) : undefined,
+          chainId: resolvedChainId,
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Decrypt service error:', errorText);
-      console.error('Request details:', { contentId, requesterAddress, url: `${encryptionServiceUrl}/decrypt-for-download` });
-      
+      console.error('Request details:', {
+        contentId,
+        requesterAddress,
+        url: `${encryptionServiceUrl}/decrypt-for-download`,
+      });
+
       // Try to parse error message
       let errorMessage = 'Failed to decrypt asset';
       try {
@@ -71,15 +73,18 @@ export async function POST(request: NextRequest) {
         // If not JSON, use the raw text
         errorMessage = errorText || errorMessage;
       }
-      
+
       // Handle specific error cases
       if (response.status === 403) {
         return NextResponse.json(
-          { error: 'Purchase verification failed. You must purchase this content first.' },
+          {
+            error:
+              'Purchase verification failed. You must purchase this content first.',
+          },
           { status: 403 }
         );
       }
-      
+
       return NextResponse.json(
         { error: errorMessage },
         { status: response.status }
@@ -88,12 +93,14 @@ export async function POST(request: NextRequest) {
 
     // The encryption service returns the decrypted file as a stream
     // We need to pass it through with the correct headers
-    const contentType = response.headers.get('content-type') || 'application/octet-stream';
-    const contentDisposition = response.headers.get('content-disposition') || 'attachment';
-    
+    const contentType =
+      response.headers.get('content-type') || 'application/octet-stream';
+    const contentDisposition =
+      response.headers.get('content-disposition') || 'attachment';
+
     // Get the file data
     const fileBuffer = await response.arrayBuffer();
-    
+
     // Return the file with appropriate headers
     return new NextResponse(fileBuffer, {
       headers: {
@@ -101,7 +108,6 @@ export async function POST(request: NextRequest) {
         'Content-Disposition': contentDisposition,
       },
     });
-    
   } catch (error) {
     console.error('Request decrypt error:', error);
     return NextResponse.json(

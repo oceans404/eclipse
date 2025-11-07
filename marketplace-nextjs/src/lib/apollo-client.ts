@@ -12,7 +12,7 @@ const getGraphQLEndpoint = () => {
   // In development, use direct endpoint
   return (
     process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ||
-    'https://indexer.dev.hyperindex.xyz/1f84b17/v1/graphql'
+    'https://indexer.dev.hyperindex.xyz/e322c4a/v1/graphql'
   );
 };
 

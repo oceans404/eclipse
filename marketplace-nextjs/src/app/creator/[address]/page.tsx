@@ -391,9 +391,9 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                               e.currentTarget.style.borderColor = '#e0e0e0';
                               e.currentTarget.style.color = '#666';
                             }}
-                            title="View on Etherscan"
+                            title="View on BaseScan"
                           >
-                            View onchain →
+                            View on BaseScan →
                           </a>
                         </div>
                       </div>

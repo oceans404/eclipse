@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUsdcAllowance, useHasPaid } from '@/hooks/useContract';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { formatUnits, parseUnits } from 'viem';
-import { USDC_DECIMALS } from '@/lib/config';
+import { parseUnits } from 'viem';
+import { EXPLORER_URL, USDC_DECIMALS } from '@/lib/config';
 import { CONTRACTS } from '@/lib/contracts';
 
 interface PurchaseButtonProps {
@@ -97,6 +97,14 @@ export function PurchaseButton({
     }
   };
 
+  const isLoading =
+    isApprovalPending ||
+    isApprovalConfirming ||
+    isPurchasePending ||
+    isPurchaseConfirming;
+  const error = approvalError || purchaseError;
+  const hash = step === 'approving' ? approvalHash : purchaseHash;
+
   // Effect to handle the approval confirmation and trigger the purchase
   React.useEffect(() => {
     const handleApprovalConfirmed = async () => {
@@ -142,6 +150,12 @@ export function PurchaseButton({
       onPurchaseSuccess?.();
     }
   }, [isPurchaseConfirmed, step, onPurchaseSuccess]);
+  React.useEffect(() => {
+    if (error) {
+      setStep('idle');
+      setShouldAutoPurchase(false);
+    }
+  }, [error]);
 
   // If user already owns this product
   if (hasPaid) {
@@ -231,17 +245,12 @@ export function PurchaseButton({
     return `Purchase for ${price} USDC`;
   };
 
-  const isLoading =
-    isApprovalPending ||
-    isApprovalConfirming ||
-    isPurchasePending ||
-    isPurchaseConfirming;
-  const error = approvalError || purchaseError;
-  const hash = step === 'approving' ? approvalHash : purchaseHash;
-
   // Helper function to get user-friendly error messages
-  const getErrorMessage = (error: any) => {
-    const message = error?.message || '';
+  const getErrorMessage = (error: unknown) => {
+    const message =
+      typeof error === 'object' && error && 'message' in error
+        ? String((error as { message?: string }).message || '')
+        : '';
 
     if (message.includes('User rejected') || message.includes('User denied')) {
       return 'Transaction was cancelled by user';
@@ -263,9 +272,77 @@ export function PurchaseButton({
       return 'You have already purchased this product';
     }
 
+    if (message.toLowerCase().includes('execution reverted')) {
+      const match = message.match(/execution reverted:?([^"]+)?/i);
+      const reason = match?.[1]?.trim();
+      return reason
+        ? `Transaction reverted: ${reason}`
+        : 'Transaction reverted on-chain. Please verify requirements and try again.';
+    }
+
     // For other errors, show a generic message
     return 'Transaction failed - please try again';
   };
+
+  const statusBanner =
+    error || hash || isLoading ? (
+      <div
+        style={{
+          marginTop: '0.75rem',
+          padding: '0.75rem 1rem',
+          borderRadius: '0.5rem',
+          border: `1px solid ${error ? '#f87171' : '#e0e0e0'}`,
+          backgroundColor: error ? '#fef2f2' : '#f8f8f6',
+          fontFamily: 'var(--font-inter)',
+          fontSize: '0.8125rem',
+          color: error ? '#7f1d1d' : '#444',
+          width: '100%',
+        }}
+      >
+        {error && (
+          <div style={{ marginBottom: hash ? '0.5rem' : 0 }}>
+            <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>
+              Transaction failed
+            </div>
+            <div>{getErrorMessage(error)}</div>
+          </div>
+        )}
+        {isLoading && (
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <span
+              style={{
+                width: '0.75rem',
+                height: '0.75rem',
+                borderRadius: '50%',
+                border: '2px solid #D97757',
+                borderTopColor: 'transparent',
+                animation: 'spin 1s linear infinite',
+              }}
+            ></span>
+            <span>
+              {step === 'approving'
+                ? 'Waiting for USDC approval to confirm...'
+                : 'Waiting for purchase transaction to confirm...'}
+            </span>
+          </div>
+        )}
+        {!error && hash && !isLoading && (
+          <div>
+            <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>
+              {step === 'approving' ? 'Approval' : 'Purchase'} submitted
+            </div>
+            <a
+              href={`${EXPLORER_URL}/tx/${hash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#D97757', textDecoration: 'none' }}
+            >
+              View on explorer →
+            </a>
+          </div>
+        )}
+      </div>
+    ) : null;
 
   return (
     <div
@@ -273,64 +350,7 @@ export function PurchaseButton({
         compact ? {} : { display: 'flex', flexDirection: 'column', gap: '1rem' }
       }
     >
-      {/* Transaction Status */}
-      {!compact && (error || hash) && (
-        <div
-          style={{
-            padding: '1rem',
-            border: '1px solid #e0e0e0',
-            fontFamily: 'var(--font-inter)',
-            fontSize: '0.875rem',
-          }}
-        >
-          {error && (
-            <div style={{ color: '#1a1a1a' }}>
-              <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>
-                Transaction failed:
-              </div>
-              <div style={{ color: '#666' }}>{getErrorMessage(error)}</div>
-            </div>
-          )}
-          {hash && (
-            <div>
-              <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>
-                {step === 'approving' ? 'Approval' : 'Purchase'} transaction
-                submitted
-                {step === 'approving' && !hasEnoughAllowance && (
-                  <span
-                    style={{
-                      color: '#D97757',
-                      fontSize: '0.8125rem',
-                      display: 'block',
-                      marginTop: '0.25rem',
-                      fontWeight: 400,
-                    }}
-                  >
-                    → Purchase will start automatically after approval
-                  </span>
-                )}
-              </div>
-              <a
-                href={`https://sepolia.etherscan.io/tx/${hash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  color: '#D97757',
-                  textDecoration: 'none',
-                  display: 'inline-block',
-                  borderBottom: '1px solid #D97757',
-                  paddingBottom: '0.125rem',
-                  transition: 'opacity 200ms',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.7')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-              >
-                View Onchain →
-              </a>
-            </div>
-          )}
-        </div>
-      )}
+      {statusBanner}
 
       {/* Purchase Button */}
       <button

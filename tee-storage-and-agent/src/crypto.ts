@@ -1,4 +1,5 @@
 import { randomBytes, createCipheriv, createDecipheriv } from 'crypto';
+import { config } from './config.js';
 
 // Encryption configuration
 const ALGORITHM = 'aes-256-gcm';
@@ -20,13 +21,10 @@ export class CryptoService {
   private masterKey: Buffer;
   private keyVersion = 'v1';
 
-  constructor() {
-    // Load master key from environment
-    const masterKeyHex = process.env.MASTER_KEY;
+  constructor(masterKeyHex: string = config.security.masterKey) {
     if (!masterKeyHex || masterKeyHex.length !== MASTER_KEY_LENGTH * 2) {
       throw new Error('MASTER_KEY must be exactly 64 hex characters (32 bytes)');
     }
-    
     this.masterKey = Buffer.from(masterKeyHex, 'hex');
   }
 

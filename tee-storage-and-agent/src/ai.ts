@@ -1,5 +1,6 @@
 import { google } from '@ai-sdk/google';
 import { generateText, type ModelMessage } from 'ai';
+import { config } from './config.js';
 
 const SYSTEM_PROMPT = `You are a helpful AI assistant that can discuss the contents of documents.
 
@@ -17,14 +18,9 @@ export class AIService {
   private model;
 
   constructor() {
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        'GOOGLE_GENERATIVE_AI_API_KEY environment variable is required'
-      );
+    if (!config.ai.apiKey) {
+      throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is required');
     }
-
-    // Initialize Google Gemini model - v5 format
     this.model = google('gemini-2.0-flash');
     console.log('[AI] Initialized with Google Gemini');
   }

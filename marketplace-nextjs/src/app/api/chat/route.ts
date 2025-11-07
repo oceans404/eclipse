@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const encryptionServiceUrl = process.env.ENCRYPTION_SERVICE_URL;
-    
+    const encryptionServiceUrl = process.env.NILCC_SERVICE_URL;
+
     if (!encryptionServiceUrl) {
       return NextResponse.json(
         { error: 'Encryption service not configured' },
@@ -12,10 +12,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Validate required fields
     const { contentId, userMessage } = body;
-    
+
     if (!contentId || !userMessage) {
       return NextResponse.json(
         { error: 'Missing required fields: contentId, userMessage' },
@@ -45,10 +45,9 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await response.json();
-    
+
     // Return the AI response
     return NextResponse.json(result);
-    
   } catch (error) {
     console.error('AI chat error:', error);
     return NextResponse.json(

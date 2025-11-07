@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ||
-  'https://indexer.dev.hyperindex.xyz/1f84b17/v1/graphql';
+  'https://indexer.dev.hyperindex.xyz/e322c4a/v1/graphql';
 
 export async function POST(request: NextRequest) {
   try {

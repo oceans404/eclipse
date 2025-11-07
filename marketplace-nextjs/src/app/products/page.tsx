@@ -15,7 +15,8 @@ import { CreatorProfile } from '@/lib/db';
 export default function ProductsPage() {
   const [sortBy, setSortBy] = useState<'price' | 'newest' | 'oldest'>('newest');
   const [searchTerm, setSearchTerm] = useState('');
-  const [requiresVerificationOnly, setRequiresVerificationOnly] = useState(false);
+  const [requiresVerificationOnly, setRequiresVerificationOnly] =
+    useState(false);
   const [creatorProfiles, setCreatorProfiles] = useState<
     Map<string, CreatorProfile>
   >(new Map());
@@ -111,8 +112,7 @@ export default function ProductsPage() {
     fetchProductTitles();
   }, [products]);
 
-  const isLoading =
-    loading || (requiresVerificationOnly && loadingVerified);
+  const isLoading = loading || (requiresVerificationOnly && loadingVerified);
 
   if (isLoading) {
     return (
@@ -141,7 +141,8 @@ export default function ProductsPage() {
     );
   }
 
-  const activeError = error || (requiresVerificationOnly ? verifiedError : undefined);
+  const activeError =
+    error || (requiresVerificationOnly ? verifiedError : undefined);
 
   if (activeError) {
     return (
@@ -241,17 +242,7 @@ export default function ProductsPage() {
             <div className="hero-label" style={{ marginBottom: '.5rem' }}>
               Browse Marketplace
             </div>
-            <h1
-              style={{
-                fontSize: '2.5rem',
-                fontWeight: 300,
-                lineHeight: 1.1,
-                marginBottom: '1rem',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Private data, verified by AI.
-            </h1>
+
             <p
               style={{
                 fontSize: '1rem',

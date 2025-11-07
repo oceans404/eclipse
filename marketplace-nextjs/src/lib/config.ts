@@ -11,9 +11,15 @@ export const CHAIN_CONFIG = {
   }
 } as const;
 
+const DEFAULT_NILCC_VERIFIED_LIST_ADDRESS =
+  '0x424a83804df6a77280847e9d20feb2766dc5fa60';
+
 export const CONTRACT_ADDRESSES = {
   PRODUCT_PAYMENT_SERVICE: '0x9d0948391f7e84fcac40b8e792a406ac7c4d591f' as const,
   USDC: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const,
+  NILCC_VERIFIED_LIST: (process.env
+    .NEXT_PUBLIC_NILCC_VERIFIED_LIST_ADDRESS ||
+    DEFAULT_NILCC_VERIFIED_LIST_ADDRESS) as `0x${string}`,
 } as const;
 
 // Wagmi configuration for wallet interactions

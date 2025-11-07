@@ -1,10 +1,12 @@
 import { createPublicClient, http, parseAbi, type Address } from 'viem';
 import { baseSepolia } from 'viem/chains';
+import { config } from './config.js';
 
 // ProductPaymentService ABI - only the parts we need
 const PAYMENT_SERVICE_ABI = parseAbi([
-  'event PaymentReceived(uint256 indexed productId, uint256 amount, address indexed buyer, uint256 timestamp)',
+  'event PaymentReceived(address indexed payer, uint256 indexed productId, uint256 amount)',
   'function products(uint256 productId) view returns (uint256 price, address creator, string contentId, bool mustBeVerified, bool exists)',
+  'function getProduct(uint256 productId) view returns (uint256 price, address creator, string contentId, bool mustBeVerified, bool exists)',
   'function hasPaid(address user, uint256 productId) view returns (bool)',
 ]);
 
@@ -13,24 +15,11 @@ export class BlockchainService {
   private contractAddress: Address;
 
   constructor() {
-    const rpcUrl = process.env.BASE_RPC_URL;
-    const contractAddress = process.env.PAYMENT_SERVICE_ADDRESS;
+    this.contractAddress = config.blockchain.paymentServiceAddress as Address;
 
-    if (!rpcUrl) {
-      throw new Error('BASE_RPC_URL environment variable is required');
-    }
-    if (!contractAddress) {
-      throw new Error(
-        'PAYMENT_SERVICE_ADDRESS environment variable is required'
-      );
-    }
-
-    this.contractAddress = contractAddress as Address;
-
-    // Initialize Viem client
     this.client = createPublicClient({
       chain: baseSepolia,
-      transport: http(rpcUrl),
+      transport: http(config.blockchain.rpcUrl),
     });
   }
 

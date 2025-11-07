@@ -164,6 +164,19 @@ export function Navbar() {
               >
                 Create
               </Link>
+              <Link
+                href="/user-verification"
+                style={{
+                  textDecoration: 'none',
+                  color: '#1a1a1a',
+                  transition: 'color 200ms',
+                  fontWeight: 400,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#D97757')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#1a1a1a')}
+              >
+                User Verification
+              </Link>
               {hasCreatedProducts && (
                 <Link
                   href={`/creator/${user?.wallet?.address}`}
@@ -221,7 +234,7 @@ export function Navbar() {
           {/* Get USDC Link - shows when balance is 0 */}
           {authenticated && usdcBalance?.value === BigInt(0) && (
             <a
-              href="https://www.coinbase.com/faucets/base-sepolia-usdc"
+              href="https://faucet.circle.com/"
               target="_blank"
               rel="noopener noreferrer"
               style={{

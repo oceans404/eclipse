@@ -339,6 +339,23 @@ export const USDC_ABI = [
   },
 ] as const;
 
+export const NILCC_VERIFIED_LIST_ABI = [
+  {
+    inputs: [{ internalType: 'address', name: 'addressToCheck', type: 'address' }],
+    name: 'isOnVerifiedList',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'addressToCheck', type: 'address' }],
+    name: 'getIdentifier',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
 // Contract configuration objects
 export const CONTRACTS = {
   PRODUCT_PAYMENT_SERVICE: {

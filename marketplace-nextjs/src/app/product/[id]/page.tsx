@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use, useState, useEffect } from 'react';
+import React, { use, useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/navigation';
 import { GET_PRODUCT_DETAILS, GET_PRICE_HISTORY } from '@/lib/queries';
@@ -13,8 +13,11 @@ import { useAssetMetadata } from '@/hooks/useAssetMetadata';
 import { useHasPaid } from '@/hooks/useContract';
 import { usePrivy } from '@privy-io/react-auth';
 import { ContentViewer } from '@/components/ContentViewer';
+import Link from 'next/link';
 import { ChatInterface } from '@/components/ChatInterface';
-import { EXPLORER_URL } from '@/lib/config';
+import { EXPLORER_URL, CONTRACT_ADDRESSES } from '@/lib/config';
+import { useReadContract } from 'wagmi';
+import { NILCC_VERIFIED_LIST_ABI } from '@/lib/contracts';
 
 interface ProductPageProps {
   params: Promise<{
@@ -50,12 +53,38 @@ export default function ProductPage({ params }: ProductPageProps) {
   // Use the asset metadata hook
   const product = data?.Product?.[0];
   const requiresVerification = Boolean(product?.mustBeVerified);
+  const walletAddress = user?.wallet?.address;
+
+  const { data: verifiedStatus } = useReadContract({
+    address: CONTRACT_ADDRESSES.NILCC_VERIFIED_LIST,
+    abi: NILCC_VERIFIED_LIST_ABI,
+    functionName: 'isOnVerifiedList',
+    args: walletAddress ? [walletAddress as `0x${string}`] : undefined,
+    query: {
+      enabled: requiresVerification && Boolean(walletAddress),
+      refetchOnWindowFocus: false,
+    },
+  });
+
+  const isVerified = requiresVerification
+    ? Boolean(verifiedStatus)
+    : true;
+  const needsVerification =
+    requiresVerification && (!walletAddress || !isVerified);
   const { getTitle, getDescription, metadata } = useAssetMetadata(
     product?.contentId || null
   );
 
   // Check if user owns this product
-  const { data: hasPaid } = useHasPaid(user?.wallet?.address, productId);
+  const { data: hasPaidData, refetch: refetchHasPaid } = useHasPaid(
+    walletAddress,
+    productId
+  );
+  const [hasPurchased, setHasPurchased] = useState(false);
+
+  useEffect(() => {
+    setHasPurchased(Boolean(hasPaidData));
+  }, [hasPaidData]);
 
   // Check if user created this product
   const isCreator =
@@ -64,11 +93,11 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   // Set default tab based on access
   useEffect(() => {
-    if (!tabInitialized && product && (hasPaid || isCreator)) {
+    if (!tabInitialized && product && (hasPurchased || isCreator)) {
       setActiveTab('content');
       setTabInitialized(true);
     }
-  }, [hasPaid, isCreator, product, tabInitialized]);
+  }, [hasPurchased, isCreator, product, tabInitialized]);
 
   // Fetch creator profile when product data is loaded
   useEffect(() => {
@@ -88,6 +117,13 @@ export default function ProductPage({ params }: ProductPageProps) {
 
     fetchCreatorProfile();
   }, [data]);
+
+  const handlePurchaseSuccess = useCallback(() => {
+    setHasPurchased(true);
+    setActiveTab('content');
+    setTabInitialized(true);
+    refetchHasPaid?.();
+  }, [refetchHasPaid]);
 
   if (isNaN(productId)) {
     return (
@@ -228,6 +264,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       payment.payer.toLowerCase() === user?.wallet?.address?.toLowerCase()
   );
 
+
   // Build complete price history
   const priceHistory = [];
   if (priceHistoryData?.added?.[0]) {
@@ -314,7 +351,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   right: '1.5rem',
                 }}
               >
-                {!isCreator && !hasPaid ? (
+                {!isCreator && !hasPurchased ? (
                   <div
                     style={{
                       display: 'flex',
@@ -322,45 +359,83 @@ export default function ProductPage({ params }: ProductPageProps) {
                       alignItems: 'center',
                     }}
                   >
-                    <PurchaseButton
-                      productId={product.productId}
-                      price={
-                        product.currentPrice
-                          ? (Number(product.currentPrice) / 1e6).toFixed(2)
-                          : '0.00'
-                      }
-                      onPurchaseSuccess={() => {
-                        window.location.reload();
-                      }}
-                      compact={true}
-                    />
-                    <p
-                      style={{
-                        fontFamily: 'var(--font-inter)',
-                        fontSize: '0.7rem',
-                        color: '#666',
-                        marginTop: '0.5rem',
-                        textAlign: 'center',
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      Buy in 2 steps: <br /> 1. Approve USDC spending cap{' '}
-                      <br /> 2. Purchase product
-                    </p>
-                    {requiresVerification && (
-                      <p
-                        style={{
-                          fontFamily: 'var(--font-inter)',
-                          fontSize: '0.7rem',
-                          color: '#999',
-                          marginTop: '0.25rem',
-                          textAlign: 'center',
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        Unlocks once Base Sepolia USDC payment is indexed and
-                        verification completes.
-                      </p>
+                    {needsVerification ? (
+                      <>
+                        <Link
+                          href="/user-verification"
+                          style={{
+                            backgroundColor: '#1a1a1a',
+                            color: '#fafaf8',
+                            border: 'none',
+                            padding: '0.6rem 1.5rem',
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.8rem',
+                            fontWeight: 500,
+                            textDecoration: 'none',
+                            borderRadius: '4px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                          }}
+                        >
+                          Verify Age to Purchase
+                        </Link>
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.7rem',
+                            color: '#999',
+                            marginTop: '0.5rem',
+                            textAlign: 'center',
+                            lineHeight: 1.4,
+                            maxWidth: '12rem',
+                          }}
+                        >
+                          Complete verification to unlock checkout for this
+                          listing.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <PurchaseButton
+                          productId={product.productId}
+                          price={
+                            product.currentPrice
+                              ? (Number(product.currentPrice) / 1e6).toFixed(2)
+                              : '0.00'
+                          }
+                          onPurchaseSuccess={handlePurchaseSuccess}
+                          compact={true}
+                        />
+                        <p
+                          style={{
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.7rem',
+                            color: '#666',
+                            marginTop: '0.5rem',
+                            textAlign: 'center',
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          Buy in 2 steps: <br /> 1. Approve USDC spending cap{' '}
+                          <br /> 2. Purchase product
+                        </p>
+                        {requiresVerification && (
+                          <p
+                            style={{
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '0.7rem',
+                              color: '#999',
+                              marginTop: '0.25rem',
+                              textAlign: 'center',
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            Unlocks once Base Sepolia USDC payment is indexed
+                            and verification completes.
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 ) : isCreator ? (
@@ -404,7 +479,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                       </span>
                     </div>
                   </div>
-                ) : hasPaid && userPurchase ? (
+                ) : hasPurchased && userPurchase ? (
                   <div
                     style={{
                       display: 'flex',
@@ -511,7 +586,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     flexShrink: 0,
                   }}
                 >
-                  {isCreator || hasPaid ? '🌔' : '🌑'}
+                  {isCreator || hasPurchased ? '🌔' : '🌑'}
                 </div>
 
                 {/* Title and Info */}
@@ -989,7 +1064,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
                     {/* Purchase Section - Bottom aligned */}
                     <div style={{ marginTop: 'auto' }}>
-                      {!isCreator && !hasPaid ? (
+                      {!isCreator && !hasPurchased ? (
                         <div
                           style={{
                             padding: '1.5rem',
@@ -1020,9 +1095,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                                   )
                                 : '0.00'
                             }
-                            onPurchaseSuccess={() => {
-                              window.location.reload();
-                            }}
+                            onPurchaseSuccess={handlePurchaseSuccess}
                           />
                           <p
                             style={{
@@ -1093,7 +1166,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                                 content
                               </p>
                             </>
-                          ) : hasPaid ? (
+                          ) : hasPurchased ? (
                             <>
                               <div
                                 style={{
@@ -1531,7 +1604,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   )}
                 </button>
 
-                {(hasPaid || isCreator) && (
+                {(hasPurchased || isCreator) && (
                   <button
                     onClick={() => setActiveTab('content')}
                     style={{
@@ -1590,7 +1663,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                       productTitle={getTitle(product.contentId)}
                     />
                   </div>
-                ) : hasPaid || isCreator ? (
+                ) : hasPurchased || isCreator ? (
                   <div>
                     <ContentViewer
                       contentId={product.contentId}

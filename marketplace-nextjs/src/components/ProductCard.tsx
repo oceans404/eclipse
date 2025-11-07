@@ -118,25 +118,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           e.currentTarget.style.borderColor = '#e0e0e0';
         }}
       >
-        {mustBeVerified && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '1rem',
-              right: '1rem',
-              backgroundColor: 'rgba(26, 26, 26, 0.9)',
-              color: '#fafaf8',
-              padding: '0.35rem 0.9rem',
-              borderRadius: '999px',
-              fontSize: '0.65rem',
-              fontFamily: 'var(--font-inter)',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
-            Verify to unlock
-          </div>
-        )}
         {/* Product ID Badge */}
         <div
           style={{
@@ -197,23 +178,42 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </h3>
 
           {/* Description */}
-          <p
+        <p
+          style={{
+            fontSize: '0.8125rem',
+            color: '#666',
+            marginBottom: '0.75rem',
+            lineHeight: 1.4,
+            maxHeight: '2.8rem',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            padding: '0 0.5rem',
+          }}
+        >
+          {getDescription()}
+        </p>
+        {mustBeVerified && (
+          <div
             style={{
-              fontSize: '0.8125rem',
-              color: '#666',
-              marginBottom: '0.75rem',
-              lineHeight: 1.4,
-              maxHeight: '2.8rem',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              padding: '0 0.5rem',
+              fontFamily: 'var(--font-inter)',
+              fontSize: '0.65rem',
+              color: '#D97757',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              border: '1px solid rgba(217, 119, 87, 0.4)',
+              backgroundColor: 'rgba(217, 119, 87, 0.08)',
+              padding: '0.35rem 0.65rem',
+              borderRadius: '4px',
+              margin: '-0.25rem 0 0.85rem',
+              textAlign: 'center',
             }}
           >
-            {getDescription()}
-          </p>
+            🔐 Verification required
+          </div>
+        )}
 
           {/* Creator */}
           <div

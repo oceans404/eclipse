@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/graphql-proxy',
-        destination: 'https://indexer.dev.hyperindex.xyz/1f84b17/v1/graphql',
+        destination: 'https://indexer.dev.hyperindex.xyz/e322c4a/v1/graphql',
       },
     ];
   },

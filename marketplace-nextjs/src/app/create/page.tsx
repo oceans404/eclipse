@@ -1078,7 +1078,7 @@ export default function CreateProductPage() {
                     {hash && (
                       <div style={{ marginTop: '0.75rem' }}>
                         <a
-                          href={`https://sepolia.etherscan.io/tx/${hash}`}
+                          href={`${EXPLORER_URL}/tx/${hash}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
@@ -1088,7 +1088,7 @@ export default function CreateProductPage() {
                             paddingBottom: '0.125rem',
                           }}
                         >
-                          View on Etherscan →
+                          View on BaseScan →
                         </a>
                       </div>
                     )}
