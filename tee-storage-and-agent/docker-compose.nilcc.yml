@@ -5,7 +5,7 @@ version: '3.8'
 services:
   tee-storage-and-agent:
     image: node:20
-    container_name: eclipse-tee-storage-and-agent-dev
+    container_name: eclipse-tee-storage-and-agent-container
     working_dir: /app
 
     # Load sensitive vars from the repo .env (must live inside ${FILES})
