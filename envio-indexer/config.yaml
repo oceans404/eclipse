@@ -2,7 +2,7 @@
 name: eclipse-envio-indexer
 networks:
   - id: 84532
-    start_block: 33384799
+    start_block: 33388105
     rpc: https://sepolia.base.org
     contracts:
       - name: ProductPaymentService

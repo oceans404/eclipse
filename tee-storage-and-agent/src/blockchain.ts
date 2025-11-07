@@ -5,7 +5,7 @@ import { baseSepolia } from 'viem/chains';
 const PAYMENT_SERVICE_ABI = parseAbi([
   'event PaymentReceived(uint256 indexed productId, uint256 amount, address indexed buyer, uint256 timestamp)',
   'function products(uint256 productId) view returns (uint256 price, address creator, string contentId, bool mustBeVerified, bool exists)',
-  'function hasPaid(address user, uint256 productId) view returns (bool)'
+  'function hasPaid(address user, uint256 productId) view returns (bool)',
 ]);
 
 export class BlockchainService {
@@ -13,49 +13,56 @@ export class BlockchainService {
   private contractAddress: Address;
 
   constructor() {
-    const rpcUrl = process.env.BASE_SEPOLIA_RPC_URL;
+    const rpcUrl = process.env.BASE_RPC_URL;
     const contractAddress = process.env.PAYMENT_SERVICE_ADDRESS;
 
     if (!rpcUrl) {
-      throw new Error('BASE_SEPOLIA_RPC_URL environment variable is required');
+      throw new Error('BASE_RPC_URL environment variable is required');
     }
     if (!contractAddress) {
-      throw new Error('PAYMENT_SERVICE_ADDRESS environment variable is required');
+      throw new Error(
+        'PAYMENT_SERVICE_ADDRESS environment variable is required'
+      );
     }
 
     this.contractAddress = contractAddress as Address;
-    
+
     // Initialize Viem client
     this.client = createPublicClient({
       chain: baseSepolia,
-      transport: http(rpcUrl)
+      transport: http(rpcUrl),
     });
   }
 
   /**
    * Verify if a user has purchased a specific product
    */
-  async verifyPurchase(userAddress: string, productId: string): Promise<boolean> {
+  async verifyPurchase(
+    userAddress: string,
+    productId: string
+  ): Promise<boolean> {
     try {
-      console.log(`Verifying purchase for user ${userAddress}, product ${productId}`);
-      
+      console.log(
+        `Verifying purchase for user ${userAddress}, product ${productId}`
+      );
+
       // First check if this is the creator
       const product = await this.getProduct(productId);
       if (product.creator.toLowerCase() === userAddress.toLowerCase()) {
         console.log('User is the creator - access granted');
         return true;
       }
-      
+
       // Call the hasPaid function on the smart contract
-      const hasPurchased = await this.client.readContract({
+      const hasPurchased = (await this.client.readContract({
         address: this.contractAddress,
         abi: PAYMENT_SERVICE_ABI,
         functionName: 'hasPaid',
-        args: [userAddress as Address, BigInt(productId)]
-      }) as boolean;
+        args: [userAddress as Address, BigInt(productId)],
+      })) as boolean;
 
       console.log(`Purchase verification result: ${hasPurchased}`);
-      
+
       return hasPurchased;
     } catch (error) {
       console.error('Error verifying purchase:', error);
@@ -78,7 +85,7 @@ export class BlockchainService {
         address: this.contractAddress,
         abi: PAYMENT_SERVICE_ABI,
         functionName: 'products',
-        args: [BigInt(productId)]
+        args: [BigInt(productId)],
       });
 
       return {
@@ -86,7 +93,7 @@ export class BlockchainService {
         creator: result[1],
         contentId: result[2],
         mustBeVerified: result[3],
-        exists: result[4]
+        exists: result[4],
       };
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -97,17 +104,20 @@ export class BlockchainService {
   /**
    * Parse contentId to extract collection and record IDs
    */
-  parseContentId(contentId: string): { collectionId: string; recordId: string } {
+  parseContentId(contentId: string): {
+    collectionId: string;
+    recordId: string;
+  } {
     // Format: nillion://collectionId/recordId
     const match = contentId.match(/^nillion:\/\/([^\/]+)\/([^\/]+)$/);
-    
+
     if (!match) {
       throw new Error(`Invalid contentId format: ${contentId}`);
     }
 
     return {
       collectionId: match[1],
-      recordId: match[2]
+      recordId: match[2],
     };
   }
 }

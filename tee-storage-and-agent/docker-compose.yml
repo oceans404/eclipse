@@ -8,37 +8,37 @@ services:
     image: node:20
     container_name: eclipse-tee-storage-and-agent-dev
     working_dir: /app
-    
+
     environment:
       # Security keys
       - MASTER_KEY=${MASTER_KEY}
-      
+
       # Nillion configuration
       - NILLION_API_KEY=${NILLION_API_KEY}
       - NILLION_COLLECTION_ID=${NILLION_COLLECTION_ID}
-      
+
       # AI configuration
       - GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY}
-      
+
       # Blockchain configuration
-      - SEPOLIA_RPC_URL=${SEPOLIA_RPC_URL}
+      - RPC_URL=${RPC_URL}
       - PAYMENT_SERVICE_ADDRESS=${PAYMENT_SERVICE_ADDRESS}
-      
+
       # Vercel Blob
       - BLOB_READ_WRITE_TOKEN=${BLOB_READ_WRITE_TOKEN}
-      
+
       # Service configuration
       - NODE_ENV=development
       - PORT=3001
-    
+
     ports:
-      - "3001:3001"
-    
+      - '3001:3001'
+
     networks:
       - internal
-    
+
     restart: unless-stopped
-    
+
     # Volume mounts - using same pattern as nilCC for consistency
     # FILES=. for local development
     volumes:
@@ -46,18 +46,17 @@ services:
       - ${FILES}/package.json:/app/package.json
       - ${FILES}/package-lock.json:/app/package-lock.json
       - ${FILES}/tsconfig.json:/app/tsconfig.json
-      
+
       # Source directory for development
       - ${FILES}/src:/app/src
-      
+
       # Temporary processing directory
       - ${FILES}/temp:/app/temp
-    
+
     # Development command with TypeScript compilation and nodemon
     command: sh -c "cd /app && npm ci && npm run dev"
 
 networks:
   internal:
     name: eclipse-network-dev
-
 # No named volumes - everything mounted from host
