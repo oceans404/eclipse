@@ -31,6 +31,7 @@ ProductPaymentService.ProductAdded.handler(async ({ event, context }) => {
     price: event.params.price,
     creator: event.params.creator,
     contentId: event.params.contentId,
+    mustBeVerified: event.params.mustBeVerified,
     blockTimestamp: BigInt(event.block.timestamp),
   };
 
@@ -43,6 +44,7 @@ ProductPaymentService.ProductAdded.handler(async ({ event, context }) => {
     currentPrice: event.params.price,
     creator: event.params.creator,
     contentId: event.params.contentId,
+    mustBeVerified: event.params.mustBeVerified,
     createdAt: BigInt(event.block.timestamp),
     lastUpdatedAt: BigInt(event.block.timestamp),
     updateCount: 0,

@@ -1,9 +1,8 @@
 import assert from "assert";
-import { 
-  TestHelpers,
-  ProductPaymentService_PaymentReceived
-} from "generated";
-const { MockDb, ProductPaymentService } = TestHelpers;
+import generated from "generated";
+import type { ProductPaymentService_PaymentReceived } from "generated";
+
+const { MockDb, ProductPaymentService } = generated.TestHelpers;
 
 describe("ProductPaymentService contract PaymentReceived event tests", () => {
   // Create mock db
@@ -20,7 +19,7 @@ describe("ProductPaymentService contract PaymentReceived event tests", () => {
     });
 
     // Getting the actual entity from the mock database
-    let actualProductPaymentServicePaymentReceived = mockDbUpdated.entities.ProductPaymentService_PaymentReceived.get(
+    const actualProductPaymentServicePaymentReceived = mockDbUpdated.entities.ProductPaymentService_PaymentReceived.get(
       `${event.chainId}_${event.block.number}_${event.logIndex}`
     );
 
@@ -30,6 +29,9 @@ describe("ProductPaymentService contract PaymentReceived event tests", () => {
       payer: event.params.payer,
       productId: event.params.productId,
       amount: event.params.amount,
+      transactionHash: event.transaction.hash,
+      blockNumber: BigInt(event.block.number),
+      blockTimestamp: BigInt(event.block.timestamp),
     };
     // Asserting that the entity in the mock database is the same as the expected entity
     assert.deepEqual(actualProductPaymentServicePaymentReceived, expectedProductPaymentServicePaymentReceived, "Actual ProductPaymentServicePaymentReceived should be the same as the expectedProductPaymentServicePaymentReceived");

@@ -14,6 +14,7 @@ type ProductPaymentService_ProductAdded {
   price: BigInt!
   creator: String!
   contentId: String!
+  mustBeVerified: Boolean!
   blockTimestamp: BigInt!
 }
 
@@ -30,6 +31,7 @@ type Product {
   currentPrice: BigInt!
   creator: String!
   contentId: String!
+  mustBeVerified: Boolean!
   createdAt: BigInt!
   lastUpdatedAt: BigInt!
   updateCount: Int!

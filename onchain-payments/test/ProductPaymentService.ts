@@ -47,8 +47,40 @@ describe("ProductPaymentService", async function () {
 
     assert.equal(events.length, 3);
     assert.equal(events[0].args.productId, 1n);
+    assert.equal(events[0].args.mustBeVerified, false);
     assert.equal(events[1].args.productId, 2n);
+    assert.equal(events[1].args.mustBeVerified, false);
     assert.equal(events[2].args.productId, 3n);
+    assert.equal(events[2].args.mustBeVerified, false);
+  });
+  it("Should emit ProductAdded with correct mustBeVerified flag", async function () {
+    const { paymentService } = await deployService();
+    const deploymentBlockNumber = await publicClient.getBlockNumber();
+
+    const [creator] = await viem.getWalletClients();
+
+    await paymentService.write.addProduct(
+      [10n, 100000000000000000000n, "nillion://open-access", false],
+      { account: creator.account }
+    );
+    await paymentService.write.addProduct(
+      [11n, 120000000000000000000n, "nillion://verified-access", true],
+      { account: creator.account }
+    );
+
+    const events = await publicClient.getContractEvents({
+      address: paymentService.address,
+      abi: paymentService.abi,
+      eventName: "ProductAdded",
+      fromBlock: deploymentBlockNumber,
+      strict: true,
+    });
+
+    assert.equal(events.length, 2);
+    assert.equal(events[0].args.productId, 10n);
+    assert.equal(events[0].args.mustBeVerified, false);
+    assert.equal(events[1].args.productId, 11n);
+    assert.equal(events[1].args.mustBeVerified, true);
   });
 
   it("Should track total revenue from PaymentReceived events", async function () {

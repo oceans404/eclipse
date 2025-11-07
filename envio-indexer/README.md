@@ -1,6 +1,6 @@
 # ProductPaymentService Indexer
 
-[Envio HyperIndex indexer](https://docs.envio.dev/docs/HyperIndex/overview) for the ProductPaymentService contract on Ethereum Sepolia testnet. See [ProductPaymentService contracts](../onchain-payments/)
+[Envio HyperIndex indexer](https://docs.envio.dev/docs/HyperIndex/overview) for the ProductPaymentService contract on Base Sepolia testnet. See [ProductPaymentService contracts](../onchain-payments/)
 
 ## Live Deployment
 
@@ -8,8 +8,8 @@
 
 ## Contract Info
 
-- **ProductPaymentService Address**: `0x9c91a92cf1cd0b94fb632292fe63ed966833518d`
-- **Network**: Sepolia (Chain ID: 11155111)
+- **ProductPaymentService Address**: `0x9d0948391f7e84fcac40b8e792a406ac7c4d591f`
+- **Network**: Base Sepolia (Chain ID: 84532)
 - **HyperSync**: Enabled
 
 ## Features

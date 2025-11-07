@@ -47,7 +47,7 @@ contract ProductPaymentService {
     mapping(address => mapping(uint256 => bool)) public hasPaid;
     
     // Events
-    event ProductAdded(uint256 indexed productId, uint256 price, address indexed creator, string contentId);
+    event ProductAdded(uint256 indexed productId, uint256 price, address indexed creator, string contentId, bool mustBeVerified);
     event ProductUpdated(uint256 indexed productId, uint256 newPrice);
     event PaymentReceived(address indexed payer, uint256 indexed productId, uint256 amount);
     
@@ -87,7 +87,7 @@ contract ProductPaymentService {
             exists: true
         });
         
-        emit ProductAdded(productId, price, msg.sender, contentId);
+        emit ProductAdded(productId, price, msg.sender, contentId, mustBeVerified);
     }
     
     /**

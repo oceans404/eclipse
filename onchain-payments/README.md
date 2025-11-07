@@ -15,7 +15,7 @@ Smart contract infrastructure for Eclipse, a private data marketplace
 - NilccVerifiedList (current deployment): [`0x424a83804df6a77280847e9d20feb2766dc5fa60`](https://sepolia.basescan.org/address/0x424a83804df6a77280847e9d20feb2766dc5fa60#code)
   - Owner: `0x3a8f416b53164e6b73b298a1b58fef5338954066`
   - Initial Manager: `0x55b9d16d93544cdccfe54bdbcf4eed7cefac1ed0`
-- ProductPaymentService: [`0xacec86a66312c15fbc7a045664923cdfdd4e1c60`](https://sepolia.basescan.org/address/0xacec86a66312c15fbc7a045664923cdfdd4e1c60#code)
+- ProductPaymentService: [`0x9d0948391f7e84fcac40b8e792a406ac7c4d591f`](https://sepolia.basescan.org/address/0x9d0948391f7e84fcac40b8e792a406ac7c4d591f#code)
 
 ### ProductPaymentService Highlights
 

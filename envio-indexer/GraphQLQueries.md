@@ -27,6 +27,7 @@ Use the `Product` entity for most queries. It tracks:
 - Current price (always up-to-date)
 - Creator address
 - Content ID
+- `mustBeVerified` flag (whether a buyer must be on the verified list)
 - Update count (how many times price changed)
 - Timestamps
 
@@ -122,6 +123,28 @@ query UpdatedProducts {
   }
 }
 ```
+
+### Filter by Verification Requirement
+
+```graphql
+query ProductsRequiringVerification {
+  Product(where: { mustBeVerified: { _eq: true } }) {
+    productId
+    contentId
+    creator
+  }
+}
+
+query ProductsOpenToAll {
+  Product(where: { mustBeVerified: { _eq: false } }) {
+    productId
+    contentId
+    creator
+  }
+}
+```
+
+No additional configuration is required—`mustBeVerified` is indexed on every `Product` entity as it streams in from `ProductAdded` events, so standard GraphQL filters can segment verified-only vs open products.
 
 ### Product Statistics
 

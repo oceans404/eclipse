@@ -1,16 +1,17 @@
 # yaml-language-server: $schema=./node_modules/envio/evm.schema.json
 name: eclipse-envio-indexer
 networks:
-  - id: 11155111
-    start_block: 9482667
+  - id: 84532
+    start_block: 33384799
+    rpc: https://sepolia.base.org
     contracts:
       - name: ProductPaymentService
         address:
-          - 0x9c91a92cF1cd0B94Fb632292Fe63eD966833518d
+          - 0x9d0948391f7e84fcac40b8e792a406ac7c4d591f
         handler: src/EventHandlers.ts
         events:
           - event: PaymentReceived(address indexed payer, uint256 indexed productId, uint256 amount)
-          - event: ProductAdded(uint256 indexed productId, uint256 price, address indexed creator, string contentId)
+          - event: ProductAdded(uint256 indexed productId, uint256 price, address indexed creator, string contentId, bool mustBeVerified)
           - event: ProductUpdated(uint256 indexed productId, uint256 newPrice)
 field_selection:
   transaction_fields:
