@@ -12,30 +12,6 @@ services:
     env_file:
       - ${FILES}/tee.env
 
-    environment:
-      # Security keys
-      - MASTER_KEY=${MASTER_KEY}
-
-      # Nillion configuration
-      - NILLION_API_KEY=${NILLION_API_KEY}
-      - NILLION_COLLECTION_ID=${NILLION_COLLECTION_ID}
-
-      # AI configuration
-      - GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY}
-
-      # Blockchain configuration
-      - RPC_URL=${RPC_URL}
-      - PAYMENT_SERVICE_ADDRESS=${PAYMENT_SERVICE_ADDRESS}
-      - VERIFIED_LIST_CONTRACT_ADDRESS=${VERIFIED_LIST_CONTRACT_ADDRESS}
-      - VERIFIED_LIST_MANAGER_PRIVATE_KEY=${VERIFIED_LIST_MANAGER_PRIVATE_KEY}
-
-      # Vercel Blob
-      - BLOB_READ_WRITE_TOKEN=${BLOB_READ_WRITE_TOKEN}
-
-      # Service configuration
-      - NODE_ENV=development
-      - PORT=3001
-
     ports:
       - '3001:3001'
 

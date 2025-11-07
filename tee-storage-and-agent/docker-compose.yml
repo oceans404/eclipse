@@ -1,6 +1,5 @@
-# Local Development Docker Compose
-# Use: FILES=. docker-compose up
-
+# nilCC-Compliant Docker Compose Configuration
+# Use: FILES=. docker-compose -f docker-compose.nilcc.yml up
 version: '3.8'
 
 services:
@@ -9,56 +8,41 @@ services:
     container_name: eclipse-tee-storage-and-agent-container
     working_dir: /app
 
-    environment:
-      # Security keys
-      - MASTER_KEY=${MASTER_KEY}
-
-      # Nillion configuration
-      - NILLION_API_KEY=${NILLION_API_KEY}
-      - NILLION_COLLECTION_ID=${NILLION_COLLECTION_ID}
-
-      # AI configuration
-      - GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY}
-
-      # Blockchain configuration
-      - RPC_URL=${RPC_URL}
-      - PAYMENT_SERVICE_ADDRESS=${PAYMENT_SERVICE_ADDRESS}
-      - VERIFIED_LIST_CONTRACT_ADDRESS=${VERIFIED_LIST_CONTRACT_ADDRESS}
-      - VERIFIED_LIST_MANAGER_PRIVATE_KEY=${VERIFIED_LIST_MANAGER_PRIVATE_KEY}
-
-      # Vercel Blob
-      - BLOB_READ_WRITE_TOKEN=${BLOB_READ_WRITE_TOKEN}
-
-      # Service configuration
-      - NODE_ENV=development
-      - PORT=3001
+    # Load sensitive vars from the repo .env (must live inside ${FILES})
+    env_file:
+      - ${FILES}/tee.env
 
     ports:
       - '3001:3001'
 
-    networks:
-      - internal
-
     restart: unless-stopped
 
-    # Volume mounts - using same pattern as nilCC for consistency
-    # FILES=. for local development
+    # Volume mounts must remain within ${FILES} to satisfy nilCC requirements.
+    # Mount individual files so the compose bundle only needs what's listed here.
     volumes:
       # Application files
       - ${FILES}/package.json:/app/package.json
       - ${FILES}/package-lock.json:/app/package-lock.json
       - ${FILES}/tsconfig.json:/app/tsconfig.json
 
-      # Source directory for development
-      - ${FILES}/src:/app/src
-
-      # Temporary processing directory
-      - ${FILES}/temp:/app/temp
+      # Source files (keep in sync with src/)
+      - ${FILES}/src/index.ts:/app/src/index.ts
+      - ${FILES}/src/ai.ts:/app/src/ai.ts
+      - ${FILES}/src/blockchain.ts:/app/src/blockchain.ts
+      - ${FILES}/src/config.ts:/app/src/config.ts
+      - ${FILES}/src/crypto.ts:/app/src/crypto.ts
+      - ${FILES}/src/nillion.ts:/app/src/nillion.ts
+      - ${FILES}/src/routes-assets.ts:/app/src/routes-assets.ts
+      - ${FILES}/src/routes-chat.ts:/app/src/routes-chat.ts
+      - ${FILES}/src/routes-decrypt.ts:/app/src/routes-decrypt.ts
+      - ${FILES}/src/routes-dev-tools.ts:/app/src/routes-dev-tools.ts
+      - ${FILES}/src/routes-health.ts:/app/src/routes-health.ts
+      - ${FILES}/src/routes-metadata.ts:/app/src/routes-metadata.ts
+      - ${FILES}/src/routes-verified-list.ts:/app/src/routes-verified-list.ts
+      - ${FILES}/src/service-context.ts:/app/src/service-context.ts
+      - ${FILES}/src/utils.ts:/app/src/utils.ts
+      - ${FILES}/src/verified-list.ts:/app/src/verified-list.ts
+      - ${FILES}/src/zkpassport.ts:/app/src/zkpassport.ts
 
     # Development command with TypeScript compilation and nodemon
     command: sh -c "cd /app && npm ci && npm run dev"
-
-networks:
-  internal:
-    name: eclipse-network-dev
-# No named volumes - everything mounted from host
