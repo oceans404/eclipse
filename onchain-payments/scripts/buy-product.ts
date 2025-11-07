@@ -28,7 +28,7 @@ const paymentService = await viem.getContractAt(
   PAYMENT_SERVICE_ADDRESS
 );
 
-console.log('🌒 Eclipse - Buy Product');
+console.log('🌒 Eclipse - Buy Product (Base Sepolia)');
 console.log('Contract:', PAYMENT_SERVICE_ADDRESS);
 console.log('Buyer:', wallet.account.address, '\n');
 
@@ -36,7 +36,7 @@ const productId = 2n;
 
 // Get product details
 console.log('📦 Fetching product details...');
-const [price, creator, contentId, exists] =
+const [price, creator, contentId, requiresVerification, exists] =
   await paymentService.read.getProduct([productId]);
 
 if (!exists) {
@@ -44,11 +44,12 @@ if (!exists) {
   process.exit(1);
 }
 
-// PYUSD has 6 decimals, not 18!
+// Base USDC has 6 decimals, not 18!
 console.log('  Product ID:', productId);
-console.log('  Price:', formatUnits(price, 6), 'PYUSD');
+console.log('  Price:', formatUnits(price, 6), 'USDC');
 console.log('  Creator:', creator);
 console.log('  Content ID:', contentId);
+console.log('  Requires Verification:', requiresVerification);
 
 // Check if already paid
 const hasPaid = await paymentService.read.hasPaid([
@@ -60,28 +61,28 @@ if (hasPaid) {
   process.exit(0);
 }
 
-// Get PYUSD token contract
-const pyusd = await viem.getContractAt(
+// Get Base USDC token contract
+const usdc = await viem.getContractAt(
   'MockERC20',
-  TOKEN_ADDRESSES.PYUSD.SEPOLIA
+  TOKEN_ADDRESSES.USDC.BASE_SEPOLIA
 );
 
-// Check buyer's PYUSD balance
-console.log('\n💰 Checking PYUSD balance...');
-const balance = await pyusd.read.balanceOf([wallet.account.address]);
-console.log('  Your balance:', formatUnits(balance, 6), 'PYUSD');
+// Check buyer's USDC balance
+console.log('\n💰 Checking USDC balance...');
+const balance = await usdc.read.balanceOf([wallet.account.address]);
+console.log('  Your balance:', formatUnits(balance, 6), 'USDC');
 
 if (balance < price) {
   console.error(
-    `\n❌ Insufficient balance. Need ${formatUnits(price, 6)} PYUSD`
+    `\n❌ Insufficient balance. Need ${formatUnits(price, 6)} USDC`
   );
-  console.log('Get PYUSD on Sepolia from a faucet or DEX');
+  console.log('Get USDC on Base Sepolia from a faucet or bridge');
   process.exit(1);
 }
 
-// Approve PYUSD spending
-console.log('\n🔐 Approving PYUSD...');
-const approveTx = await pyusd.write.approve([PAYMENT_SERVICE_ADDRESS, price], {
+// Approve USDC spending
+console.log('\n🔐 Approving USDC...');
+const approveTx = await usdc.write.approve([PAYMENT_SERVICE_ADDRESS, price], {
   account: wallet.account,
 });
 console.log('  Approval tx:', approveTx);
@@ -105,7 +106,11 @@ try {
   if (error.message?.includes('AlreadyPaid')) {
     console.log('✅ You already own this product!');
   } else if (error.message?.includes('TokenTransferFailed')) {
-    console.error('❌ Payment failed. Check your PYUSD balance and approval');
+    console.error('❌ Payment failed. Check your USDC balance and approval');
+  } else if (error.message?.includes('Caller not verified')) {
+    console.error(
+      '❌ Purchase failed: your wallet is not on the NilccVerifiedList for this product.'
+    );
   } else {
     console.error('❌ Purchase failed:', error.message);
   }

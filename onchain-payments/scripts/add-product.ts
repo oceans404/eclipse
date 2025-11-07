@@ -9,6 +9,9 @@ if (!PAYMENT_SERVICE_ADDRESS) {
   process.exit(1);
 }
 
+const mustBeVerified =
+  (process.env.MUST_BE_VERIFIED ?? '').toLowerCase() === 'true';
+
 const { viem } = await network.connect();
 const publicClient = await viem.getPublicClient();
 const [wallet] = await viem.getWalletClients();
@@ -22,7 +25,7 @@ console.log('🌒 Eclipse');
 console.log('Contract:', PAYMENT_SERVICE_ADDRESS);
 console.log('Wallet:', wallet.account.address, '\n');
 
-// Add a product (PYUSD has 6 decimals!)
+// Add a product (Base USDC has 6 decimals!)
 const productId = 3n;
 const price = parseUnits('4', 6);
 const contentId = 'abc-123';
@@ -30,7 +33,7 @@ const contentId = 'abc-123';
 console.log('📦 Adding product...');
 try {
   const tx = await paymentService.write.addProduct(
-    [productId, price, contentId],
+    [productId, price, contentId, mustBeVerified],
     { account: wallet.account }
   );
   console.log('✅ Product added! Tx:', tx);
@@ -45,14 +48,15 @@ try {
 
 // Read product details directly
 console.log('\n📋 Product Details:');
-const [productPrice, creator, contentIdStored, exists] =
+const [productPrice, creator, contentIdStored, requiresVerification, exists] =
   await paymentService.read.getProduct([productId]);
 
 if (exists) {
   console.log('  ID:', productId);
-  console.log('  Price:', formatUnits(productPrice, 6), 'PYUSD');
+  console.log('  Price:', formatUnits(productPrice, 6), 'USDC');
   console.log('  Creator:', creator);
   console.log('  Content ID:', contentIdStored);
+  console.log('  Requires Verification:', requiresVerification);
 } else {
   console.log('  Product does not exist');
 }

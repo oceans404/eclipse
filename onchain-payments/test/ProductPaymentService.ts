@@ -7,26 +7,33 @@ describe("ProductPaymentService", async function () {
   const { viem } = await network.connect();
   const publicClient = await viem.getPublicClient();
 
-  it("Should emit ProductAdded events for multiple creators", async function () {
+  const deployService = async () => {
     const token = await viem.deployContract("MockERC20");
+    const verifiedList = await viem.deployContract("NilccVerifiedList");
     const paymentService = await viem.deployContract("ProductPaymentService", [
       token.address,
+      verifiedList.address,
     ]);
+    return { token, verifiedList, paymentService };
+  };
+
+  it("Should emit ProductAdded events for multiple creators", async function () {
+    const { paymentService } = await deployService();
     const deploymentBlockNumber = await publicClient.getBlockNumber();
 
     const [creator1, creator2, creator3] = await viem.getWalletClients();
 
     // Multiple creators add products
     await paymentService.write.addProduct(
-      [1n, 100000000000000000000n, "nillion://content1"],
+      [1n, 100000000000000000000n, "nillion://content1", false],
       { account: creator1.account }
     );
     await paymentService.write.addProduct(
-      [2n, 50000000000000000000n, "nillion://content2"],
+      [2n, 50000000000000000000n, "nillion://content2", false],
       { account: creator2.account }
     );
     await paymentService.write.addProduct(
-      [3n, 200000000000000000000n, "nillion://content3"],
+      [3n, 200000000000000000000n, "nillion://content3", false],
       { account: creator3.account }
     );
 
@@ -45,25 +52,22 @@ describe("ProductPaymentService", async function () {
   });
 
   it("Should track total revenue from PaymentReceived events", async function () {
-    const token = await viem.deployContract("MockERC20");
-    const paymentService = await viem.deployContract("ProductPaymentService", [
-      token.address,
-    ]);
+    const { token, paymentService } = await deployService();
     const deploymentBlockNumber = await publicClient.getBlockNumber();
 
     const [creator, buyer1, buyer2, buyer3] = await viem.getWalletClients();
 
     // Creator adds products
     await paymentService.write.addProduct(
-      [1n, 100000000000000000000n, "nillion://content1"],
+      [1n, 100000000000000000000n, "nillion://content1", false],
       { account: creator.account }
     );
     await paymentService.write.addProduct(
-      [2n, 50000000000000000000n, "nillion://content2"],
+      [2n, 50000000000000000000n, "nillion://content2", false],
       { account: creator.account }
     );
     await paymentService.write.addProduct(
-      [3n, 75000000000000000000n, "nillion://content3"],
+      [3n, 75000000000000000000n, "nillion://content3", false],
       { account: creator.account }
     );
 
@@ -109,16 +113,13 @@ describe("ProductPaymentService", async function () {
   });
 
   it("Should handle concurrent purchases from multiple buyers", async function () {
-    const token = await viem.deployContract("MockERC20");
-    const paymentService = await viem.deployContract("ProductPaymentService", [
-      token.address,
-    ]);
+    const { token, paymentService } = await deployService();
 
     const [creator, ...buyers] = await viem.getWalletClients();
 
     // Creator adds popular product
     await paymentService.write.addProduct(
-      [1n, 10000000000000000000n, "nillion://popular-content"],
+      [1n, 10000000000000000000n, "nillion://popular-content", false],
       { account: creator.account }
     );
 
@@ -152,17 +153,14 @@ describe("ProductPaymentService", async function () {
   });
 
   it("Should track different payment amounts after price update", async function () {
-    const token = await viem.deployContract("MockERC20");
-    const paymentService = await viem.deployContract("ProductPaymentService", [
-      token.address,
-    ]);
+    const { token, paymentService } = await deployService();
     const deploymentBlockNumber = await publicClient.getBlockNumber();
 
     const [creator, buyer1, buyer2] = await viem.getWalletClients();
 
     // Creator adds product at 100 tokens
     await paymentService.write.addProduct(
-      [1n, 100000000000000000000n, "nillion://content1"],
+      [1n, 100000000000000000000n, "nillion://content1", false],
       { account: creator.account }
     );
 
@@ -203,10 +201,7 @@ describe("ProductPaymentService", async function () {
   });
 
   it("Should track payment status across multiple products", async function () {
-    const token = await viem.deployContract("MockERC20");
-    const paymentService = await viem.deployContract("ProductPaymentService", [
-      token.address,
-    ]);
+    const { token, paymentService } = await deployService();
 
     const [creator, buyer] = await viem.getWalletClients();
 
@@ -214,7 +209,7 @@ describe("ProductPaymentService", async function () {
     const numProducts = 10;
     for (let i = 1; i <= numProducts; i++) {
       await paymentService.write.addProduct(
-        [BigInt(i), 10000000000000000000n, `nillion://content${i}`],
+        [BigInt(i), 10000000000000000000n, `nillion://content${i}`, false],
         { account: creator.account }
       );
     }
@@ -255,5 +250,121 @@ describe("ProductPaymentService", async function () {
     // Creator received correct amount
     const creatorBalance = await token.read.balanceOf([creator.account.address]);
     assert.equal(creatorBalance, 50000000000000000000n); // 50 tokens
+  });
+
+  it("Requires verification when mustBeVerified is true", async function () {
+    const { token, verifiedList, paymentService } = await deployService();
+    const [owner, creator, buyer] = await viem.getWalletClients();
+
+    await verifiedList.write.addManager([creator.account.address], {
+      account: owner.account,
+    });
+
+    await paymentService.write.addProduct(
+      [1n, 100000000000000000000n, "nillion://secure-content", true],
+      { account: creator.account }
+    );
+
+    await token.write.mint([buyer.account.address, 1000000000000000000000n]);
+    await token.write.approve([paymentService.address, 100000000000000000000n], {
+      account: buyer.account,
+    });
+
+    await assert.rejects(
+      () => paymentService.write.payForProduct([1n], { account: buyer.account }),
+      /Caller not verified/
+    );
+
+    await verifiedList.write.addToVerifiedList([buyer.account.address, 1n], {
+      account: creator.account,
+    });
+
+    await paymentService.write.payForProduct([1n], { account: buyer.account });
+    const hasPaid = await paymentService.read.hasPaid([
+      buyer.account.address,
+      1n,
+    ]);
+    assert.equal(hasPaid, true);
+  });
+
+  it("Allows unverified buyers on products without verification requirement", async function () {
+    const { token, verifiedList, paymentService } = await deployService();
+    const [owner, creator, buyer] = await viem.getWalletClients();
+
+    await verifiedList.write.addManager([creator.account.address], {
+      account: owner.account,
+    });
+
+    await paymentService.write.addProduct(
+      [1n, 100000000000000000000n, "nillion://restricted-content", true],
+      { account: creator.account }
+    );
+    await paymentService.write.addProduct(
+      [2n, 50000000000000000000n, "nillion://open-content", false],
+      { account: creator.account }
+    );
+
+    await token.write.mint([buyer.account.address, 200000000000000000000n]);
+    await token.write.approve([paymentService.address, 200000000000000000000n], {
+      account: buyer.account,
+    });
+
+    await assert.rejects(
+      () => paymentService.write.payForProduct([1n], { account: buyer.account }),
+      /Caller not verified/
+    );
+
+    await paymentService.write.payForProduct([2n], { account: buyer.account });
+    const hasPaidOpen = await paymentService.read.hasPaid([
+      buyer.account.address,
+      2n,
+    ]);
+    assert.equal(hasPaidOpen, true);
+  });
+
+  it("Allows verified buyers to purchase multiple restricted products", async function () {
+    const { token, verifiedList, paymentService } = await deployService();
+    const [owner, creator, buyer] = await viem.getWalletClients();
+
+    await verifiedList.write.addManager([creator.account.address], {
+      account: owner.account,
+    });
+
+    await paymentService.write.addProduct(
+      [1n, 100000000000000000000n, "nillion://restricted-1", true],
+      { account: creator.account }
+    );
+    await paymentService.write.addProduct(
+      [2n, 75000000000000000000n, "nillion://restricted-2", true],
+      { account: creator.account }
+    );
+
+    await token.write.mint([buyer.account.address, 300000000000000000000n]);
+    await token.write.approve([paymentService.address, 300000000000000000000n], {
+      account: buyer.account,
+    });
+
+    await assert.rejects(
+      () => paymentService.write.payForProduct([1n], { account: buyer.account }),
+      /Caller not verified/
+    );
+
+    await verifiedList.write.addToVerifiedList([buyer.account.address, 1n], {
+      account: creator.account,
+    });
+
+    await paymentService.write.payForProduct([1n], { account: buyer.account });
+    await paymentService.write.payForProduct([2n], { account: buyer.account });
+
+    const paid1 = await paymentService.read.hasPaid([
+      buyer.account.address,
+      1n,
+    ]);
+    const paid2 = await paymentService.read.hasPaid([
+      buyer.account.address,
+      2n,
+    ]);
+    assert.equal(paid1, true);
+    assert.equal(paid2, true);
   });
 });

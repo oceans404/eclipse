@@ -23,11 +23,11 @@ console.log('Contract:', PAYMENT_SERVICE_ADDRESS);
 console.log('Wallet:', wallet.account.address, '\n');
 
 const productId = 3n;
-const newPrice = parseUnits('5', 6); // ? PYUSD with 6 decimals
+const newPrice = parseUnits('5', 6); // Base USDC has 6 decimals
 
 // Get current product details
 console.log('📦 Current Product Details:');
-const [currentPrice, creator, contentId, exists] =
+const [currentPrice, creator, contentId, requiresVerification, exists] =
   await paymentService.read.getProduct([productId]);
 
 if (!exists) {
@@ -36,8 +36,9 @@ if (!exists) {
 }
 
 console.log('  ID:', productId);
-console.log('  Current Price:', formatUnits(currentPrice, 6), 'PYUSD');
+console.log('  Current Price:', formatUnits(currentPrice, 6), 'USDC');
 console.log('  Creator:', creator);
+console.log('  Requires Verification:', requiresVerification);
 
 // Check if caller is the creator
 if (creator.toLowerCase() !== wallet.account.address.toLowerCase()) {
@@ -48,7 +49,7 @@ if (creator.toLowerCase() !== wallet.account.address.toLowerCase()) {
 }
 
 // Update the price
-console.log('\n📝 Updating price to', formatUnits(newPrice, 6), 'PYUSD...');
+console.log('\n📝 Updating price to', formatUnits(newPrice, 6), 'USDC...');
 try {
   const tx = await paymentService.write.updateProductPrice(
     [productId, newPrice],
@@ -60,7 +61,7 @@ try {
 
   // Verify the update
   const [updatedPrice] = await paymentService.read.getProduct([productId]);
-  console.log('\n✅ New Price:', formatUnits(updatedPrice, 6), 'PYUSD');
+  console.log('\n✅ New Price:', formatUnits(updatedPrice, 6), 'USDC');
   console.log(`\n  View transaction: https://sepolia.etherscan.io/tx/${tx}`);
 } catch (error: any) {
   if (error.message?.includes('OnlyCreatorCanUpdate')) {

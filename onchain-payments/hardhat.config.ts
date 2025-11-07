@@ -32,12 +32,12 @@ const config: HardhatUserConfig = {
       type: 'edr-simulated',
       chainType: 'op',
     },
-    sepolia: {
+    baseSepolia: {
       type: 'http',
-      chainType: 'l1',
-      url: process.env.SEPOLIA_RPC_URL || '',
+      chainType: 'op',
+      url: process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org',
       accounts: [
-        process.env.SEPOLIA_PRIVATE_KEY,
+        process.env.BASE_SEPOLIA_PRIVATE_KEY,
         process.env.BUYER_PRIVATE_KEY,
       ].filter(Boolean) as string[], // Filter out undefined values
     },

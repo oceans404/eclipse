@@ -7,6 +7,10 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
+interface IVerifiedList {
+    function isOnVerifiedList(address addressToCheck) external view returns (bool);
+}
+
 /**
  * @title ProductPaymentService
  * @dev A payment service contract for managing one-time payments for products using a specific ERC20 token
@@ -21,15 +25,18 @@ contract ProductPaymentService {
     error InvalidTokenAddress();
     error InvalidContentId();
     error TokenTransferFailed();
+    error InvalidVerifiedListAddress();
     
     // Hardcoded ERC20 token address
     IERC20 public immutable paymentToken;
+    IVerifiedList public immutable verifiedList;
     
     // Product structure
     struct Product {
         uint256 price;      // Price in tokens (with token decimals)
         address creator;    // Address of the content creator
         string contentId;   // Reference to content in Nillion storage
+        bool mustBeVerified; // Whether buyer must be on NilccVerifiedList
         bool exists;        // Whether this product exists
     }
     
@@ -54,9 +61,11 @@ contract ProductPaymentService {
      * @dev Constructor sets the payment token address
      * @param _paymentToken Address of the ERC20 token to be used for payments
      */
-    constructor(address _paymentToken) {
+    constructor(address _paymentToken, address _verifiedList) {
         if (_paymentToken == address(0)) revert InvalidTokenAddress();
+        if (_verifiedList == address(0)) revert InvalidVerifiedListAddress();
         paymentToken = IERC20(_paymentToken);
+        verifiedList = IVerifiedList(_verifiedList);
     }
     
     /**
@@ -65,7 +74,7 @@ contract ProductPaymentService {
      * @param price Price in tokens (remember to account for token decimals)
      * @param contentId Reference to the content in Nillion storage
      */
-    function addProduct(uint256 productId, uint256 price, string memory contentId) external {
+    function addProduct(uint256 productId, uint256 price, string memory contentId, bool mustBeVerified) external {
         if (products[productId].exists) revert ProductAlreadyExists();
         if (price == 0) revert InvalidPrice();
         if (bytes(contentId).length == 0) revert InvalidContentId();
@@ -74,6 +83,7 @@ contract ProductPaymentService {
             price: price,
             creator: msg.sender,
             contentId: contentId,
+            mustBeVerified: mustBeVerified,
             exists: true
         });
         
@@ -102,6 +112,13 @@ contract ProductPaymentService {
         if (hasPaid[msg.sender][productId]) revert AlreadyPaid();
         
         Product memory product = products[productId];
+
+        if (product.mustBeVerified) {
+            require(
+                verifiedList.isOnVerifiedList(msg.sender),
+                "Caller not verified"
+            );
+        }
         
         // Transfer tokens from buyer directly to creator
         if (!paymentToken.transferFrom(msg.sender, product.creator, product.price)) {
@@ -130,16 +147,18 @@ contract ProductPaymentService {
      * @return price The price of the product
      * @return creator The address of the creator
      * @return contentId The content ID in Nillion storage
+     * @return mustBeVerified Whether buyers must be on the verified list
      * @return exists Whether the product exists
      */
     function getProduct(uint256 productId) external view returns (
         uint256 price, 
         address creator, 
-        string memory contentId, 
+        string memory contentId,
+        bool mustBeVerified,
         bool exists
     ) {
         Product memory product = products[productId];
-        return (product.price, product.creator, product.contentId, product.exists);
+        return (product.price, product.creator, product.contentId, product.mustBeVerified, product.exists);
     }
     
     /**
