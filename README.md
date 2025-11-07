@@ -4,8 +4,7 @@
 
 Eclipse is a private data marketplace where an AI agent analyzes encrypted content to answer buyer questions—creators don't leak their work until they get paid.
 
-- **Live Demo**: https://eclipse-pm.vercel.app
-- **EthGlobal Showcase**: https://ethglobal.com/showcase/eclipse-n93ec
+- Demo: https://eclipse-pm.vercel.app
 
 ## The Problem
 
@@ -29,16 +28,12 @@ No previews. No leaks. No blind purchases.
 
 1. **Creator uploads** → Content encrypted with AES-256-GCM, stored in Vercel Blob + Nillion nilDB
 2. **Buyer asks questions** → Gemini 2.0 decrypts content in TEE memory, answers with privacy guardrails
-3. **Buyer pays in PYUSD** → Smart contract payment indexed by Envio
+3. **Buyer pays in USDC (Base Sepolia)** → Smart contract payment indexed by Envio
 4. **Instant access** → TEE verifies payment, grants download
 
 ## Tech Stack
 
-- **[PYUSD](https://github.com/oceans404/eclipse/blob/main/onchain-payments/scripts/deploy.ts#L28)** - Stablecoin payments for predictable pricing
-- **[Hardhat 3](https://hardhat.org/docs/getting-started)** - Smart contract development + comprehensive testing
-  - [ProductPaymentService.sol](https://github.com/oceans404/eclipse/blob/main/onchain-payments/contracts/ProductPaymentService.sol) - Core payment contract
-  - [TypeScript Tests](https://github.com/oceans404/eclipse/blob/main/onchain-payments/test/ProductPaymentService.ts) - End-to-end integration
-  - [Solidity Tests](https://github.com/oceans404/eclipse/blob/main/onchain-payments/contracts/ProductPaymentService.t.sol) - Unit testing
+- **[USDC on Base Sepolia](https://github.com/oceans404/eclipse/blob/main/onchain-payments/scripts/deploy.ts#L28)** - Stablecoin payments for predictable pricing
 - **[Envio HyperIndex](https://docs.envio.dev/docs/HyperIndex/overview)** - Real-time event indexing with [GraphQL API](https://github.com/oceans404/eclipse/blob/main/envio-indexer/GraphQLQueries.md)
 - **[Nillion nilDB](https://docs.nillion.com/build/private-storage/overview)** - Private storage for encrypted metadata
 - **[Nillion nilCC](https://docs.nillion.com/build/compute/overview)** - TEE running the agent for private multimodal analysis over the private content
@@ -47,44 +42,20 @@ No previews. No leaks. No blind purchases.
 
 ### 📦 [onchain-payments/](./onchain-payments/)
 
-Smart contract infrastructure for marketplace payments using PYUSD.
-
-- **[ProductPaymentService.sol](https://github.com/oceans404/eclipse/blob/main/onchain-payments/contracts/ProductPaymentService.sol)** - Core marketplace contract with direct creator payments
-- **Comprehensive testing** - Solidity unit tests + TypeScript integration tests
-- **Deployment scripts** - Deploy and interact with contracts on Sepolia testnet
-- **Live on Sepolia** - [0x9c91a92cf1cd0b94fb632292fe63ed966833518d](https://sepolia.etherscan.io/address/0x9c91a92cf1cd0b94fb632292fe63ed966833518d#code)
+Smart contract infrastructure for marketplace payments using USDC on Base Sepolia and verification allowlist.
 
 ### 🔍 [envio-indexer/](./envio-indexer/)
 
 Event indexing service for real-time marketplace data.
 
-- **Live GraphQL API** - https://indexer.dev.hyperindex.xyz/1f84b17/v1/graphql
-- **Dual Entity System** - Tracks both historical events and current product state
-- **HyperSync enabled** - Fast historical data synchronization
-- **Real-time indexing** - Live event tracking from [ProductPaymentService.sol](https://github.com/oceans404/eclipse/blob/main/onchain-payments/contracts/ProductPaymentService.sol)
-
 ### 🌐 [marketplace-nextjs/](./marketplace-nextjs/)
 
 Eclipse marketplace frontend built with Next.js 15.
-
-- **Live Demo** - https://eclipse-pm.vercel.app
-- **Product Discovery** - Browse with search, filtering, and sorting
-- **Creator Profiles** - View statistics and product portfolios
-- **Transaction Tracking** - Complete price history and Etherscan links
-- **Real-time Data** - Apollo Client synced with Envio GraphQL API
 
 ### 🔐 [tee-storage-and-agent/](./tee-storage-and-agent/)
 
 TEE-based storage and AI agent service running in Nillion's nilCC infrastructure.
 
-- **Live nilCC Service** - https://2e08d150-6083-49aa-99e3-2b786e51fb2f.workloads.nilcc.sandbox.nillion.network/health
-- **AES-256-GCM encryption** - Secure content encryption with master key protection
-- **Nillion nilDB integration** - Encrypted metadata and key storage
-- **Google Gemini 2.0 Flash** - Multimodal content analysis (text + images)
-- **Privacy guardrails** - Prevents content leakage during AI interactions
-- **Payment verification** - Blockchain integration via Envio before granting access
-- **nilCC compliant** - Runs in Nillion's trusted execution environment
-
 ---
 
-_Built for [EthOnline 2025](https://ethglobal.com/events/ethonline2025)_
+[EthOnline 2025 Showcase](https://ethglobal.com/showcase/eclipse-n93ec)

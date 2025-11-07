@@ -3,7 +3,7 @@
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits } from 'viem';
 import { CONTRACTS } from '@/lib/contracts';
-import { PYUSD_DECIMALS } from '@/lib/config';
+import { USDC_DECIMALS } from '@/lib/config';
 
 // Hook for reading product details
 export function useProduct(productId: number) {
@@ -26,10 +26,10 @@ export function useHasPaid(userAddress: string | undefined, productId: number) {
   });
 }
 
-// Hook for checking PYUSD allowance
-export function usePyusdAllowance(userAddress: string | undefined) {
+// Hook for checking USDC allowance
+export function useUsdcAllowance(userAddress: string | undefined) {
   return useReadContract({
-    ...CONTRACTS.PYUSD,
+    ...CONTRACTS.USDC,
     functionName: 'allowance',
     args: userAddress ? [
       userAddress as `0x${string}`,
@@ -50,11 +50,11 @@ export function useContractWrite() {
       hash,
     });
 
-  // Approve PYUSD spending
-  const approvePyusd = async (amount: string) => {
-    const amountBigInt = parseUnits(amount, PYUSD_DECIMALS);
+  // Approve USDC spending
+  const approveUsdc = async (amount: string) => {
+    const amountBigInt = parseUnits(amount, USDC_DECIMALS);
     return writeContract({
-      ...CONTRACTS.PYUSD,
+      ...CONTRACTS.USDC,
       functionName: 'approve',
       args: [CONTRACTS.PRODUCT_PAYMENT_SERVICE.address, amountBigInt],
       // Add gas configuration to prevent overestimation
@@ -63,12 +63,17 @@ export function useContractWrite() {
   };
 
   // Add a new product
-  const addProduct = (productId: number, price: string, contentId: string) => {
-    const priceBigInt = parseUnits(price, PYUSD_DECIMALS);
+  const addProduct = (
+    productId: number,
+    price: string,
+    contentId: string,
+    mustBeVerified: boolean
+  ) => {
+    const priceBigInt = parseUnits(price, USDC_DECIMALS);
     writeContract({
       ...CONTRACTS.PRODUCT_PAYMENT_SERVICE,
       functionName: 'addProduct',
-      args: [BigInt(productId), priceBigInt, contentId],
+      args: [BigInt(productId), priceBigInt, contentId, mustBeVerified],
     });
   };
 
@@ -85,7 +90,7 @@ export function useContractWrite() {
 
   // Update product price
   const updateProductPrice = (productId: number, newPrice: string) => {
-    const priceBigInt = parseUnits(newPrice, PYUSD_DECIMALS);
+    const priceBigInt = parseUnits(newPrice, USDC_DECIMALS);
     writeContract({
       ...CONTRACTS.PRODUCT_PAYMENT_SERVICE,
       functionName: 'updateProductPrice',
@@ -94,7 +99,7 @@ export function useContractWrite() {
   };
 
   return {
-    approvePyusd,
+    approveUsdc,
     addProduct,
     payForProduct,
     updateProductPrice,

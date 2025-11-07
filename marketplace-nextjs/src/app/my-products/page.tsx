@@ -12,6 +12,7 @@ import { ProductCard } from '@/components/ProductCard';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { CreatorProfile } from '@/lib/db';
+import { EXPLORER_URL } from '@/lib/config';
 
 export default function MyProductsPage() {
   const { authenticated, user, login } = usePrivy();
@@ -511,6 +512,7 @@ export default function MyProductsPage() {
                             contentId={product.contentId}
                             currentPrice={product.currentPrice}
                             creator={product.creator}
+                            mustBeVerified={Boolean(product.mustBeVerified)}
                             creatorProfile={
                               creatorProfiles.get(product.creator) || null
                             }
@@ -549,7 +551,7 @@ export default function MyProductsPage() {
                                 {formatDate(purchaseDetails.purchaseDate)}
                               </p>
                               <a
-                                href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${purchaseDetails.transactionHash}`}
+                                href={`${EXPLORER_URL}/tx/${purchaseDetails.transactionHash}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
@@ -764,6 +766,7 @@ export default function MyProductsPage() {
                           contentId={product.contentId}
                           currentPrice={product.currentPrice}
                           creator={product.creator}
+                          mustBeVerified={Boolean(product.mustBeVerified)}
                           creatorProfile={
                             creatorProfiles.get(product.creator) || null
                           }

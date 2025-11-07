@@ -1,10 +1,10 @@
 import { createPublicClient, http, parseAbi, type Address } from 'viem';
-import { sepolia } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
 
 // ProductPaymentService ABI - only the parts we need
 const PAYMENT_SERVICE_ABI = parseAbi([
   'event PaymentReceived(uint256 indexed productId, uint256 amount, address indexed buyer, uint256 timestamp)',
-  'function products(uint256 productId) view returns (uint256 price, address creator, string contentId, bool exists)',
+  'function products(uint256 productId) view returns (uint256 price, address creator, string contentId, bool mustBeVerified, bool exists)',
   'function hasPaid(address user, uint256 productId) view returns (bool)'
 ]);
 
@@ -13,11 +13,11 @@ export class BlockchainService {
   private contractAddress: Address;
 
   constructor() {
-    const rpcUrl = process.env.SEPOLIA_RPC_URL;
+    const rpcUrl = process.env.BASE_SEPOLIA_RPC_URL;
     const contractAddress = process.env.PAYMENT_SERVICE_ADDRESS;
 
     if (!rpcUrl) {
-      throw new Error('SEPOLIA_RPC_URL environment variable is required');
+      throw new Error('BASE_SEPOLIA_RPC_URL environment variable is required');
     }
     if (!contractAddress) {
       throw new Error('PAYMENT_SERVICE_ADDRESS environment variable is required');
@@ -27,7 +27,7 @@ export class BlockchainService {
     
     // Initialize Viem client
     this.client = createPublicClient({
-      chain: sepolia,
+      chain: baseSepolia,
       transport: http(rpcUrl)
     });
   }
@@ -70,6 +70,7 @@ export class BlockchainService {
     price: bigint;
     creator: string;
     contentId: string;
+    mustBeVerified: boolean;
     exists: boolean;
   }> {
     try {
@@ -84,7 +85,8 @@ export class BlockchainService {
         price: result[0],
         creator: result[1],
         contentId: result[2],
-        exists: result[3]
+        mustBeVerified: result[3],
+        exists: result[4]
       };
     } catch (error) {
       console.error('Error fetching product:', error);

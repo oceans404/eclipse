@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { CHAIN_CONFIG } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +15,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate required fields
-    const { contentId, requesterAddress, productId } = body;
+    const {
+      contentId,
+      requesterAddress,
+      productId,
+      chainId,
+    } = body;
     
     if (!contentId || !requesterAddress) {
       return NextResponse.json(
@@ -23,11 +29,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const resolvedChainId =
+      typeof chainId !== 'undefined'
+        ? Number(chainId)
+        : CHAIN_CONFIG.BASE_SEPOLIA.id;
+
     // Log the request for debugging
     console.log('[Request-Decrypt] Forwarding request:', {
       contentId,
       requesterAddress,
       productId: productId ? parseInt(productId) : undefined,
+      chainId: resolvedChainId,
       url: `${encryptionServiceUrl}/decrypt-for-download`
     });
 
@@ -41,6 +53,7 @@ export async function POST(request: NextRequest) {
         contentId,
         requesterAddress,
         productId: productId ? parseInt(productId) : undefined,
+        chainId: resolvedChainId,
       }),
     });
 

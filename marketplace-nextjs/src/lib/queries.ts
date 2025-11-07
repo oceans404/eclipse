@@ -8,6 +8,7 @@ export const GET_ALL_PRODUCTS = gql`
       currentPrice
       creator
       contentId
+      mustBeVerified
       createdAt
       lastUpdatedAt
     }
@@ -21,6 +22,7 @@ export const GET_PRODUCT_DETAILS = gql`
       currentPrice
       creator
       contentId
+      mustBeVerified
       updateCount
       createdAt
       lastUpdatedAt
@@ -81,6 +83,7 @@ export const GET_PRICE_HISTORY = gql`
       where: { productId: { _eq: $productId } }
     ) {
       price
+      mustBeVerified
       blockTimestamp
     }
     updates: ProductPaymentService_ProductUpdated(
@@ -107,6 +110,7 @@ export const GET_CREATOR_STATS = gql`
       productId
       currentPrice
       contentId
+      mustBeVerified
       updateCount
     }
   }
@@ -136,6 +140,7 @@ export const GET_PRODUCTS_BY_CREATOR = gql`
       currentPrice
       creator
       contentId
+      mustBeVerified
       updateCount
       createdAt
       lastUpdatedAt
@@ -151,6 +156,7 @@ export const GET_CREATOR_PROFILE = gql`
       currentPrice
       creator
       contentId
+      mustBeVerified
       updateCount
       createdAt
       lastUpdatedAt
@@ -180,6 +186,22 @@ export const GET_OWNED_PRODUCTS_WITH_DETAILS = gql`
       currentPrice
       creator
       contentId
+      mustBeVerified
+      createdAt
+      lastUpdatedAt
+    }
+  }
+`;
+
+export const GET_PRODUCTS_REQUIRING_VERIFICATION = gql`
+  query ProductsRequiringVerification {
+    Product(where: { mustBeVerified: { _eq: true } }) {
+      id
+      productId
+      creator
+      contentId
+      currentPrice
+      mustBeVerified
       createdAt
       lastUpdatedAt
     }

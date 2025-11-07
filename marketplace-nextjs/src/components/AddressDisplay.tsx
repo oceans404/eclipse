@@ -1,6 +1,7 @@
 import React from 'react';
 import { Copy, ExternalLink } from 'lucide-react';
 import { truncateAddress } from '@/utils/formatting';
+import { EXPLORER_URL } from '@/lib/config';
 
 interface AddressDisplayProps {
   address: string;
@@ -37,11 +38,11 @@ export const AddressDisplay: React.FC<AddressDisplayProps> = ({
       )}
       {showExplorer && (
         <a
-          href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/address/${address}`}
+          href={`${EXPLORER_URL}/address/${address}`}
           target="_blank"
           rel="noopener noreferrer"
           className="p-1 hover:bg-gray-100 rounded transition-colors"
-          title="View on Etherscan"
+          title="View on BaseScan"
         >
           <ExternalLink size={14} />
         </a>

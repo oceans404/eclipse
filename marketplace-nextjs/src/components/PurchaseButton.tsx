@@ -2,15 +2,15 @@
 
 import React, { useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { usePyusdAllowance, useHasPaid } from '@/hooks/useContract';
+import { useUsdcAllowance, useHasPaid } from '@/hooks/useContract';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatUnits, parseUnits } from 'viem';
-import { PYUSD_DECIMALS } from '@/lib/config';
+import { USDC_DECIMALS } from '@/lib/config';
 import { CONTRACTS } from '@/lib/contracts';
 
 interface PurchaseButtonProps {
   productId: number;
-  price: string; // PYUSD amount as string
+  price: string; // USDC amount as string
   onPurchaseSuccess?: () => void;
   compact?: boolean; // Add compact mode for header usage
 }
@@ -50,13 +50,13 @@ export function PurchaseButton({
   // Check if user already owns this product
   const { data: hasPaid } = useHasPaid(user?.wallet?.address, productId);
 
-  // Check current PYUSD allowance
-  const { data: allowance, refetch: refetchAllowance } = usePyusdAllowance(
+  // Check current USDC allowance
+  const { data: allowance, refetch: refetchAllowance } = useUsdcAllowance(
     user?.wallet?.address
   );
 
-  const priceInPyusd = parseUnits(price, PYUSD_DECIMALS);
-  const hasEnoughAllowance = allowance && allowance >= priceInPyusd;
+  const priceInUsdc = parseUnits(price, USDC_DECIMALS);
+  const hasEnoughAllowance = allowance && allowance >= priceInUsdc;
 
   const handlePurchase = async () => {
     if (!authenticated) {
@@ -66,14 +66,14 @@ export function PurchaseButton({
 
     try {
       if (!hasEnoughAllowance) {
-        // Step 1: Approve PYUSD spending
+        // Step 1: Approve USDC spending
         setStep('approving');
         setShouldAutoPurchase(true); // Mark that we should auto-purchase after approval
         console.log('Starting batched approval + purchase flow...');
 
-        const amountBigInt = parseUnits(price, PYUSD_DECIMALS);
+        const amountBigInt = parseUnits(price, USDC_DECIMALS);
         writeApproval({
-          ...CONTRACTS.PYUSD,
+          ...CONTRACTS.USDC,
           functionName: 'approve',
           args: [CONTRACTS.PRODUCT_PAYMENT_SERVICE.address, amountBigInt],
           gas: BigInt(100000),
@@ -217,7 +217,7 @@ export function PurchaseButton({
 
   const getButtonText = () => {
     if (step === 'approving') {
-      if (isApprovalPending) return 'Approving PYUSD...';
+      if (isApprovalPending) return 'Approving USDC...';
       if (isApprovalConfirming) return 'Approval Confirming...';
     } else if (step === 'purchasing') {
       if (isPurchasePending) return 'Processing Purchase...';
@@ -225,10 +225,10 @@ export function PurchaseButton({
     }
 
     if (!hasEnoughAllowance) {
-      return `Buy for $${price} PYUSD`;
+      return `Buy for $${price} USDC`;
     }
 
-    return `Purchase for ${price} PYUSD`;
+    return `Purchase for ${price} USDC`;
   };
 
   const isLoading =
@@ -252,7 +252,7 @@ export function PurchaseButton({
     }
 
     if (message.includes('allowance')) {
-      return 'PYUSD allowance issue - please try again';
+      return 'USDC allowance issue - please try again';
     }
 
     if (message.includes('ProductAlreadyExists')) {

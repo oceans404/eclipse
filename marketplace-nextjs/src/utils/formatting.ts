@@ -1,8 +1,8 @@
 import { format } from 'date-fns';
 
-// PYUSD has 6 decimals, not 18 like ETH
-export function pyusdToFormatted(pyusdAmount: string): string {
-  const amount = Number(pyusdAmount) / 1e6; // 6 decimals for PYUSD
+// USDC has 6 decimals, not 18 like ETH
+export function usdcToFormatted(usdcAmount: string): string {
+  const amount = Number(usdcAmount) / 1e6; // 6 decimals for USDC
   return amount.toFixed(2);
 }
 

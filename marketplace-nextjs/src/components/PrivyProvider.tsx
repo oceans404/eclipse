@@ -2,7 +2,7 @@
 
 import { PrivyProvider as BasePrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
-import { sepolia } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
 import { http, createConfig } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -11,10 +11,13 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   // Wagmi config specifically for Privy
+  const baseRpcUrl =
+    process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
+
   const wagmiConfig = createConfig({
-    chains: [sepolia],
+    chains: [baseSepolia],
     transports: {
-      [sepolia.id]: http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://eth-sepolia.g.alchemy.com/v2/demo'),
+      [baseSepolia.id]: http(baseRpcUrl),
     },
   });
 
@@ -28,9 +31,9 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
           accentColor: '#3B82F6',
         },
         defaultChain: {
-          id: 11155111,
-          name: 'Sepolia',
-          network: 'sepolia',
+          id: 84532,
+          name: 'Base Sepolia',
+          network: 'base-sepolia',
           nativeCurrency: {
             decimals: 18,
             name: 'Ethereum',
@@ -38,21 +41,21 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
           },
           rpcUrls: {
             default: {
-              http: [process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://eth-sepolia.g.alchemy.com/v2/demo'],
+              http: [baseRpcUrl],
             },
             public: {
-              http: [process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://eth-sepolia.g.alchemy.com/v2/demo'],
+              http: [baseRpcUrl],
             },
           },
           blockExplorers: {
-            default: { name: 'Etherscan', url: 'https://sepolia.etherscan.io' },
+            default: { name: 'BaseScan', url: 'https://sepolia.basescan.org' },
           },
         },
         supportedChains: [
           {
-            id: 11155111,
-            name: 'Sepolia',
-            network: 'sepolia',
+            id: 84532,
+            name: 'Base Sepolia',
+            network: 'base-sepolia',
             nativeCurrency: {
               decimals: 18,
               name: 'Ethereum',
@@ -60,14 +63,14 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
             },
             rpcUrls: {
               default: {
-                http: [process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://eth-sepolia.g.alchemy.com/v2/demo'],
+                http: [baseRpcUrl],
               },
               public: {
-                http: [process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://eth-sepolia.g.alchemy.com/v2/demo'],
+                http: [baseRpcUrl],
               },
             },
             blockExplorers: {
-              default: { name: 'Etherscan', url: 'https://sepolia.etherscan.io' },
+              default: { name: 'BaseScan', url: 'https://sepolia.basescan.org' },
             },
           },
         ],

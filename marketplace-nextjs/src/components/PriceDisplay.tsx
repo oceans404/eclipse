@@ -1,23 +1,23 @@
 import React from 'react';
-import { pyusdToFormatted } from '@/utils/formatting';
+import { usdcToFormatted } from '@/utils/formatting';
 
 interface PriceDisplayProps {
-  priceInPyusd: string;
+  priceInUsdc: string;
   className?: string;
 }
 
 export const PriceDisplay: React.FC<PriceDisplayProps> = ({
-  priceInPyusd,
+  priceInUsdc,
   className = '',
 }) => {
-  const pyusdValue = pyusdToFormatted(priceInPyusd);
+  const usdcValue = usdcToFormatted(priceInUsdc);
 
   return (
     <span
       className={`font-semibold ${className}`}
-      title={`${priceInPyusd} PYUSD (6 decimals)`}
+      title={`${priceInUsdc} USDC (6 decimals)`}
     >
-      ${pyusdValue}
+      ${usdcValue}
     </span>
   );
 };

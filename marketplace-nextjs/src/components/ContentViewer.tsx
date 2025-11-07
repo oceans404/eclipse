@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
+import { CHAIN_CONFIG } from '@/lib/config';
 
 interface ContentViewerProps {
   contentId: string;
@@ -48,6 +49,7 @@ export function ContentViewer({
           contentId,
           requesterAddress: user.wallet.address,
           productId,
+          chainId: CHAIN_CONFIG.BASE_SEPOLIA.id,
         }),
       });
 
@@ -98,6 +100,7 @@ export function ContentViewer({
           contentId,
           requesterAddress: user.wallet.address,
           productId,
+          chainId: CHAIN_CONFIG.BASE_SEPOLIA.id,
         }),
       });
 

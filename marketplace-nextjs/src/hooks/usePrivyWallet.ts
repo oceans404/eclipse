@@ -3,8 +3,48 @@
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { parseUnits, encodeFunctionData } from 'viem';
 import { CONTRACTS } from '@/lib/contracts';
-import { PYUSD_DECIMALS } from '@/lib/config';
+import { CHAIN_CONFIG, USDC_DECIMALS } from '@/lib/config';
 import { useState } from 'react';
+
+const BASE_CHAIN_ID_HEX = `0x${CHAIN_CONFIG.BASE_SEPOLIA.id.toString(16)}`;
+const baseRpcUrl =
+  process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
+
+async function ensureOnBaseSepolia(provider: any) {
+  const currentChainId = await provider.request({ method: 'eth_chainId' });
+
+  if (currentChainId?.toLowerCase() === BASE_CHAIN_ID_HEX) {
+    return;
+  }
+
+  try {
+    await provider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: BASE_CHAIN_ID_HEX }],
+    });
+  } catch (switchError: any) {
+    if (switchError?.code === 4902) {
+      await provider.request({
+        method: 'wallet_addEthereumChain',
+        params: [
+          {
+            chainId: BASE_CHAIN_ID_HEX,
+            chainName: CHAIN_CONFIG.BASE_SEPOLIA.name,
+            nativeCurrency: {
+              name: 'Ethereum',
+              symbol: 'ETH',
+              decimals: 18,
+            },
+            rpcUrls: [baseRpcUrl],
+            blockExplorerUrls: [CHAIN_CONFIG.BASE_SEPOLIA.explorer],
+          },
+        ],
+      });
+      return;
+    }
+    throw switchError;
+  }
+}
 
 export function usePrivyWallet() {
   const { authenticated } = usePrivy();
@@ -15,7 +55,12 @@ export function usePrivyWallet() {
 
   const wallet = wallets.find(w => w.walletClientType === 'privy') || wallets[0]; // Get Privy wallet or first wallet
 
-  const addProduct = async (productId: number, price: string, contentId: string) => {
+  const addProduct = async (
+    productId: number,
+    price: string,
+    contentId: string,
+    mustBeVerified: boolean
+  ) => {
     if (!authenticated || !wallet) {
       throw new Error('Wallet not connected');
     }
@@ -25,18 +70,21 @@ export function usePrivyWallet() {
     setHash(null);
 
     try {
-      const priceBigInt = parseUnits(price, PYUSD_DECIMALS);
+      const priceBigInt = parseUnits(price, USDC_DECIMALS);
       
       // Encode the function call
       const data = encodeFunctionData({
         abi: CONTRACTS.PRODUCT_PAYMENT_SERVICE.abi,
         functionName: 'addProduct',
-        args: [BigInt(productId), priceBigInt, contentId],
+        args: [BigInt(productId), priceBigInt, contentId, mustBeVerified],
       });
 
       // Send the transaction using Privy's wallet
       const provider = await wallet.getEthereumProvider();
       
+      // Ensure we're on Base Sepolia before sending transactions
+      await ensureOnBaseSepolia(provider);
+
       // Estimate gas for the transaction
       const gasEstimate = await provider.request({
         method: 'eth_estimateGas',
@@ -73,7 +121,7 @@ export function usePrivyWallet() {
     }
   };
 
-  const approvePyusd = async (amount: string) => {
+  const approveUsdc = async (amount: string) => {
     if (!authenticated || !wallet) {
       throw new Error('Wallet not connected');
     }
@@ -83,11 +131,11 @@ export function usePrivyWallet() {
     setHash(null);
 
     try {
-      const amountBigInt = parseUnits(amount, PYUSD_DECIMALS);
+      const amountBigInt = parseUnits(amount, USDC_DECIMALS);
       
       // Encode the function call
       const data = encodeFunctionData({
-        abi: CONTRACTS.PYUSD.abi,
+        abi: CONTRACTS.USDC.abi,
         functionName: 'approve',
         args: [CONTRACTS.PRODUCT_PAYMENT_SERVICE.address, amountBigInt],
       });
@@ -95,12 +143,14 @@ export function usePrivyWallet() {
       // Send the transaction using Privy's wallet
       const provider = await wallet.getEthereumProvider();
       
+      await ensureOnBaseSepolia(provider);
+
       // Estimate gas for the transaction (ERC20 approval should be ~50k gas)
       const gasEstimate = await provider.request({
         method: 'eth_estimateGas',
         params: [
           {
-            to: CONTRACTS.PYUSD.address,
+            to: CONTRACTS.USDC.address,
             data,
             from: wallet.address,
           },
@@ -113,7 +163,7 @@ export function usePrivyWallet() {
         method: 'eth_sendTransaction',
         params: [
           {
-            to: CONTRACTS.PYUSD.address,
+            to: CONTRACTS.USDC.address,
             data,
             from: wallet.address,
             gas: gasEstimate,
@@ -151,6 +201,8 @@ export function usePrivyWallet() {
       // Send the transaction using Privy's wallet
       const provider = await wallet.getEthereumProvider();
       
+      await ensureOnBaseSepolia(provider);
+
       // Estimate gas for the transaction
       const gasEstimate = await provider.request({
         method: 'eth_estimateGas',
@@ -193,7 +245,7 @@ export function usePrivyWallet() {
 
   return {
     addProduct,
-    approvePyusd,
+    approveUsdc,
     payForProduct,
     isLoading,
     error,

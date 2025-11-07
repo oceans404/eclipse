@@ -3,8 +3,48 @@
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { parseUnits, encodeFunctionData, keccak256, toBytes } from 'viem';
 import { CONTRACTS } from '@/lib/contracts';
-import { PYUSD_DECIMALS } from '@/lib/config';
+import { CHAIN_CONFIG, USDC_DECIMALS } from '@/lib/config';
 import { useState } from 'react';
+
+const BASE_CHAIN_ID_HEX = `0x${CHAIN_CONFIG.BASE_SEPOLIA.id.toString(16)}`;
+const baseRpcUrl =
+  process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
+
+async function ensureOnBaseSepolia(provider: any) {
+  const currentChainId = await provider.request({ method: 'eth_chainId' });
+
+  if (currentChainId?.toLowerCase() === BASE_CHAIN_ID_HEX) {
+    return;
+  }
+
+  try {
+    await provider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: BASE_CHAIN_ID_HEX }],
+    });
+  } catch (switchError: any) {
+    if (switchError?.code === 4902) {
+      await provider.request({
+        method: 'wallet_addEthereumChain',
+        params: [
+          {
+            chainId: BASE_CHAIN_ID_HEX,
+            chainName: CHAIN_CONFIG.BASE_SEPOLIA.name,
+            nativeCurrency: {
+              name: 'Ethereum',
+              symbol: 'ETH',
+              decimals: 18,
+            },
+            rpcUrls: [baseRpcUrl],
+            blockExplorerUrls: [CHAIN_CONFIG.BASE_SEPOLIA.explorer],
+          },
+        ],
+      });
+      return;
+    }
+    throw switchError;
+  }
+}
 
 export function usePermitPurchase() {
   const { authenticated } = usePrivy();
@@ -26,9 +66,10 @@ export function usePermitPurchase() {
 
     try {
       const provider = await wallet.getEthereumProvider();
-      const amount = parseUnits(price, PYUSD_DECIMALS);
+      await ensureOnBaseSepolia(provider);
+      const amount = parseUnits(price, USDC_DECIMALS);
 
-      // Check if PYUSD supports permit (EIP-2612)
+      // Check if USDC supports permit (EIP-2612)
       try {
         // Try to call DOMAIN_SEPARATOR to check if permit is supported
         const domainSeparatorCall = encodeFunctionData({
@@ -48,7 +89,7 @@ export function usePermitPurchase() {
           method: 'eth_call',
           params: [
             {
-              to: CONTRACTS.PYUSD.address,
+              to: CONTRACTS.USDC.address,
               data: domainSeparatorCall,
             },
             'latest'
@@ -56,7 +97,7 @@ export function usePermitPurchase() {
         });
 
         if (domainResult) {
-          // PYUSD supports permit! Create permit signature
+          // USDC supports permit! Create permit signature
           const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
           
           // Create permit message (EIP-2612 standard)
@@ -73,7 +114,7 @@ export function usePermitPurchase() {
           throw new Error('Permit implementation needs EIP-712 signing');
         }
       } catch (permitError) {
-        console.log('PYUSD does not support permit, using regular flow');
+        console.log('USDC does not support permit, using regular flow');
       }
 
       // Fallback: Regular two-step process but in quick succession
@@ -81,7 +122,7 @@ export function usePermitPurchase() {
       
       // Step 1: Approval
       const approvalData = encodeFunctionData({
-        abi: CONTRACTS.PYUSD.abi,
+        abi: CONTRACTS.USDC.abi,
         functionName: 'approve',
         args: [CONTRACTS.PRODUCT_PAYMENT_SERVICE.address, amount],
       });
@@ -90,7 +131,7 @@ export function usePermitPurchase() {
         method: 'eth_sendTransaction',
         params: [
           {
-            to: CONTRACTS.PYUSD.address,
+            to: CONTRACTS.USDC.address,
             data: approvalData,
             from: wallet.address,
           },

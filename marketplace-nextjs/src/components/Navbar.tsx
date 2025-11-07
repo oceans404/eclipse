@@ -4,7 +4,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useBalance } from 'wagmi';
 import { useQuery } from '@apollo/client';
 import { formatUnits } from 'viem';
-import { CONTRACT_ADDRESSES, PYUSD_DECIMALS } from '@/lib/config';
+import { CONTRACT_ADDRESSES, USDC_DECIMALS } from '@/lib/config';
 import { GET_PRODUCTS_BY_CREATOR } from '@/lib/queries';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -16,10 +16,10 @@ export function Navbar() {
     null
   );
 
-  // Get PYUSD balance if user is connected
-  const { data: pyusdBalance } = useBalance({
+  // Get USDC balance if user is connected
+  const { data: usdcBalance } = useBalance({
     address: user?.wallet?.address as `0x${string}`,
-    token: CONTRACT_ADDRESSES.PYUSD,
+    token: CONTRACT_ADDRESSES.USDC,
     query: {
       enabled: !!user?.wallet?.address,
     },
@@ -54,9 +54,9 @@ export function Navbar() {
     fetchCreatorProfile();
   }, [hasCreatedProducts, user?.wallet?.address]);
 
-  const formatPyusdBalance = (balance: bigint | undefined) => {
+  const formatUsdcBalance = (balance: bigint | undefined) => {
     if (!balance) return '0.00';
-    return formatUnits(balance, PYUSD_DECIMALS);
+    return formatUnits(balance, USDC_DECIMALS);
   };
 
   return (
@@ -218,10 +218,10 @@ export function Navbar() {
             </>
           )}
 
-          {/* Get PYUSD Link - shows when balance is 0 */}
-          {authenticated && pyusdBalance?.value === BigInt(0) && (
+          {/* Get USDC Link - shows when balance is 0 */}
+          {authenticated && usdcBalance?.value === BigInt(0) && (
             <a
-              href="https://faucet.paxos.com/"
+              href="https://www.coinbase.com/faucets/base-sepolia-usdc"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -250,7 +250,7 @@ export function Navbar() {
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              Get Eth Sepolia PYUSD
+              Get Base Sepolia USDC
             </a>
           )}
 
@@ -320,7 +320,7 @@ export function Navbar() {
                   </span>
                 </div>
 
-                {/* PYUSD Balance */}
+                {/* USDC Balance */}
                 <div
                   style={{
                     display: 'flex',
@@ -339,7 +339,7 @@ export function Navbar() {
                       fontFamily: 'var(--font-inter)',
                     }}
                   >
-                    PYUSD
+                    USDC
                   </span>
                   <span
                     style={{
@@ -349,7 +349,7 @@ export function Navbar() {
                       fontFamily: 'var(--font-inter)',
                     }}
                   >
-                    {formatPyusdBalance(pyusdBalance?.value)}
+                    {formatUsdcBalance(usdcBalance?.value)}
                   </span>
                 </div>
               </div>

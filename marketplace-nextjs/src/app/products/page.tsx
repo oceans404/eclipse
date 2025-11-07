@@ -1,9 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@apollo/client';
 import { usePrivy } from '@privy-io/react-auth';
-import { GET_ALL_PRODUCTS, GET_USER_OWNED_PRODUCTS } from '@/lib/queries';
+import {
+  GET_ALL_PRODUCTS,
+  GET_PRODUCTS_REQUIRING_VERIFICATION,
+  GET_USER_OWNED_PRODUCTS,
+} from '@/lib/queries';
 import { ProductCard } from '@/components/ProductCard';
 import { Navbar } from '@/components/Navbar';
 import { CreatorProfile } from '@/lib/db';
@@ -11,6 +15,7 @@ import { CreatorProfile } from '@/lib/db';
 export default function ProductsPage() {
   const [sortBy, setSortBy] = useState<'price' | 'newest' | 'oldest'>('newest');
   const [searchTerm, setSearchTerm] = useState('');
+  const [requiresVerificationOnly, setRequiresVerificationOnly] = useState(false);
   const [creatorProfiles, setCreatorProfiles] = useState<
     Map<string, CreatorProfile>
   >(new Map());
@@ -20,6 +25,13 @@ export default function ProductsPage() {
   const { authenticated, user } = usePrivy();
 
   const { loading, error, data } = useQuery(GET_ALL_PRODUCTS);
+  const {
+    loading: loadingVerified,
+    error: verifiedError,
+    data: verifiedData,
+  } = useQuery(GET_PRODUCTS_REQUIRING_VERIFICATION, {
+    skip: !requiresVerificationOnly,
+  });
 
   // Get user's owned products to determine ownership
   const { data: ownedData } = useQuery(GET_USER_OWNED_PRODUCTS, {
@@ -27,13 +39,21 @@ export default function ProductsPage() {
     skip: !authenticated || !user?.wallet?.address,
   });
 
+  const baseProducts = data?.Product || [];
+  const verifiedProducts = verifiedData?.Product || [];
+
+  const products = useMemo(
+    () => (requiresVerificationOnly ? verifiedProducts : baseProducts),
+    [requiresVerificationOnly, baseProducts, verifiedProducts]
+  );
+
   // Fetch creator profiles when products are loaded
   useEffect(() => {
     const fetchCreatorProfiles = async () => {
-      if (!data?.Product) return;
+      if (!products.length) return;
 
       const uniqueCreators = [
-        ...new Set(data.Product.map((p: any) => p.creator)),
+        ...new Set(products.map((p: any) => p.creator)),
       ] as string[];
       const profiles = new Map<string, CreatorProfile>();
 
@@ -55,17 +75,17 @@ export default function ProductsPage() {
     };
 
     fetchCreatorProfiles();
-  }, [data]);
+  }, [products]);
 
   // Fetch product titles for search functionality
   useEffect(() => {
     const fetchProductTitles = async () => {
-      if (!data?.Product) return;
+      if (!products.length) return;
 
       const titles = new Map<string, string>();
 
       await Promise.all(
-        data.Product.map(async (product: any) => {
+        products.map(async (product: any) => {
           try {
             const response = await fetch(
               `/api/asset/${encodeURIComponent(product.contentId)}`
@@ -89,9 +109,12 @@ export default function ProductsPage() {
     };
 
     fetchProductTitles();
-  }, [data]);
+  }, [products]);
 
-  if (loading) {
+  const isLoading =
+    loading || (requiresVerificationOnly && loadingVerified);
+
+  if (isLoading) {
     return (
       <div
         style={{
@@ -118,7 +141,9 @@ export default function ProductsPage() {
     );
   }
 
-  if (error) {
+  const activeError = error || (requiresVerificationOnly ? verifiedError : undefined);
+
+  if (activeError) {
     return (
       <div
         style={{
@@ -146,14 +171,12 @@ export default function ProductsPage() {
               fontFamily: 'var(--font-inter)',
             }}
           >
-            {error.message}
+            {activeError.message}
           </p>
         </div>
       </div>
     );
   }
-
-  const products = data?.Product || [];
 
   // Create sets for owned and created products for quick lookup
   const ownedProductIds = new Set(
@@ -334,6 +357,57 @@ export default function ProductsPage() {
 
               <div
                 style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  fontFamily: 'var(--font-inter)',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setRequiresVerificationOnly(false)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '999px',
+                    border: requiresVerificationOnly
+                      ? '1px solid #e0e0e0'
+                      : '1px solid #1a1a1a',
+                    backgroundColor: requiresVerificationOnly
+                      ? '#fafaf8'
+                      : '#1a1a1a',
+                    color: requiresVerificationOnly ? '#1a1a1a' : '#fafaf8',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 200ms ease',
+                  }}
+                >
+                  All products
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRequiresVerificationOnly(true)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '999px',
+                    border: requiresVerificationOnly
+                      ? '1px solid #D97757'
+                      : '1px solid #e0e0e0',
+                    backgroundColor: requiresVerificationOnly
+                      ? '#D97757'
+                      : '#fafaf8',
+                    color: requiresVerificationOnly ? '#fafaf8' : '#1a1a1a',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 200ms ease',
+                  }}
+                >
+                  Requires verification
+                </button>
+              </div>
+
+              <div
+                style={{
                   padding: '0.375rem 0.875rem',
                   backgroundColor: '#f5f5f3',
                   border: '1px solid #e0e0e0',
@@ -394,6 +468,7 @@ export default function ProductsPage() {
                     contentId={product.contentId}
                     currentPrice={product.currentPrice}
                     creator={product.creator}
+                    mustBeVerified={Boolean(product.mustBeVerified)}
                     creatorProfile={
                       creatorProfiles.get(product.creator) || null
                     }

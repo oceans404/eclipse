@@ -154,7 +154,7 @@ export default function LandingPage() {
               <div className="step-number">02</div>
               <h3>Set Your Price</h3>
               <p>
-                Add a title, description, and price in PYUSD. That's it—no FAQ
+                Add a title, description, and price in USDC. That's it—no FAQ
                 writing, no question prediction, no customer support.
               </p>
             </div>
@@ -174,7 +174,7 @@ export default function LandingPage() {
               <div className="step-number">04</div>
               <h3>Get Paid, Grant Access</h3>
               <p>
-                PYUSD transfers to your wallet via smart contract. Envio indexes
+                USDC transfers to your wallet via smart contract. Envio indexes
                 the payment event, the TEE verifies it, and the buyer gets
                 instant download access. Guaranteed and simultaneous.
               </p>
@@ -259,7 +259,7 @@ export default function LandingPage() {
                   3. Buy with Confidence
                 </h3>
                 <p>
-                  Pay in PYUSD. Instantly download the full content. Verify the
+                  Pay in USDC. Instantly download the full content. Verify the
                   AI was telling the truth.
                 </p>
               </div>
@@ -330,7 +330,7 @@ export default function LandingPage() {
                 <div className="step-number">03</div>
                 <h3>Verified Access</h3>
                 <p>
-                  After PYUSD payment is verified on-chain via Envio indexing,
+                  After USDC payment is verified on-chain via Envio indexing,
                   the TEE decrypts and serves the full content. Until then,
                   buyers get answers—not files.
                 </p>
@@ -386,7 +386,7 @@ export default function LandingPage() {
               <div className="benefit-for">For Trust</div>
               <h3 className="benefit-title">Verified on-chain payments</h3>
               <p className="benefit-description">
-                PYUSD transfers to creator wallet via smart contract. Envio
+                USDC transfers to creator wallet via smart contract. Envio
                 indexes the payment event in real-time. The TEE verifies payment
                 before granting content access. No escrow, no waiting, no manual
                 approval.
@@ -425,8 +425,8 @@ export default function LandingPage() {
               </p>
               <p style={{ marginBottom: '2rem' }}>
                 <strong>Hardhat 3 + Smart Contracts:</strong>{' '}
-                ProductPaymentService contract on Ethereum Sepolia handles all
-                PYUSD payments. Tracks purchases per product ID and emits events
+                ProductPaymentService contract on Base Sepolia handles all
+                USDC payments. Tracks purchases per product ID and emits events
                 for indexing.
               </p>
               <p style={{ marginBottom: '2rem' }}>
@@ -436,10 +436,11 @@ export default function LandingPage() {
                 data.
               </p>
               <p>
-                <strong>PayPal USD (PYUSD):</strong> Stablecoin payments via
-                direct transfers to creator wallets. When a buyer purchases,
-                payment is verified on-chain and content access is granted
-                simultaneously. List at $50, get $50. No volatility, no escrow.
+                <strong>Circle USDC (Base Sepolia):</strong> Stablecoin payments
+                via direct transfers to creator wallets. When a buyer
+                purchases, payment is verified on-chain and content access is
+                granted simultaneously. List at $50, get $50. No volatility, no
+                escrow.
               </p>
             </div>
           </div>
@@ -563,13 +564,13 @@ export default function LandingPage() {
                   "How does payment verification work?"
                 </h3>
                 <p>
-                  When you purchase, PYUSD transfers from your wallet to the
+                  When you purchase, USDC transfers from your wallet to the
                   creator's wallet via the ProductPaymentService smart contract
-                  on Ethereum Sepolia. The contract emits a payment event.
-                  Envio's HyperIndex indexes this event in real-time. The TEE
-                  service queries Envio's GraphQL API to verify the payment,
-                  then grants you download access. Payment and access are
-                  separate steps but happen within seconds.
+                  on Base Sepolia. The contract emits a payment event. Envio's
+                  HyperIndex indexes this event in real-time. The TEE service
+                  queries Envio's GraphQL API to verify the payment, then
+                  grants you download access. Payment and access are separate
+                  steps but happen within seconds.
                 </p>
               </div>
               <div style={{ marginBottom: '3rem' }}>
@@ -580,13 +581,13 @@ export default function LandingPage() {
                     fontWeight: '400',
                   }}
                 >
-                  "Why PYUSD?"
+                  "Why USDC?"
                 </h3>
                 <p>
                   Stablecoin = no price volatility. You list at $50, you get $50
                   worth of value. No conversion math, no surprise fees from
-                  market swings. Plus, PayPal USD has wide adoption and easy
-                  on-ramps.
+                  market swings. Plus, USDC has wide adoption and easy on-ramps
+                  across Base.
                 </p>
               </div>
               <div>

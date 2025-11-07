@@ -9,9 +9,10 @@ import { ProductCard } from '@/components/ProductCard';
 import { AddressDisplay } from '@/components/AddressDisplay';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { EditProfileModal } from '@/components/EditProfileModal';
-import { pyusdToFormatted } from '@/utils/formatting';
+import { usdcToFormatted } from '@/utils/formatting';
 import { Navbar } from '@/components/Navbar';
 import { CreatorProfile } from '@/lib/db';
+import { EXPLORER_URL } from '@/lib/config';
 
 interface CreatorPageProps {
   params: Promise<{
@@ -365,7 +366,7 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                             Copy
                           </button>
                           <a
-                            href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/address/${resolvedParams.address}`}
+                            href={`${EXPLORER_URL}/address/${resolvedParams.address}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
@@ -528,7 +529,7 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                         }}
                       >
                         <span style={{ color: '#D97757' }}>
-                          {pyusdToFormatted(totalRevenue)} PYUSD
+                          {usdcToFormatted(totalRevenue)} USDC
                         </span>
                       </p>
                     </div>
@@ -553,7 +554,7 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                           fontWeight: 500,
                         }}
                       >
-                        {pyusdToFormatted(averagePrice.toString())} PYUSD
+                        {usdcToFormatted(averagePrice.toString())} USDC
                       </p>
                     </div>
 
@@ -596,7 +597,7 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                               ).map((payment: any, index: number) => (
                                 <a
                                   key={`payment-${payment.transactionHash}-${index}`}
-                                  href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${payment.transactionHash}`}
+                                  href={`${EXPLORER_URL}/tx/${payment.transactionHash}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   style={{
@@ -629,7 +630,7 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                                       marginBottom: '0.125rem',
                                     }}
                                   >
-                                    ${pyusdToFormatted(payment.amount)}
+                                    ${usdcToFormatted(payment.amount)}
                                   </span>
                                   <span
                                     style={{
@@ -704,6 +705,7 @@ export default function CreatorPage({ params }: CreatorPageProps) {
                     contentId={product.contentId}
                     currentPrice={product.currentPrice}
                     creator={product.creator}
+                    mustBeVerified={Boolean(product.mustBeVerified)}
                     creatorProfile={creatorProfile}
                   />
                 ))}

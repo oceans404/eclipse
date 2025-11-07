@@ -43,6 +43,7 @@ export default function CreateProductPage() {
     title: '',
     description: '',
     contentId: '',
+    mustBeVerified: true,
   });
 
   // File upload state
@@ -269,7 +270,8 @@ export default function CreateProductPage() {
       const txHash = await addProduct(
         productIdNum,
         formData.price,
-        formData.contentId
+        formData.contentId,
+        formData.mustBeVerified
       );
       setSubmitted(true);
       console.log('Product creation transaction:', txHash);
@@ -290,6 +292,13 @@ export default function CreateProductPage() {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleVerificationToggle = (value: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      mustBeVerified: value,
     }));
   };
 
@@ -1217,7 +1226,7 @@ export default function CreateProductPage() {
                             marginBottom: '0.75rem',
                           }}
                         >
-                          Price (PYUSD) *
+                          Price (USDC) *
                         </label>
                         <input
                           type="number"
@@ -1254,8 +1263,78 @@ export default function CreateProductPage() {
                             marginTop: '0.5rem',
                           }}
                         >
-                          Set your product price in PYUSD
+                          Set your product price in USDC (Base Sepolia)
                         </p>
+                      </div>
+
+                      {/* Verification requirement */}
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <label
+                          style={{
+                            display: 'block',
+                            fontFamily: 'var(--font-inter)',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1a1a1a',
+                            marginBottom: '0.75rem',
+                          }}
+                        >
+                          Require verification before unlock?
+                        </label>
+                        <div
+                          style={{
+                            display: 'flex',
+                            gap: '0.75rem',
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleVerificationToggle(true)}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              borderRadius: '6px',
+                              border: formData.mustBeVerified
+                                ? '1px solid #D97757'
+                                : '1px solid #e0e0e0',
+                              backgroundColor: formData.mustBeVerified
+                                ? 'rgba(217, 151, 87, 0.1)'
+                                : '#fafaf8',
+                              color: '#1a1a1a',
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '0.8125rem',
+                              fontWeight: 500,
+                              cursor: 'pointer',
+                              transition: 'all 200ms',
+                            }}
+                          >
+                            Yes
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleVerificationToggle(false)}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              borderRadius: '6px',
+                              border: formData.mustBeVerified
+                                ? '1px solid #e0e0e0'
+                                : '1px solid #1a1a1a',
+                              backgroundColor: formData.mustBeVerified
+                                ? '#fafaf8'
+                                : '#1a1a1a',
+                              color: formData.mustBeVerified
+                                ? '#1a1a1a'
+                                : '#fafaf8',
+                              fontFamily: 'var(--font-inter)',
+                              fontSize: '0.8125rem',
+                              fontWeight: 500,
+                              cursor: 'pointer',
+                              transition: 'all 200ms',
+                            }}
+                          >
+                            No
+                          </button>
+                        </div>
                       </div>
                     </>
                   )}

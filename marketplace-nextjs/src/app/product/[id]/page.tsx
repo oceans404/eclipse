@@ -14,6 +14,7 @@ import { useHasPaid } from '@/hooks/useContract';
 import { usePrivy } from '@privy-io/react-auth';
 import { ContentViewer } from '@/components/ContentViewer';
 import { ChatInterface } from '@/components/ChatInterface';
+import { EXPLORER_URL } from '@/lib/config';
 
 interface ProductPageProps {
   params: Promise<{
@@ -48,6 +49,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   // Use the asset metadata hook
   const product = data?.Product?.[0];
+  const requiresVerification = Boolean(product?.mustBeVerified);
   const { getTitle, getDescription, metadata } = useAssetMetadata(
     product?.contentId || null
   );
@@ -342,9 +344,24 @@ export default function ProductPage({ params }: ProductPageProps) {
                         lineHeight: 1.4,
                       }}
                     >
-                      Buy in 2 steps: <br /> 1. Approve PYUSD spending cap{' '}
+                      Buy in 2 steps: <br /> 1. Approve USDC spending cap{' '}
                       <br /> 2. Purchase product
                     </p>
+                    {requiresVerification && (
+                      <p
+                        style={{
+                          fontFamily: 'var(--font-inter)',
+                          fontSize: '0.7rem',
+                          color: '#999',
+                          marginTop: '0.25rem',
+                          textAlign: 'center',
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        Unlocks once Base Sepolia USDC payment is indexed and
+                        verification completes.
+                      </p>
+                    )}
                   </div>
                 ) : isCreator ? (
                   <div
@@ -383,7 +400,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     >
                       {formatDate(product.createdAt)} • Price:{' '}
                       <span style={{ fontWeight: 500, color: '#D97757' }}>
-                        <PriceDisplay priceInPyusd={product.currentPrice} />
+                        <PriceDisplay priceInUsdc={product.currentPrice} />
                       </span>
                     </div>
                   </div>
@@ -423,11 +440,11 @@ export default function ProductPage({ params }: ProductPageProps) {
                     >
                       {formatDate(userPurchase.blockTimestamp)} • Paid{' '}
                       <span style={{ fontWeight: 500, color: '#D97757' }}>
-                        <PriceDisplay priceInPyusd={userPurchase.amount} />
+                        <PriceDisplay priceInUsdc={userPurchase.amount} />
                       </span>
                     </div>
                     <a
-                      href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${userPurchase.transactionHash}`}
+                      href={`${EXPLORER_URL}/tx/${userPurchase.transactionHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
@@ -511,17 +528,37 @@ export default function ProductPage({ params }: ProductPageProps) {
                     >
                       {getTitle(product.contentId)}
                     </h1>
-                    <p
+                  <p
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#666',
+                      fontFamily: 'var(--font-inter)',
+                    }}
+                  >
+                    Product #{product.productId} • Created{' '}
+                    {formatDate(product.createdAt)}
+                  </p>
+                  {requiresVerification && (
+                    <div
                       style={{
-                        fontSize: '0.75rem',
-                        color: '#666',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        padding: '0.25rem 0.65rem',
+                        borderRadius: '999px',
+                        backgroundColor: 'rgba(217, 151, 87, 0.12)',
+                        border: '1px solid rgba(217, 151, 87, 0.4)',
+                        fontSize: '0.7rem',
                         fontFamily: 'var(--font-inter)',
+                        fontWeight: 500,
+                        color: '#D97757',
+                        marginTop: '0.5rem',
                       }}
                     >
-                      Product #{product.productId} • Created{' '}
-                      {formatDate(product.createdAt)}
-                    </p>
-                  </div>
+                      🔐 Verification required
+                    </div>
+                  )}
+                </div>
 
                   <p
                     style={{
@@ -656,7 +693,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                           fontWeight: 500,
                         }}
                       >
-                        <PriceDisplay priceInPyusd={totalRevenue} />
+                        <PriceDisplay priceInUsdc={totalRevenue} />
                       </p>
                     </div>
 
@@ -681,7 +718,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                           color: '#D97757',
                         }}
                       >
-                        <PriceDisplay priceInPyusd={product.currentPrice} />
+                        <PriceDisplay priceInUsdc={product.currentPrice} />
                       </p>
                     </div>
 
@@ -1000,9 +1037,16 @@ export default function ProductPage({ params }: ProductPageProps) {
                             <strong style={{ color: '#1a1a1a' }}>Note:</strong>{' '}
                             Purchase is a 2-step process
                             <br />
-                            1) Approve PYUSD spending
+                            1) Approve USDC spending
                             <br />
                             2) Complete product purchase
+                            {requiresVerification && (
+                              <>
+                                <br />
+                                Content unlocks after verification confirms your
+                                Base Sepolia USDC payment.
+                              </>
+                            )}
                           </p>
                         </div>
                       ) : (
@@ -1120,7 +1164,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                           marginBottom: '0.5rem',
                         }}
                       >
-                        <PriceDisplay priceInPyusd={product.currentPrice} />
+                        <PriceDisplay priceInUsdc={product.currentPrice} />
                       </p>
                       <p
                         style={{
@@ -1199,7 +1243,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                           marginBottom: '0.5rem',
                         }}
                       >
-                        <PriceDisplay priceInPyusd={totalRevenue} />
+                        <PriceDisplay priceInUsdc={totalRevenue} />
                       </p>
                       <p
                         style={{
@@ -1304,7 +1348,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                                     color: '#D97757',
                                   }}
                                 >
-                                  <PriceDisplay priceInPyusd={entry.price} />
+                                  <PriceDisplay priceInUsdc={entry.price} />
                                 </span>
                               </div>
                               <span
@@ -1371,7 +1415,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                           ).map((payment: any, index: number) => (
                             <a
                               key={`payment-${payment.transactionHash}-${index}`}
-                              href={`${process.env.NEXT_PUBLIC_SEPOLIA_EXPLORER}/tx/${payment.transactionHash}`}
+                              href={`${EXPLORER_URL}/tx/${payment.transactionHash}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               style={{
@@ -1416,7 +1460,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                                     color: '#D97757',
                                   }}
                                 >
-                                  <PriceDisplay priceInPyusd={payment.amount} />
+                                  <PriceDisplay priceInUsdc={payment.amount} />
                                 </span>
                               </div>
                               <span

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@apollo/client';
 import { GET_CREATOR_STATS, GET_CREATOR_REVENUE } from '@/lib/queries';
 import { AddressDisplay } from './AddressDisplay';
-import { pyusdToFormatted } from '@/utils/formatting';
+import { usdcToFormatted } from '@/utils/formatting';
 import { CreatorProfile } from '@/lib/db';
 
 interface CreatorCardProps {
@@ -298,7 +298,7 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
                 color: '#D97757',
               }}
             >
-              ${pyusdToFormatted(totalRevenue)}
+              ${usdcToFormatted(totalRevenue)}
             </p>
             <p
               style={{
@@ -308,7 +308,7 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
                 marginTop: '0.125rem',
               }}
             >
-              PYUSD
+              USDC
             </p>
           </div>
         </div>

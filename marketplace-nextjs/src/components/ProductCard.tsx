@@ -14,6 +14,7 @@ interface ProductCardProps {
   contentId: string;
   currentPrice: string;
   creator: string;
+  mustBeVerified: boolean;
   creatorProfile?: CreatorProfile | null;
 }
 
@@ -22,6 +23,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   contentId,
   currentPrice,
   creator,
+  mustBeVerified,
   creatorProfile,
 }) => {
   const router = useRouter();
@@ -116,6 +118,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           e.currentTarget.style.borderColor = '#e0e0e0';
         }}
       >
+        {mustBeVerified && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              backgroundColor: 'rgba(26, 26, 26, 0.9)',
+              color: '#fafaf8',
+              padding: '0.35rem 0.9rem',
+              borderRadius: '999px',
+              fontSize: '0.65rem',
+              fontFamily: 'var(--font-inter)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Verify to unlock
+          </div>
+        )}
         {/* Product ID Badge */}
         <div
           style={{
@@ -290,7 +311,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 color: '#D97757',
               }}
             >
-              <PriceDisplay priceInPyusd={currentPrice} />
+              <PriceDisplay priceInUsdc={currentPrice} />
             </div>
             <p
               style={{
@@ -300,7 +321,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 marginTop: '0.125rem',
               }}
             >
-              PYUSD
+              USDC
             </p>
           </div>
         </div>
