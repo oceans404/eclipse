@@ -67,7 +67,7 @@ Create `.env.local`:
 
 ```bash
 # GraphQL endpoint for blockchain data
-NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://indexer.dev.hyperindex.xyz/0ae1800/v1/graphql
+NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://indexer.dev.hyperindex.xyz/1f84b17/v1/graphql
 
 # Blockchain explorer for transaction links
 NEXT_PUBLIC_SEPOLIA_EXPLORER=https://sepolia.etherscan.io

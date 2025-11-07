@@ -579,4 +579,4 @@ This configuration enables:
 
 ---
 
-**GraphQL endpoint:** https://indexer.dev.hyperindex.xyz/0ae1800/v1/graphql
+**GraphQL endpoint:** https://indexer.dev.hyperindex.xyz/1f84b17/v1/graphql

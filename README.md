@@ -58,7 +58,7 @@ Smart contract infrastructure for marketplace payments using PYUSD.
 
 Event indexing service for real-time marketplace data.
 
-- **Live GraphQL API** - https://indexer.dev.hyperindex.xyz/0ae1800/v1/graphql
+- **Live GraphQL API** - https://indexer.dev.hyperindex.xyz/1f84b17/v1/graphql
 - **Dual Entity System** - Tracks both historical events and current product state
 - **HyperSync enabled** - Fast historical data synchronization
 - **Real-time indexing** - Live event tracking from [ProductPaymentService.sol](https://github.com/oceans404/eclipse/blob/main/onchain-payments/contracts/ProductPaymentService.sol)
