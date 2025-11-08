@@ -57,4 +57,3 @@ services:
 
     # Development command with TypeScript compilation and nodemon
     command: sh -c "cd /app && npm ci && npm run dev"
-
