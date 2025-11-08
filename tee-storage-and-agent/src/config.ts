@@ -8,16 +8,19 @@ const localEnvPath = resolve(__dirname, '../.env');
 dotenv.config({ path: localEnvPath });
 dotenv.config();
 
-type RequiredEnv =
-  | 'MASTER_KEY'
-  | 'NILLION_API_KEY'
-  | 'NILLION_COLLECTION_ID'
-  | 'GOOGLE_GENERATIVE_AI_API_KEY'
-  | 'RPC_URL'
-  | 'PAYMENT_SERVICE_ADDRESS'
-  | 'BLOB_READ_WRITE_TOKEN'
-  | 'VERIFIED_LIST_CONTRACT_ADDRESS'
-  | 'VERIFIED_LIST_MANAGER_PRIVATE_KEY';
+export const REQUIRED_ENV_VARS = [
+  'MASTER_KEY',
+  'NILLION_API_KEY',
+  'NILLION_COLLECTION_ID',
+  'GOOGLE_GENERATIVE_AI_API_KEY',
+  'RPC_URL',
+  'PAYMENT_SERVICE_ADDRESS',
+  'BLOB_READ_WRITE_TOKEN',
+  'VERIFIED_LIST_CONTRACT_ADDRESS',
+  'VERIFIED_LIST_MANAGER_PRIVATE_KEY',
+] as const;
+
+type RequiredEnv = (typeof REQUIRED_ENV_VARS)[number];
 
 function requireEnv(name: RequiredEnv): string {
   const value = process.env[name];

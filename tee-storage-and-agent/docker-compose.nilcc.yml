@@ -8,9 +8,20 @@ services:
     container_name: eclipse-tee-storage-and-agent-container
     working_dir: /app
 
-    # Load sensitive vars from the repo .env (must live inside ${FILES})
-    env_file:
-      - ${FILES}/tee.env
+    # Explicitly declare the vars our app needs so nilCC runners can override them
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=${PORT:-3001}
+      - NPM_CONFIG_PRODUCTION=false
+      - MASTER_KEY=${MASTER_KEY:-}
+      - NILLION_API_KEY=${NILLION_API_KEY:-}
+      - NILLION_COLLECTION_ID=${NILLION_COLLECTION_ID:-}
+      - GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY:-}
+      - RPC_URL=${RPC_URL:-}
+      - PAYMENT_SERVICE_ADDRESS=${PAYMENT_SERVICE_ADDRESS:-}
+      - BLOB_READ_WRITE_TOKEN=${BLOB_READ_WRITE_TOKEN:-}
+      - VERIFIED_LIST_CONTRACT_ADDRESS=${VERIFIED_LIST_CONTRACT_ADDRESS:-}
+      - VERIFIED_LIST_MANAGER_PRIVATE_KEY=${VERIFIED_LIST_MANAGER_PRIVATE_KEY:-}
 
     ports:
       - '3001:3001'
