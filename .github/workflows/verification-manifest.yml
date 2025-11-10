@@ -2,6 +2,12 @@ name: Update Verification Manifest
 
 on:
   push:
+    branches: [main]
+    paths:
+      - tee-storage-and-agent/docker-compose.nilcc.yml
+      - tee-storage-and-agent/scripts/update-verification-manifest.sh
+      - tee-storage-and-agent/verification-manifest.json
+  push:
     tags:
       - 'v*'
   workflow_dispatch:
