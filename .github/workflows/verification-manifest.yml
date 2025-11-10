@@ -21,14 +21,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Update verification manifest
-        working-directory: tee-storage-and-agent
-        run: scripts/update-verification-manifest.sh
+        run: |
+          cd tee-storage-and-agent
+          scripts/update-verification-manifest.sh
 
       - name: Commit manifest changes
-        working-directory: tee-storage-and-agent
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cd tee-storage-and-agent
+
           if git diff --quiet verification-manifest.json; then
             echo "verification-manifest.json already up to date"
             exit 0
