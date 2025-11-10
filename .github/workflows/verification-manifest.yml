@@ -1,7 +1,6 @@
 name: verification-manifest
 
 on:
-  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -9,10 +8,14 @@ on:
       - tee-storage-and-agent/verification-manifest.json
       - tee-storage-and-agent/scripts/update-verification-manifest.sh
       - .github/workflows/verification-manifest.yml
+  workflow_dispatch:
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tee-storage-and-agent
     permissions:
       contents: write
 
@@ -22,15 +25,13 @@ jobs:
 
       - name: Update verification manifest
         run: |
-          cd tee-storage-and-agent
-          scripts/update-verification-manifest.sh
+          chmod +x scripts/update-verification-manifest.sh
+          ./scripts/update-verification-manifest.sh
 
       - name: Commit manifest changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd tee-storage-and-agent
-
           if git diff --quiet verification-manifest.json; then
             echo "verification-manifest.json already up to date"
             exit 0
