@@ -1,0 +1,41 @@
+name: verification-manifest
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - tee-storage-and-agent/docker-compose.nilcc.yml
+      - tee-storage-and-agent/verification-manifest.json
+      - tee-storage-and-agent/scripts/update-verification-manifest.sh
+      - .github/workflows/verification-manifest.yml
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update verification manifest
+        working-directory: tee-storage-and-agent
+        run: scripts/update-verification-manifest.sh
+
+      - name: Commit manifest changes
+        working-directory: tee-storage-and-agent
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet verification-manifest.json; then
+            echo "verification-manifest.json already up to date"
+            exit 0
+          fi
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add verification-manifest.json
+          git commit -m "chore: update verification manifest"
+          git push
