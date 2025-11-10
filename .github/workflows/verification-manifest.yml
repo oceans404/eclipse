@@ -1,44 +1,65 @@
-name: verification-manifest
+name: Update Verification Manifest
 
 on:
   push:
-    branches: [main]
-    paths:
-      - tee-storage-and-agent/docker-compose.nilcc.yml
-      - tee-storage-and-agent/verification-manifest.json
-      - tee-storage-and-agent/scripts/update-verification-manifest.sh
-      - .github/workflows/verification-manifest.yml
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
-  update:
+  update-verification:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     defaults:
       run:
         working-directory: tee-storage-and-agent
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Get version from tag
+        id: get-version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Using version: $VERSION"
+
       - name: Update verification manifest
+        id: update-manifest
+        env:
+          MANIFEST_KEY: ${{ steps.get-version.outputs.version }}
         run: |
           chmod +x scripts/update-verification-manifest.sh
-          ./scripts/update-verification-manifest.sh
+          HASH=$(./scripts/update-verification-manifest.sh)
+          COMPOSE=$(jq -r --arg key "$MANIFEST_KEY" '.[$key].docker_compose_hash' verification-manifest.json)
+          echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+          echo "compose=$COMPOSE" >> "$GITHUB_OUTPUT"
+          echo "measurement hash: $HASH"
+          echo "Updated verification-manifest.json:"
+          cat verification-manifest.json
 
-      - name: Commit manifest changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if git diff --quiet verification-manifest.json; then
-            echo "verification-manifest.json already up to date"
-            exit 0
-          fi
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update verification manifest for ${{ steps.get-version.outputs.version }}'
+          title: 'Update verification manifest for ${{ steps.get-version.outputs.version }}'
+          body: |
+            This PR publishes the verification inputs for version ${{ steps.get-version.outputs.version }}.
 
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add verification-manifest.json
-          git commit -m "chore: update verification manifest"
-          git push
+            - Measurement hash: `${{ steps.update-manifest.outputs.hash }}`
+            - Docker Compose hash: `${{ steps.update-manifest.outputs.compose }}`
+
+            Generated automatically by the verification-manifest workflow.
+          add-paths: |
+            tee-storage-and-agent/verification-manifest.json
+          branch: update-verification-${{ steps.get-version.outputs.version }}
+          base: main
+          delete-branch: true
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          signoff: true
