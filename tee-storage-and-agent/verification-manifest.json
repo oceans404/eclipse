@@ -1,1 +1,8 @@
-{}
+{
+  "0.2.0": {
+    "measurement_hash": "3c7ffd4eeb1ae04a9b0594172524ea68ed35ff78276c2b35e7a73919fe2f9f3f062f85e1c68ad0f549aaf9accc7b2303",
+    "docker_compose_hash": "0829b9f92c113465452aeaa664cde3a05ae7efdb6808b3360baf810f4f9bc73a",
+    "cpus": 1,
+    "nilcc_version": "0.2.1"
+  }
+}
