@@ -2,14 +2,8 @@ name: Update Verification Manifest
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
-    paths:
-      - tee-storage-and-agent/docker-compose.nilcc.yml
-      - tee-storage-and-agent/scripts/update-verification-manifest.sh
-      - tee-storage-and-agent/verification-manifest.json
   workflow_dispatch:
 
 jobs:
@@ -23,7 +17,7 @@ jobs:
         working-directory: tee-storage-and-agent
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Get version from tag
@@ -32,7 +26,7 @@ jobs:
           VERSION=${GITHUB_REF#refs/tags/}
           VERSION=${VERSION#v}
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Using version: $VERSION"
+          echo "Extracted version: $VERSION"
 
       - name: Update verification manifest
         id: update-manifest
@@ -52,8 +46,8 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore: update verification manifest for ${{ steps.get-version.outputs.version }}'
-          title: 'Update verification manifest for ${{ steps.get-version.outputs.version }}'
+          commit-message: "chore: update verification manifest for ${{ steps.get-version.outputs.version }}"
+          title: "Update verification manifest for ${{ steps.get-version.outputs.version }}"
           body: |
             This PR publishes the verification inputs for version ${{ steps.get-version.outputs.version }}.
 
@@ -68,4 +62,4 @@ jobs:
           delete-branch: true
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          signoff: true
+          sign-commits: true
