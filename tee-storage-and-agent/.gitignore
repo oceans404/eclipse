@@ -37,4 +37,4 @@ coverage/
 
 # Local scripts (only track measurement hash helper)
 scripts/*
-!scripts/measurement-hash.sh
+!scripts/update-verification-manifest.sh
